@@ -1,0 +1,88 @@
+﻿<Window x:Class="ClientMessenger.Home"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ClientMessenger"
+        mc:Ignorable="d"
+        Title="Home" MinHeight="450" MinWidth="800" Width="800" Height="450" Background="#1f1e1f" WindowStyle="None" WindowStartupLocation="CenterScreen">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CornerRadius="20" CaptionHeight="12" ResizeBorderThickness="3" UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition Width="5*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="8*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,0,0" Grid.Row="0" Grid.Column="1">
+            <Button x:Name="MinimizeBtn" Content="―"  BorderBrush="#1f1e1f" Height="30" Width="30" Margin="0, 0, 0, 0"/>
+            <Button x:Name="MaximizeBtn" Content="🗖"  BorderBrush="#1f1e1f" Height="30" Width="30" Margin="0, 0, 0, 0"/>
+            <Button x:Name="CloseBtn" Content="X"  BorderBrush="#1f1e1f" Height="30" Width="30" Margin="0, 0, 0, 0"/>
+        </StackPanel>
+
+        <!--#region User infos-->
+
+        <Ellipse Grid.Column="0" Width="45" Height="45" VerticalAlignment="Center" Margin="0, 0, 130, 0" RenderOptions.BitmapScalingMode="HighQuality" Cursor="Hand">
+            <Ellipse.Fill>
+                <ImageBrush x:Name="ProfilPic" Stretch="UniformToFill" ImageSource="C:\Users\Crist\Pictures\Schnee.jpg"/>
+            </Ellipse.Fill>
+        </Ellipse>
+
+        <TextBlock x:Name="Username" Text="1234567890ABCDE" Height="20" Width="120" Margin="0, 0, 560, 0" Foreground="#7c7e84" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
+        <!--#endregion-->
+      
+        <!--#region Btns-->
+
+        <Button x:Name="FriendsBtn" Tag="Friends" Grid.Column="1" Width = "100" Height="30" Content="Friends" Margin="0, 0, 450, 0"/>
+
+        <Button x:Name="PendingBtn" Tag="Pending" Grid.Column="1" Width ="100" Height="30" Content="Pending" Margin="0, 0, 200, 0"/>
+
+        <Button x:Name="BlockedBtn" Tag="Blocked" Grid.Column="1" Width = "100" Height="30" Margin="50, 0, 0, 0" Content="Blocked"/>
+
+        <Button x:Name="AddFriendBtn" Tag="AddFriend" Grid.Column="1" Width = "100" Height="30" Margin="290, 0, 0, 0" Content="Add Friend"/>
+        
+        <!--#endregion-->
+
+        <ListBox x:Name="Dms" Grid.Row="1" Background="Transparent"/>
+
+        <!--#region Panels-->
+        
+        <Grid x:Name="FriendsPanel" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="FriendsPanelTranslateTransform"/>
+            </Grid.RenderTransform>
+            <ListBox x:Name="FriendsList" Background="#222" Foreground="White" FontSize="16" Margin="10" BorderBrush="#222"/>
+        </Grid>
+
+        <Grid x:Name="PendingPanel" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="PendingPanelTranslateTransform"/>
+            </Grid.RenderTransform>
+            <ListBox x:Name="PendingList" Background="#222" Foreground="White" FontSize="16" Margin="10" BorderBrush="#222"/>
+        </Grid>
+
+        <Grid x:Name="BlockedPanel" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="BlockedPanelTranslateTransform"/>
+            </Grid.RenderTransform>
+            <ListBox x:Name="BlockedList" Background="#222" Foreground="White" FontSize="16" Margin="10" BorderBrush="#222"/>
+        </Grid>
+
+        <Grid x:Name="AddFriendPanel" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="AddFriendPanelTranslateTransform"/>
+            </Grid.RenderTransform>
+        </Grid>
+        
+        <!--#endregion-->
+    </Grid>
+</Window>

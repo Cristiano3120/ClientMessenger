@@ -1,0 +1,71 @@
+﻿<Window x:Class="ClientMessenger.CreateAcc"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ClientMessenger"
+        mc:Ignorable="d"
+        Title="Account Creation" MinHeight="450" MinWidth="800" Width="800" Height="450" MaxHeight="450" MaxWidth="800" WindowStartupLocation="CenterScreen"
+        Background="#1f1e1f" WindowStyle="None">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CornerRadius="20" CaptionHeight="12" ResizeBorderThickness="3" UseAeroCaptionButtons="False" GlassFrameThickness="0"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Orientation="Horizontal" Margin="0,0,0,0">
+            <Button x:Name="MinimizeBtn" Content="―"  BorderBrush="#1f1e1f" Height="30" Width="30" Margin="0, 0, 0, 0"/>
+            <Button x:Name="MaximizeBtn" Content="🗖"  BorderBrush="#1f1e1f" Height="30" Width="30" Margin="0, 0, 0, 0"/>
+            <Button x:Name="CloseBtn" Content="X"  BorderBrush="#1f1e1f" Height="30" Width="30" Margin="0, 0, 0, 0"/>
+        </StackPanel>
+
+        <Grid x:Name="FirstStage" Visibility="Visible">
+            <!--#region Email -->
+            <TextBlock x:Name="EmailError" Foreground="Red" Text="Email can´t be empty or unvalid!" Height="20" Width="200" Margin="40, 0, 0, 200" Visibility="Hidden"/>
+
+            <TextBox x:Name="EmailTextBox" Width="160" Height="30" Background="#343234" Margin="0, 0, 0, 150" Text="Email"/>
+            <!--#endregion-->
+
+
+            <!--#region Password -->
+            <TextBlock x:Name="PasswordError" Foreground="Red" Text="Can´t be empty!" Height="20" Width="160" Margin="0, 0, 0, 50" Visibility="Hidden"/>
+
+            <TextBox x:Name="PasswordTextBox" Width="160" Height="30" Background="#343234" Margin="0, 0, 0, 0" Text="Password"/>
+            <Button x:Name="RandomPasswordBtn" Content="Random" Width="57" Height="30" Margin="230, 0, 0, 0"/>
+            <!--#endregion-->
+
+
+            <!--#region Geburtsdatum-->
+            <TextBlock x:Name="DateOfBirthError" Foreground="Red" Height="20" Width="160" Margin="0, 70, 0, 0" Visibility="Collapsed"/>
+
+            <TextBlock x:Name="DateOfBirth" Text="Date of birth" Height="20" Width="160" Margin="0, 100, 0, 0" Foreground="#7c7e84"/>
+
+            <ComboBox x:Name="DayBox" Width="49" Height="25" Margin="0, 150, 110, 0"/>
+            <ComboBox x:Name="MonthBox" Width="49" Height="25" Margin="0, 150, 3, 0"/>
+            <ComboBox x:Name="YearBox" Width="57" Height="25" Margin="110, 150, 0, 0"/>
+            <!--#endregion-->
+
+            <Button x:Name="ContinueBtn" Background="#343234" Height="30" Width="80" Content="continue" Margin="0, 250, 0, 0"/>
+        </Grid>
+
+        <TextBlock x:Name="GoBackBtn" Foreground="White" Text="🡨" HorizontalAlignment="Left" Height="30" Width="30" FontSize="28" Margin="20, 0, 0, 400"/>
+        
+        <Grid x:Name="SecondStage" Visibility="Collapsed">
+            
+            <Ellipse x:Name="Image" Width="75" Height="75" VerticalAlignment="Center" Margin="0, 0, 225, 210" RenderOptions.BitmapScalingMode="HighQuality" Cursor="Hand">
+                <Ellipse.Fill>
+                    <ImageBrush x:Name="ProfilPic" Stretch="UniformToFill" ImageSource="C:\Users\Crist\Pictures\Ich.png"/>
+                </Ellipse.Fill>
+            </Ellipse>
+
+            <TextBlock x:Name="UsernameError" Text="Username and Hashtag can´t be empty!" Height="20" Width="300" Foreground="Red" Margin="0, 0, 0, 120" Visibility="Collapsed"/>
+            <TextBox x:Name="UsernameTextBox" Width="200" Height="40" Margin="0, 0, 100, 50" Text="Username" FontSize="18"/>
+            <TextBox x:Name="HashTagTextBox" Width="90" Height="40" Margin="210, 0, 0, 50" Text="#" FontSize="18"/>
+
+            <TextBox x:Name="BiographyTextBox" Width="300" Height="120" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0, 140, 0, 0" Text="Biography" FontSize="18"/>
+
+            <Button x:Name="SignUpBtn" Background="#343234" Height="45" Width="120" Content="sign up" Margin="0, 350, 0, 0"/>
+        </Grid>
+
+    </Grid>
+</Window>
