@@ -9,27 +9,73 @@ namespace ClientMessenger
         [GeneratedRegex(@"^(?("")("".+?""@)|(([0-9a-zA-Z](([\w-]*[0-9a-zA-Z])?)+)\@))([a-zA-Z0-9][\w-]*\.)+[a-zA-Z]{2,}$")]
         private static partial Regex EmailRegex();
 
+        [GeneratedRegex(@"^(?!Password$).{8,}$")]
+        private static partial Regex PasswordRegex();
+
         public Login()
         {
             InitializeComponent();
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
+            InitPasswordTextBox();
+            InitEmailTextBox();
 
-            #region Email TextBox
-            EmailTextBox.GotFocus += (sender, e) => 
+            CreateAccLink.Click += ((sender, args) 
+                => ClientUI.SwitchWindows<Login, CreateAcc>());
+
+            LoginBtn.Click += async(sender, args) => 
             { 
+                string email = EmailTextBox.Text;
+                string password = PasswordTextBox.Text;
+
+                if (!await ValidateUserInput(email, password))
+                    return;
+
+                var payload = new
+                {
+                    code = OpCode.RequestLogin,
+                    email,
+                    password,
+                };
+                await Client.SendPayloadAsync(payload);
+            };
+        }
+
+        private async Task<bool> ValidateUserInput(string email, string password)
+        {
+            if (!EmailRegex().IsMatch(email))
+            {
+                await ShowError(EmailError);
+                return false;
+            }
+
+            if (!PasswordRegex().IsMatch(password))
+            {
+                await ShowError(PasswordError);
+                return false;
+            }
+
+            return true;
+        }
+
+        #region Init
+
+        private void InitEmailTextBox()
+        {
+            EmailTextBox.GotFocus += (sender, e) =>
+            {
                 if (EmailTextBox.Text == "Email")
-                    EmailTextBox.Text = ""; 
+                    EmailTextBox.Text = "";
             };
 
             EmailTextBox.LostFocus += (sender, e) =>
             {
-                if (EmailTextBox.Text == "") 
+                if (EmailTextBox.Text == "")
                     EmailTextBox.Text = "Email";
             };
+        }
 
-            #endregion
-
-            #region Password TextBox
+        private void InitPasswordTextBox()
+        {
             PasswordTextBox.GotFocus += (sender, e) =>
             {
                 if (PasswordTextBox.Text == "Password")
@@ -41,43 +87,9 @@ namespace ClientMessenger
                 if (PasswordTextBox.Text == "")
                     PasswordTextBox.Text = "Password";
             };
-
-            #endregion
-
-            CreateAccLink.Click += ((sender, args) =>
-            {
-                var createAcc = ClientUI.GetWindow<CreateAcc>();
-                createAcc ??= new CreateAcc();
-                createAcc.Show();
-                Hide();
-            });
-
-            LoginBtn.Click += async(sender, args) => 
-            { 
-                var email = EmailTextBox.Text;
-                var password = PasswordTextBox.Text;
-
-                if (!EmailRegex().IsMatch(email))
-                {
-                    await ShowError(EmailError);
-                    return;
-                }
-
-                if (password == "Password" || string.IsNullOrEmpty(password))
-                {
-                    await ShowError(PasswordError);
-                    return;
-                }
-
-                var payload = new
-                {
-                    code = OpCode.RequestLogin,
-                    email = EmailTextBox.Text,
-                    password = PasswordTextBox.Text,
-                };
-                await Client.SendPayloadAsync(payload);
-            };
         }
+
+        #endregion
 
         #region HandleError
 

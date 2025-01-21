@@ -28,7 +28,7 @@
 
 
             <!--#region Password -->
-            <TextBlock x:Name="PasswordError" Foreground="Red" Text="Can´t be empty!" Height="20" Width="160" Margin="0, 0, 0, 50" Visibility="Hidden"/>
+            <TextBlock x:Name="PasswordError" Foreground="Red" Text="Atleast 8 chars" Height="20" Width="160" Margin="0, 0, 0, 50" Visibility="Hidden"/>
 
             <TextBox x:Name="PasswordTextBox" Width="160" Height="30" Background="#343234" Margin="0, 0, 0, 0" Text="Password"/>
             <Button x:Name="RandomPasswordBtn" Content="Random" Width="57" Height="30" Margin="230, 0, 0, 0"/>
@@ -52,9 +52,9 @@
         
         <Grid x:Name="SecondStage" Visibility="Collapsed">
             
-            <Ellipse x:Name="Image" Width="75" Height="75" VerticalAlignment="Center" Margin="0, 0, 225, 210" RenderOptions.BitmapScalingMode="HighQuality" Cursor="Hand">
+            <Ellipse x:Name="ProfilPic" Width="75" Height="75" VerticalAlignment="Center" Margin="0, 0, 225, 210" RenderOptions.BitmapScalingMode="HighQuality" Cursor="Hand">
                 <Ellipse.Fill>
-                    <ImageBrush x:Name="ProfilPic" Stretch="UniformToFill" ImageSource="C:\Users\Crist\Pictures\Ich.png"/>
+                    <ImageBrush Stretch="UniformToFill" ImageSource="C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png"/>
                 </Ellipse.Fill>
             </Ellipse>
 

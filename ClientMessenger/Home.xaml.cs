@@ -1,5 +1,4 @@
-﻿using Server_Messenger;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -9,17 +8,10 @@ namespace ClientMessenger
     public partial class Home : Window
     {
         private static readonly List<Relationship> _relationships = [];
-        public Home(DatabaseInfos dbInfos)
+        public Home()
         {
             InitializeComponent();
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
-
-            LocalUserDatabase.AddPassword(dbInfos.DbPassword); 
-            if (dbInfos.DbUpdated!.Value == true)
-                Client.User = LocalUserDatabase.GetUserdata(); 
-            else
-                LocalUserDatabase.SaveorUpdateUserdata(Client.User);
-            
             InitNameAndProfilPic();
             InitBtns();
         }

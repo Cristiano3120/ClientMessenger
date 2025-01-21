@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using LiteDB;
+using System.Collections;
 using System.Globalization;
 using System.Windows.Media.Imaging;
 
@@ -6,14 +7,27 @@ namespace ClientMessenger
 {
     public sealed class User : IEnumerable<(string name, string value)>
     {
-        public BitmapImage ProfilePicture { get; set; } = new();
-        public string Username { get; set; } = "";
-        public string HashTag { get; set; } = "";
-        public string Email { get; init; } = "";
-        public string Password { get; init; } = "";
-        public string Biography { get; set; } = "";
-        public long Id { get; init; } = -1;
-        public DateOnly? Birthday { get; init; } = null;
+        [BsonId]
+        public long Id { get; init; }
+        public BitmapImage? ProfilePicture { get; set; }
+        public string Username { get; set; }
+        public string HashTag { get; set; }
+        public string Email { get; init; }
+        public string Password { get; init; }
+        public string Biography { get; set; }
+        public DateOnly? Birthday { get; init; }
+
+        public User()
+        {
+            Id = -1;
+            ProfilePicture = null;
+            Username = "";
+            HashTag = "";
+            Email = "";
+            Password = "";
+            Biography = "";
+            Birthday = null;
+        }
 
         public IEnumerator<(string name, string value)> GetEnumerator()
         {
@@ -24,7 +38,10 @@ namespace ClientMessenger
             yield return (nameof(Biography), Biography);
             yield return (nameof(Id), Id.ToString());
             yield return (nameof(Birthday), Birthday?.ToString(new CultureInfo("de-DE")) ?? "");
-            yield return (nameof(ProfilePicture), Convert.ToBase64String(Converter.ToByteArray(ProfilePicture)));
+            if (ProfilePicture != null)
+            {
+                yield return (nameof(ProfilePicture), Convert.ToBase64String(Converter.ToByteArray(ProfilePicture)));
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator()

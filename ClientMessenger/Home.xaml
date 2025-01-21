@@ -52,7 +52,7 @@
         
         <!--#endregion-->
 
-        <ListBox x:Name="Dms" Grid.Row="1" Background="Transparent"/>
+        <ListBox x:Name="Dms" Grid.Row="1" Background="Transparent" BorderBrush="Transparent"/>
 
         <!--#region Panels-->
         

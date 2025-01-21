@@ -9,10 +9,12 @@ namespace ClientMessenger
 {
     internal static class Client
     {
+        public const string PathToConfig = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Settings\Settings.json";
         public static JsonSerializerOptions JsonSerializerOptions { get; private set; } = new();
         private static ClientWebSocket _server = new();
-        public const string PathToConfig = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Settings\Settings.json";
         public static User User { get; set; } = new();
+
+        #region Start
 
         public static async Task Start()
         {
@@ -27,32 +29,32 @@ namespace ClientMessenger
             JsonSerializerOptions.Converters.Add(new JsonConverters.UserConverter());
             JsonSerializerOptions.WriteIndented = true;
 
-            var retries = 0;
+            await ConnectToServer();
+        }
+
+        private static async Task ConnectToServer()
+        {
             while (_server.State != WebSocketState.Open)
             {
                 try
                 {
-                    if (retries < 10)
-                    {
-                        await _server.ConnectAsync(GetUri(true), CancellationToken.None);
-                    }
-                    else
-                    {
-                        await Task.Delay(10000);
-                        retries = 0;
-                    }
+                    await _server.ConnectAsync(GetUri(true), CancellationToken.None);
                 }
-                catch (Exception ex)
+                catch (OperationCanceledException ex)
                 {
                     await Task.Delay(1000);
                     Logger.LogError(ex);
                     _server = new();
-                    retries++;
                 }
             }
+
             Logger.LogWarning("Connected!");
             _ = Task.Run(ReceiveMessages);
         }
+
+        #endregion
+
+        #region Receive and handle message
 
         private static async Task ReceiveMessages()
         {
@@ -99,14 +101,6 @@ namespace ClientMessenger
             await Start();
         }
 
-        private static async Task CleanUpConnection()
-        {
-            using var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(10));
-            if (_server.State != WebSocketState.Aborted)
-                await _server.CloseAsync(WebSocketCloseStatus.Empty, null, cts.Token);
-        }
-
         private static async Task HandleReceivedMessage(JsonElement message)
         {
             var code = message.GetProperty("code").GetOpCode();
@@ -126,6 +120,10 @@ namespace ClientMessenger
                     break;
             }
         }
+
+        #endregion
+
+        #region Send data
 
         internal static async Task SendPayloadAsync(object payload, RSAParameters publicKey)
         {
@@ -167,12 +165,24 @@ namespace ClientMessenger
             Logger.LogInformation($"Buffer length: {encryptedData.Length}");
         }
 
+        #endregion
+
+        #region Helper methods
+
         private static void ClearMs(MemoryStream ms)
         {
             var buffer = ms.GetBuffer();
             Array.Clear(buffer, 0, buffer.Length);
             ms.Position = 0;
             ms.SetLength(0);
+        }
+
+        private static async Task CleanUpConnection()
+        {
+            using var cts = new CancellationTokenSource();
+            cts.CancelAfter(TimeSpan.FromSeconds(10));
+            if (_server.State != WebSocketState.Aborted)
+                await _server.CloseAsync(WebSocketCloseStatus.Empty, null, cts.Token);
         }
 
         private static Uri GetUri(bool testing)
@@ -192,5 +202,7 @@ namespace ClientMessenger
 
             return new Uri(serverUri);
         }
+
+        #endregion
     }
 }

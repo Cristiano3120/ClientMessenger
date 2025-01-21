@@ -70,6 +70,9 @@ namespace ClientMessenger
 
         #region Compress/ Decompress
 
+        /// <summary>
+        /// <c>Returns</c> the compressed data but only if the compressed data is smaller than the original
+        /// </summary>
         internal static byte[] CompressData(byte[] data)
         {
             using var compressor = new Compressor(new CompressionOptions(1));

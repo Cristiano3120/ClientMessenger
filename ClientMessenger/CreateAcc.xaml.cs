@@ -1,7 +1,6 @@
 ﻿using Microsoft.Win32;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -23,15 +22,16 @@ namespace ClientMessenger
         [GeneratedRegex(@"^[A-Za-z0-9._\s]+$")]
         private static partial Regex UsernameRegex();
 
-        private static string profilPicFile = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png";
+        [GeneratedRegex(@"^(?!Password$).{8,}$")]
+        private static partial Regex PasswordRegex();
+
+        private static string _profilPicFile = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png";
         private static readonly Brush grayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#343234"));
 
         public CreateAcc()
         {
             InitializeComponent();
-            InitializeComboBoxes();
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
-            
             InitFirstStage();
             InitSecondStage();
 
@@ -41,9 +41,7 @@ namespace ClientMessenger
             {
                 if (FirstStage.Visibility == Visibility.Visible)
                 {
-                    var login = ClientUI.GetWindow<Login>() ?? new Login();
-                    login.Show();
-                    Hide();
+                    ClientUI.SwitchWindows<CreateAcc, Login>();
                 }
                 else
                 {
@@ -52,15 +50,9 @@ namespace ClientMessenger
                 }
             };
 
-            GoBackBtn.MouseEnter += (sender, args) =>
-            {
-                Cursor = Cursors.Hand;
-            };
+            GoBackBtn.MouseEnter += (sender, args) => Cursor = Cursors.Hand;
 
-            GoBackBtn.MouseLeave += (sender, args) =>
-            {
-                Cursor = Cursors.Arrow;
-            };
+            GoBackBtn.MouseLeave += (sender, args) => Cursor = Cursors.Arrow;
 
             #endregion
         }
@@ -70,6 +62,7 @@ namespace ClientMessenger
         {
             InitEmailTextBox();
             InitPasswordTextBox();
+            InitializeComboBoxes();
 
             RandomPasswordBtn.Click += GeneratePassword_Click;
 
@@ -84,6 +77,48 @@ namespace ClientMessenger
                 FirstStage.Visibility = Visibility.Collapsed;
                 SecondStage.Visibility = Visibility.Visible;
             };
+        }
+
+        private void InitializeComboBoxes()
+        {
+            for (var i = 1; i <= 31; i++)
+            {
+                ComboBoxItem item = new()
+                {
+                    IsSelected = i == 1,
+                    Background = grayBrush,
+                    BorderBrush = grayBrush,
+                    FontWeight = FontWeights.Bold,
+                    Content = $"{i}"
+                };
+                DayBox.Items.Add(item);
+            }
+
+            for (var i = 1; i <= 12; i++)
+            {
+                ComboBoxItem item = new()
+                {
+                    IsSelected = i == 1,
+                    Background = grayBrush,
+                    BorderBrush = grayBrush,
+                    FontWeight = FontWeights.Bold,
+                    Content = $"{i}"
+                };
+                MonthBox.Items.Add(item);
+            }
+
+            for (var i = 2020; i >= 1950; i--)
+            {
+                ComboBoxItem item = new()
+                {
+                    IsSelected = i == 2020,
+                    Background = grayBrush,
+                    BorderBrush = grayBrush,
+                    FontWeight = FontWeights.Bold,
+                    Content = $"{i}"
+                };
+                YearBox.Items.Add(item);
+            }
         }
 
         private void InitEmailTextBox()
@@ -122,23 +157,7 @@ namespace ClientMessenger
 
         private void InitSecondStage()
         {
-            Image.MouseLeftButtonDown += (sender, args) =>
-            {
-                OpenFileDialog explorer = new()
-                {
-                    Filter = "Image files (*.png;*.jpeg;*.jpg)|*.png;*.jpeg;*.jpg",
-                    Title = "Please select an image file.",
-                    Multiselect = false
-                };
-
-                if (explorer.ShowDialog() == true)
-                {
-                    BitmapImage bitmap = new(new Uri(explorer.FileName));
-                    Image.Fill = new ImageBrush(bitmap);
-                    profilPicFile = explorer.FileName;
-                }
-            };
-
+            InitProfilPic();
             InitUsernameTextBox();
             InitHashTagTextBox();
             InitBiographyTextBox();
@@ -163,6 +182,11 @@ namespace ClientMessenger
                 var month = int.Parse((string)monthItem.Content).ToString("D2");
                 var year = (string)yearItem.Content;
 
+                if (_profilPicFile is "" or null)
+                {
+                    _profilPicFile = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png";
+                }
+
                 var user = new User()
                 {
                     Email = EmailTextBox.Text,
@@ -171,7 +195,7 @@ namespace ClientMessenger
                     Username = UsernameTextBox.Text,
                     HashTag = HashTagTextBox.Text,
                     Biography = biography,
-                    ProfilePicture = Converter.ToBitmapImage(File.ReadAllBytes(profilPicFile))
+                    ProfilePicture = ImageEditor.ScaleImage(_profilPicFile),
                 };
 
                 var payload = new
@@ -251,6 +275,27 @@ namespace ClientMessenger
             };
         }
 
+        private void InitProfilPic()
+        {
+            ProfilPic.Fill = ImageEditor.CreateImageBrush(_profilPicFile);
+            ProfilPic.MouseLeftButtonDown += (sender, args) =>
+            {
+                OpenFileDialog explorer = new()
+                {
+                    Filter = "Image files (*.png;*.jpeg;*.jpg)|*.png;*.jpeg;*.jpg",
+                    Title = "Please select an image file.",
+                    Multiselect = false
+                };
+
+                if (explorer.ShowDialog() == true)
+                {
+                    _profilPicFile = explorer.FileName;
+                    BitmapImage croppedImage = ImageEditor.ScaleImage(_profilPicFile);
+                    ProfilPic.Fill = ImageEditor.CreateImageBrush(croppedImage);
+                }
+            };
+        }
+
         #endregion
 
         #region Validation
@@ -264,7 +309,7 @@ namespace ClientMessenger
                 return false;
             }
 
-            if (PasswordTextBox.Text == "Password")
+            if (!PasswordRegex().IsMatch(PasswordTextBox.Text))
             {
                 element = PasswordError;
                 return false;
@@ -306,6 +351,45 @@ namespace ClientMessenger
 
         #endregion
 
+        #region Generate Password
+
+        private async void GeneratePassword_Click(object sender, RoutedEventArgs e)
+        {
+            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            const int passwordLength = 30;
+
+            RandomNumberGenerator generator = RandomNumberGenerator.Create();
+            var passwordChars = new char[passwordLength];
+            var buffer = new byte[1];
+
+            for (int i = 0; i < passwordLength; i++)
+            {
+                do
+                {
+                    generator.GetBytes(buffer);
+                }
+                while (buffer[0] >= validChars.Length);
+
+                passwordChars[i] = validChars[buffer[0] % validChars.Length];
+            }
+
+            string password = new(passwordChars);
+            PasswordTextBox.Text = password;
+            Clipboard.SetText(password, TextDataFormat.Text);
+
+            await ChangePasswordErrorText();
+        }
+
+        private async Task ChangePasswordErrorText()
+        {
+            string oldMsg = PasswordError.Text;
+            PasswordError.Text = "Copied password to clipboard";
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            PasswordError.Text = oldMsg;
+        }
+
+        #endregion
+
         public async Task AccCreationWentWrong(string column)
         {
             TextBlock causedErrorTextBlock;
@@ -321,7 +405,7 @@ namespace ClientMessenger
                     causedErrorTextBlock = EmailError;
                     await Error(causedErrorTextBlock, "This email is already in use");
                     break;
-                case "username" or "hashtag":
+                case "username, hashtag":
                     if (SecondStage.Visibility == Visibility.Collapsed)
                     {
                         SecondStage.Visibility = Visibility.Visible;
@@ -331,71 +415,6 @@ namespace ClientMessenger
                     causedErrorTextBlock = UsernameError;
                     await Error(causedErrorTextBlock, "This username hashtag combination is already in use");
                     break;
-            }
-        }
-
-        public void GeneratePassword_Click(object sender, RoutedEventArgs e)
-        {
-            const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-            const int passwordLength = 16;
-
-            RandomNumberGenerator generator = RandomNumberGenerator.Create();
-            var passwordChars = new char[passwordLength];
-            var buffer = new byte[1];
-
-            for (int i = 0; i < passwordLength; i++)
-            {
-                do
-                {
-                    generator.GetBytes(buffer);
-                } 
-                while (buffer[0] >= validChars.Length);
-
-                passwordChars[i] = validChars[buffer[0] % validChars.Length];
-            }
-
-            PasswordTextBox.Text = new string(passwordChars);
-        }
-
-        public void InitializeComboBoxes()
-        {
-            for (var i = 1; i <= 31; i++)
-            {
-                ComboBoxItem item = new()
-                {
-                    IsSelected = i == 1,
-                    Background = grayBrush,
-                    BorderBrush = grayBrush,
-                    FontWeight = FontWeights.Bold,
-                    Content = $"{i}"
-                };
-                DayBox.Items.Add(item);
-            }
-
-            for (var i = 1; i <= 12; i++)
-            {
-                ComboBoxItem item = new()
-                {
-                    IsSelected = i == 1,
-                    Background = grayBrush,
-                    BorderBrush = grayBrush,
-                    FontWeight = FontWeights.Bold,
-                    Content = $"{i}"
-                };
-                MonthBox.Items.Add(item);
-            }
-
-            for (var i = 2020; i >= 1950; i--)
-            {
-                ComboBoxItem item = new()
-                {
-                    IsSelected = i == 2020,
-                    Background = grayBrush,
-                    BorderBrush = grayBrush,
-                    FontWeight = FontWeights.Bold,
-                    Content = $"{i}"
-                };
-                YearBox.Items.Add(item);
             }
         }
     }

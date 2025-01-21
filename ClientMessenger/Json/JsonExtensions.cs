@@ -1,5 +1,4 @@
-﻿using Server_Messenger;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -35,15 +34,13 @@ namespace ClientMessenger.Json
         public static DateOnly GetDateOnly(this JsonElement property)
             => DateOnly.Parse(property.GetString()!, new CultureInfo("de-DE"));
 
-        public static DatabaseInfos GetDatabaseInfos(this JsonElement property)
-            => JsonSerializer.Deserialize<DatabaseInfos>(property) ?? new();
-
         /// <summary>
         /// Needs to be called on the <c>error</c> property of the <see cref="JsonElement"/>.
         /// </summary>
         /// <returns><c>Returns</c> the NpgsqlException that the Server sent</returns>
         /// <exception cref="InvalidOperationException"></exception>
         public static NpgsqlExceptionInfos GetNpgsqlExceptionInfos(this JsonElement property)
-            => JsonSerializer.Deserialize<NpgsqlExceptionInfos>(property) ?? throw new InvalidOperationException("Couldn´t get NpgsqlExceptionInfos");
+            => JsonSerializer.Deserialize<NpgsqlExceptionInfos>(property.GetProperty("npgsqlException"))
+            ?? throw new InvalidOperationException("Couldn´t get NpgsqlExceptionInfos");
     }
 }

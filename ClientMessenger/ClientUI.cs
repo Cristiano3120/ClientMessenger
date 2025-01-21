@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
+using System.Windows;
 
 namespace ClientMessenger
 {
@@ -14,20 +14,38 @@ namespace ClientMessenger
         private const int SC_RESTORE = 0xF120;
         private const int SC_CLOSE = 0xF060;
 
-        public static void CloseAllWindowsExceptOne<T>()
+        /// <summary>
+        /// Takes the type of the window to close (<typeparamref name="TWindowToClose"/>) and the type of the window to open (<typeparamref name="TWindowToOpen"/>).
+        /// It then creates a new Instance of <typeparamref name="TWindowToOpen"/> and calls .Show() on it. After that a 300ms delay follows.
+        /// At last it searches <see cref="Application.Current.Windows"/> for an window of type <typeparamref name="TWindowToClose"/> and calls .Close() on it.
+        /// </summary>
+        /// <typeparam name="TWindowToClose"></typeparam>
+        /// <typeparam name="TWindowToOpen"></typeparam>
+        public static void SwitchWindows<TWindowToClose, TWindowToOpen>() where TWindowToClose : Window where TWindowToOpen : Window, new()
         {
-            foreach (Window window in Application.Current.Windows)
+            Application.Current.Dispatcher.InvokeAsync(async () =>
             {
-                if (typeof(T) != window.GetType())
+                new TWindowToOpen().Show();
+                await Task.Delay(300);
+
+                foreach (Window window in Application.Current.Windows)
                 {
-                    window.Close();
-                    break;
+                    if (typeof(TWindowToClose) == window.GetType())
+                    {
+                        window.Close();
+                        return;
+                    }
                 }
-            }
+            });
         }
 
-        public static T? GetWindow<T>() where T : Window =>
-            Application.Current.Windows.OfType<T>().FirstOrDefault();
+        /// <summary>
+        /// Searches for the window and returns it if found. 
+        /// If it doesn´t find anything it creates a new Instance of <typeparamref name="T"/>
+        /// </summary>
+        /// <returns>The window of type <typeparamref name="T"/></returns>
+        public static T GetWindow<T>() where T : Window, new() =>
+            Application.Current.Windows.OfType<T>().FirstOrDefault() ?? new T();
 
         #region Control Window state
 
@@ -50,6 +68,8 @@ namespace ClientMessenger
             var button = (Button)sender;
             button.Cursor = Cursors.Hand;
         }
+
+        #region Event_Click
 
         private static void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -76,6 +96,8 @@ namespace ClientMessenger
             var windowHandle = new WindowInteropHelper(window).Handle;
             SendMessage(windowHandle, WM_SYSCOMMAND, SC_CLOSE, IntPtr.Zero);
         }
+
+        #endregion
 
         #endregion
     }

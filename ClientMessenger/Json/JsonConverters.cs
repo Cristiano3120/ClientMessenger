@@ -7,11 +7,14 @@ namespace ClientMessenger.Json
     {
         public class UserConverter : JsonConverter<User>
         {
-            public override User Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            public override User? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
                 using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
                 {
                     var root = doc.RootElement.GetProperty("user");
+
+                    if (root.ValueKind == JsonValueKind.Null)
+                        return null;
                     
                     return new User()
                     {

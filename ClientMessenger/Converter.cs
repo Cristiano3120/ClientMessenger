@@ -1,10 +1,28 @@
-﻿using System.IO;
-using System.Windows.Media.Imaging;
+﻿using System.Windows.Media.Imaging;
+using System.Drawing;
+using System.IO;
 
 namespace ClientMessenger
 {
     internal static class Converter
     {
+        public static BitmapImage ToBitmapImage(Bitmap bitmap)
+        {
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memoryStream;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+
+                return bitmapImage;
+            }
+        }
+
         public static BitmapImage ToBitmapImage(byte[] bytes)
         {
             if (bytes.Length == 0)
@@ -14,6 +32,7 @@ namespace ClientMessenger
             bitmapImage.BeginInit();
             bitmapImage.StreamSource = new MemoryStream(bytes);
             bitmapImage.EndInit();
+            bitmapImage.Freeze();
             return bitmapImage;
         }
 
