@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-namespace ClientMessenger.Logging
+namespace ClientMessenger
 {
     internal static partial class Logger
     {
