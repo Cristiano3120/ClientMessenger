@@ -55,7 +55,7 @@ namespace ClientMessenger
 
         private static byte[] DecryptAes(byte[] encryptedData)
         {
-            var decryptor = Aes.CreateDecryptor();
+            ICryptoTransform decryptor = Aes.CreateDecryptor();
 
             using var ms = new MemoryStream();
             using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write))

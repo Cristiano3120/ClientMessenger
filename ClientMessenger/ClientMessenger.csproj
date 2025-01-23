@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <Folder Include="Images\" />
-    <Folder Include="LocalDatabase\" />
   </ItemGroup>
 
 </Project>

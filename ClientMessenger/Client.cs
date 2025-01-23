@@ -65,7 +65,7 @@ namespace ClientMessenger
             {
                 try
                 {
-                    var receivedDataInfo = await _server.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    WebSocketReceiveResult receivedDataInfo = await _server.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                     Logger.LogInformation(ConsoleColor.Cyan, $"[RECEIVED]: The received payload is {receivedDataInfo.Count} bytes long");
 
                     if (receivedDataInfo.MessageType == WebSocketMessageType.Close)
@@ -103,7 +103,7 @@ namespace ClientMessenger
 
         private static async Task HandleReceivedMessage(JsonElement message)
         {
-            var code = message.GetProperty("code").GetOpCode();
+            OpCode code = message.GetProperty("code").GetOpCode();
             switch (code)
             {
                 case OpCode.ReceiveRSA:

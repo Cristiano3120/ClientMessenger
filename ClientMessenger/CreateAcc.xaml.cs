@@ -26,7 +26,7 @@ namespace ClientMessenger
         private static partial Regex PasswordRegex();
 
         private static string _profilPicFile = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png";
-        private static readonly Brush grayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#343234"));
+        private static readonly Brush _grayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#343234"));
 
         public CreateAcc()
         {
@@ -68,7 +68,7 @@ namespace ClientMessenger
 
             ContinueBtn.Click += async (sender, args) =>
             {
-                if (!CheckIfAllFieldsAreFilledStage1(out var textBlock))
+                if (!CheckIfAllFieldsAreFilledStage1(out TextBlock? textBlock))
                 {
                     await Error(textBlock);
                     return;
@@ -86,8 +86,8 @@ namespace ClientMessenger
                 ComboBoxItem item = new()
                 {
                     IsSelected = i == 1,
-                    Background = grayBrush,
-                    BorderBrush = grayBrush,
+                    Background = _grayBrush,
+                    BorderBrush = _grayBrush,
                     FontWeight = FontWeights.Bold,
                     Content = $"{i}"
                 };
@@ -99,8 +99,8 @@ namespace ClientMessenger
                 ComboBoxItem item = new()
                 {
                     IsSelected = i == 1,
-                    Background = grayBrush,
-                    BorderBrush = grayBrush,
+                    Background = _grayBrush,
+                    BorderBrush = _grayBrush,
                     FontWeight = FontWeights.Bold,
                     Content = $"{i}"
                 };
@@ -112,8 +112,8 @@ namespace ClientMessenger
                 ComboBoxItem item = new()
                 {
                     IsSelected = i == 2020,
-                    Background = grayBrush,
-                    BorderBrush = grayBrush,
+                    Background = _grayBrush,
+                    BorderBrush = _grayBrush,
                     FontWeight = FontWeights.Bold,
                     Content = $"{i}"
                 };
@@ -358,7 +358,7 @@ namespace ClientMessenger
             const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
             const int passwordLength = 30;
 
-            RandomNumberGenerator generator = RandomNumberGenerator.Create();
+            var generator = RandomNumberGenerator.Create();
             var passwordChars = new char[passwordLength];
             var buffer = new byte[1];
 

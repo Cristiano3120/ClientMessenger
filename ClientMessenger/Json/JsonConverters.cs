@@ -11,22 +11,21 @@ namespace ClientMessenger.Json
             {
                 using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
                 {
-                    var root = doc.RootElement.GetProperty("user");
+                    JsonElement root = doc.RootElement.GetProperty("user");
 
-                    if (root.ValueKind == JsonValueKind.Null)
-                        return null;
-                    
-                    return new User()
-                    {
-                        ProfilePicture = Converter.ToBitmapImage(root.GetProperty("ProfilePicture").GetBytesFromBase64()),
-                        Username = root.GetProperty("Username").GetString()!,
-                        HashTag = root.GetProperty("HashTag").GetString()!,
-                        Email = root.GetProperty("Email").GetString()!,
-                        Password = root.GetProperty("Password").GetString()!,
-                        Biography = root.GetProperty("Biography").GetString()!,
-                        Id = long.Parse(root.GetProperty("Id").GetString()!),
-                        Birthday = root.GetProperty("Birthday").GetDateOnly(),
-                    };
+                    return root.ValueKind == JsonValueKind.Null
+                        ? null
+                        : new User()
+                        {
+                            ProfilePicture = Converter.ToBitmapImage(root.GetProperty("ProfilePicture").GetBytesFromBase64()),
+                            Username = root.GetProperty("Username").GetString()!,
+                            HashTag = root.GetProperty("HashTag").GetString()!,
+                            Email = root.GetProperty("Email").GetString()!,
+                            Password = root.GetProperty("Password").GetString()!,
+                            Biography = root.GetProperty("Biography").GetString()!,
+                            Id = long.Parse(root.GetProperty("Id").GetString()!),
+                            Birthday = root.GetProperty("Birthday").GetDateOnly(),
+                        };
                 }
             }
 
@@ -37,7 +36,7 @@ namespace ClientMessenger.Json
             {
                 writer.WriteStartObject();
 
-                foreach (var item in value)
+                foreach ((string name, string value) item in value)
                 {
                     writer.WritePropertyName(item.name);
                     writer.WriteStringValue(item.value);

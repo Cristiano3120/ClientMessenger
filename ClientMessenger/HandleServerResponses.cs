@@ -74,7 +74,7 @@ namespace ClientMessenger
                     Logger.LogError("Account creation error");
                     await Application.Current.Dispatcher.InvokeAsync(async() =>
                     {
-                        var createAcc = ClientUI.GetWindow<CreateAcc>();
+                        CreateAcc createAcc = ClientUI.GetWindow<CreateAcc>();
                         await createAcc.AccCreationWentWrong(column);
                     }); 
                     break;
@@ -82,7 +82,7 @@ namespace ClientMessenger
                     Logger.LogError("Wrong login data");
                     await Application.Current.Dispatcher.InvokeAsync(async () =>
                     {
-                        var login = ClientUI.GetWindow<Login>();
+                        Login login = ClientUI.GetWindow<Login>();
                         await login.LoginWentWrong();
                     });
                     break;

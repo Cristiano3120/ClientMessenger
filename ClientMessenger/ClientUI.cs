@@ -8,11 +8,13 @@ namespace ClientMessenger
 {
     internal static partial class ClientUI
     {
+#pragma warning disable
         private const int WM_SYSCOMMAND = 0x112;
         private const int SC_MAXIMIZE = 0xF030;
         private const int SC_MINIMIZE = 0xF020;
         private const int SC_RESTORE = 0xF120;
         private const int SC_CLOSE = 0xF060;
+#pragma warning restore
 
         /// <summary>
         /// Takes the type of the window to close (<typeparamref name="TWindowToClose"/>) and the type of the window to open (<typeparamref name="TWindowToOpen"/>).
