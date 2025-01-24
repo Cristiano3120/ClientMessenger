@@ -49,6 +49,23 @@ namespace ClientMessenger
         public static T GetWindow<T>() where T : Window, new() =>
             Application.Current.Windows.OfType<T>().FirstOrDefault() ?? new T();
 
+        /// <summary>
+        /// Checks if the text being pasted from the clipboard exceeds the specified character limit.
+        /// If the pasted content exceeds the limit, the paste operation is canceled.
+        /// </summary>
+        /// <param name="textBox">The <see cref="TextBox"/> where the paste operation is occurring.</param>
+        /// <param name="maxChars">The maximum allowed character count for the <see cref="TextBox"/> content after pasting.</param>
+        public static void RestrictClipboardPasting(TextBox textBox, byte maxChars)
+        {
+            DataObject.AddPastingHandler(textBox, (sender, args) =>
+            {
+                if (Clipboard.GetText().Length + textBox.Text.Length > maxChars)
+                {
+                    args.CancelCommand();
+                }
+            });
+        }
+
         #region Control Window state
 
         [DllImport("user32.dll")]

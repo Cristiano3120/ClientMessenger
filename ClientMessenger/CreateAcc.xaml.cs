@@ -209,6 +209,7 @@ namespace ClientMessenger
 
         private void InitUsernameTextBox()
         {
+            const byte maxChars = 14;
             UsernameTextBox.GotFocus += (sender, args) =>
             {
                 if (UsernameTextBox.Text == "Username")
@@ -223,24 +224,22 @@ namespace ClientMessenger
 
             UsernameTextBox.PreviewTextInput += (sender, args) =>
             {
-                if (UsernameTextBox.Text.Length > 14 || !UsernameRegex().IsMatch(args.Text))
+                if (UsernameTextBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
                     args.Handled = true;
             };
+
+            ClientUI.RestrictClipboardPasting(UsernameTextBox, maxChars);
         }
 
         private void InitHashTagTextBox()
         {
+            const byte maxChars = 5;
             HashTagTextBox.PreviewTextInput += (sender, args) =>
             {
-                if (HashTagTextBox.Text.Length >= 5)
+                if (HashTagTextBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
                 {
                     args.Handled = true;
                     return;
-                }
-
-                if (!UsernameRegex().IsMatch(args.Text))
-                {
-                    args.Handled = true;
                 }
             };
 
@@ -252,10 +251,14 @@ namespace ClientMessenger
                     HashTagTextBox.CaretIndex = HashTagTextBox.Text.Length;
                 }
             };
+
+            ClientUI.RestrictClipboardPasting(HashTagTextBox, maxChars);
         }
 
         private void InitBiographyTextBox()
         {
+            const byte maxChars = 150;
+
             BiographyTextBox.GotFocus += (sender, args) =>
             {
                 if (BiographyTextBox.Text == "Biography")
@@ -270,9 +273,11 @@ namespace ClientMessenger
 
             BiographyTextBox.TextInput += (sender, args) =>
             {
-                if (BiographyTextBox.Text.Length > 150 || !BiographyRegex().IsMatch(args.Text))
+                if (BiographyTextBox.Text.Length >= maxChars || !BiographyRegex().IsMatch(args.Text))
                     args.Handled = true;
             };
+
+            ClientUI.RestrictClipboardPasting(BiographyTextBox, maxChars);
         }
 
         private void InitProfilPic()
@@ -326,7 +331,7 @@ namespace ClientMessenger
             }
 
             element = null;
-            return true;    
+            return true;
         }
 
         private bool CheckIfAllFieldsAreFilledStage2() =>
