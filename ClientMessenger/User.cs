@@ -16,6 +16,7 @@ namespace ClientMessenger
         public string Password { get; init; }
         public string Biography { get; set; }
         public DateOnly? Birthday { get; init; }
+        public bool FaEnabled {  get; set; } 
 
         public User()
         {
@@ -42,6 +43,7 @@ namespace ClientMessenger
             {
                 yield return (nameof(ProfilePicture), Convert.ToBase64String(Converter.ToByteArray(ProfilePicture)));
             }
+            yield return (nameof(FaEnabled), FaEnabled.ToString());
         }
 
         IEnumerator IEnumerable.GetEnumerator()

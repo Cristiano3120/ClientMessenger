@@ -6,6 +6,7 @@ namespace ClientMessenger
 {
     public static class HandleServerResponses
     {
+        #region Pre logged in
         public static async Task ReceiveRSA(JsonElement message)
         {
             Logger.LogInformation("Received RSA. Sending Aes now!");
@@ -34,7 +35,7 @@ namespace ClientMessenger
             if (error.Exception == NpgsqlExceptions.None)
             {
                 Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
-                ClientUI.SwitchWindows<CreateAcc, Home>();
+                ClientUI.SwitchWindows<CreateAcc, Verification>();
                 return;
             }
 
@@ -46,15 +47,31 @@ namespace ClientMessenger
             Logger.LogInformation("Received answer to login from server");
 
             NpgsqlExceptionInfos error = message.GetNpgsqlExceptionInfos();
-            if (error.Exception == NpgsqlExceptions.None)
+            if (error.Exception != NpgsqlExceptions.None)
             {
-                Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
-                ClientUI.SwitchWindows<Login, Home>();
+                await HandleNpgsqlError(error);
                 return;
             }
 
-            await HandleNpgsqlError(error);
+            Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
+
+            if (Client.User.FaEnabled)
+            {
+                ClientUI.SwitchWindows<Login, Verification>();
+                return;
+            }
+            
+            ClientUI.SwitchWindows<Login, Home>();
         }
+
+        public static async Task AnswerToVerificationRequest(JsonElement message)
+        {
+            Logger.LogInformation("Received answer to verification request");
+            bool success = message.GetProperty("success").GetBoolean();
+            await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(success);
+        }
+
+        #endregion
 
         private static async Task HandleNpgsqlError(NpgsqlExceptionInfos errorInfos)
         {
@@ -64,7 +81,7 @@ namespace ClientMessenger
             {
                 case NpgsqlExceptions.UnknownError:
                     Logger.LogError("Unknown error! Server is closing the connection");
-                    Application.Current.Shutdown();
+                    Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
                     break;
                 case NpgsqlExceptions.ConnectionError:
                     Logger.LogError("Connection lost! Server is closing the connection");
@@ -85,6 +102,9 @@ namespace ClientMessenger
                         Login login = ClientUI.GetWindow<Login>();
                         await login.LoginWentWrong();
                     });
+                    break;
+                default:
+                    Logger.LogError("The received database error has no case.");
                     break;
             }
         }

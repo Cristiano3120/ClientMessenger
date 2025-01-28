@@ -51,7 +51,14 @@
         <TextBlock x:Name="GoBackBtn" Foreground="White" Text="🡨" HorizontalAlignment="Left" Height="30" Width="30" FontSize="28" Margin="20, 0, 0, 400"/>
         
         <Grid x:Name="SecondStage" Visibility="Collapsed">
+
+            <!--#region 2Fa-->
+
+            <TextBlock Text="2FA Enabled?: " Margin="100, 0, 0, 120" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="20" Foreground="#7c7e84"/>
+            <CheckBox x:Name="FaCheckBox" Margin="260, 0, 0, 110" Width="20" Height="20" Background="#7c7e84" IsChecked="False" IsThreeState="False"/>
             
+            <!--#endregion-->
+
             <Ellipse x:Name="ProfilPic" Width="75" Height="75" VerticalAlignment="Center" Margin="0, 0, 225, 210" RenderOptions.BitmapScalingMode="HighQuality" Cursor="Hand">
                 <Ellipse.Fill>
                     <ImageBrush Stretch="UniformToFill" ImageSource="C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png"/>

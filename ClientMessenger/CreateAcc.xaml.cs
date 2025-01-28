@@ -196,6 +196,7 @@ namespace ClientMessenger
                     HashTag = HashTagTextBox.Text,
                     Biography = biography,
                     ProfilePicture = ImageEditor.ScaleImage(_profilPicFile),
+                    FaEnabled = FaCheckBox.IsChecked!.Value,
                 };
 
                 var payload = new
@@ -257,7 +258,10 @@ namespace ClientMessenger
 
         private void InitBiographyTextBox()
         {
-            const byte maxChars = 150;
+            const byte maxChars = 100;
+
+            BiographyTextBox.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            BiographyTextBox.TextWrapping = TextWrapping.Wrap;
 
             BiographyTextBox.GotFocus += (sender, args) =>
             {
@@ -271,8 +275,10 @@ namespace ClientMessenger
                     BiographyTextBox.Text = "Biography";
             };
 
-            BiographyTextBox.TextInput += (sender, args) =>
+            BiographyTextBox.PreviewTextInput += (sender, args) =>
             {
+                int charAmmount = BiographyTextBox.Text.Length;
+
                 if (BiographyTextBox.Text.Length >= maxChars || !BiographyRegex().IsMatch(args.Text))
                     args.Handled = true;
             };

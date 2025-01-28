@@ -118,6 +118,14 @@ namespace ClientMessenger
                 case OpCode.AnswerLogin:
                     await HandleServerResponses.AnswerToLogin(message);
                     break;
+                case OpCode.VerificationProcess:
+                    await HandleServerResponses.AnswerToVerificationRequest(message);
+                    break;
+                case OpCode.VerificationWentWrong:
+                    await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(null);
+                    await _server.CloseAsync(WebSocketCloseStatus.InternalServerError, "", CancellationToken.None);
+                    Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
+                    break;
             }
         }
 
@@ -177,12 +185,12 @@ namespace ClientMessenger
             ms.SetLength(0);
         }
 
-        private static async Task CleanUpConnection()
+        public static async Task CleanUpConnection()
         {
-            using var cts = new CancellationTokenSource();
-            cts.CancelAfter(TimeSpan.FromSeconds(10));
-            if (_server.State != WebSocketState.Aborted)
-                await _server.CloseAsync(WebSocketCloseStatus.Empty, null, cts.Token);
+            if (_server.State == WebSocketState.Open)
+                await _server.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
+
+            Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 
         private static Uri GetUri(bool testing)

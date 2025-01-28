@@ -47,7 +47,8 @@ namespace ClientMessenger
         /// </summary>
         /// <returns>The window of type <typeparamref name="T"/></returns>
         public static T GetWindow<T>() where T : Window, new() =>
-            Application.Current.Windows.OfType<T>().FirstOrDefault() ?? new T();
+            Application.Current.Dispatcher.Invoke(() => Application.Current.Windows.OfType<T>().FirstOrDefault() ?? new T());
+        
 
         /// <summary>
         /// Checks if the text being pasted from the clipboard exceeds the specified character limit.
@@ -59,11 +60,32 @@ namespace ClientMessenger
         {
             DataObject.AddPastingHandler(textBox, (sender, args) =>
             {
-                if (Clipboard.GetText().Length + textBox.Text.Length > maxChars)
+                string clipboardText = Clipboard.GetText();
+                //get the amount of chars that fit into the textBox
+                int availableChars = maxChars - textBox.Text.Length + textBox.SelectedText.Length;
+
+                //If textBox is already full
+                if (availableChars <= 0)
                 {
                     args.CancelCommand();
+                    return;
                 }
+
+                // Truncate the clipboard text to fit within the available space in the TextBox
+                if (clipboardText.Length > availableChars)
+                {
+                    clipboardText = clipboardText[..availableChars];
+                }
+
+                int selectionStart = textBox.SelectionStart;
+                textBox.SelectedText = clipboardText;
+                args.CancelCommand();
+
+                textBox.SelectionStart = selectionStart + clipboardText.Length;
+                textBox.SelectionLength = 0;
             });
+
+
         }
 
         #region Control Window state

@@ -9,7 +9,7 @@ namespace ClientMessenger.Json
         {
             public override User? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
-                using (JsonDocument doc = JsonDocument.ParseValue(ref reader))
+                using (var doc = JsonDocument.ParseValue(ref reader))
                 {
                     JsonElement root = doc.RootElement.GetProperty("user");
 
@@ -25,6 +25,7 @@ namespace ClientMessenger.Json
                             Biography = root.GetProperty("Biography").GetString()!,
                             Id = long.Parse(root.GetProperty("Id").GetString()!),
                             Birthday = root.GetProperty("Birthday").GetDateOnly(),
+                            FaEnabled = bool.Parse(root.GetProperty("FaEnabled").GetString()!),
                         };
                 }
             }
