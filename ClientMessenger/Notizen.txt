@@ -1,4 +1,1 @@
-﻿Biography textbox text bleibt nur in der ersten zeile
-Clipboard pasting nur so viel einfügen wie geht (Fixed)
-Verification (Fixed)
-2FA (Fixed)
+﻿

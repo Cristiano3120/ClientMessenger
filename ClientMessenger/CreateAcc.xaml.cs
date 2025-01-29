@@ -34,27 +34,7 @@ namespace ClientMessenger
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
             InitFirstStage();
             InitSecondStage();
-
-            #region GoBackBtn
-
-            GoBackBtn.MouseLeftButtonDown += (sender, args) =>
-            {
-                if (FirstStage.Visibility == Visibility.Visible)
-                {
-                    ClientUI.SwitchWindows<CreateAcc, Login>();
-                }
-                else
-                {
-                    FirstStage.Visibility = Visibility.Visible;
-                    SecondStage.Visibility = Visibility.Collapsed;
-                }
-            };
-
-            GoBackBtn.MouseEnter += (sender, args) => Cursor = Cursors.Hand;
-
-            GoBackBtn.MouseLeave += (sender, args) => Cursor = Cursors.Arrow;
-
-            #endregion
+            InitGoBackBtn();
         }
 
         #region FirstStage
@@ -161,51 +141,7 @@ namespace ClientMessenger
             InitUsernameTextBox();
             InitHashTagTextBox();
             InitBiographyTextBox();
-
-            SignUpBtn.Click += async (sender, args) =>
-            {
-                if (!CheckIfAllFieldsAreFilledStage2())
-                {
-                    await Error(UsernameError);
-                    return;
-                }
-
-                var biography = BiographyTextBox.Text == "Biography"
-                ? ""
-                : BiographyTextBox.Text;
-
-                var dayItem = (ComboBoxItem)DayBox.SelectedItem;
-                var monthItem = (ComboBoxItem)MonthBox.SelectedItem;
-                var yearItem = (ComboBoxItem)YearBox.SelectedItem;
-
-                var day = int.Parse((string)dayItem.Content).ToString("D2");
-                var month = int.Parse((string)monthItem.Content).ToString("D2");
-                var year = (string)yearItem.Content;
-
-                if (_profilPicFile is "" or null)
-                {
-                    _profilPicFile = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png";
-                }
-
-                var user = new User()
-                {
-                    Email = EmailTextBox.Text,
-                    Password = PasswordTextBox.Text,
-                    Birthday = DateOnly.ParseExact($"{day}-{month}-{year}", "dd-MM-yyyy", CultureInfo.InvariantCulture),
-                    Username = UsernameTextBox.Text,
-                    HashTag = HashTagTextBox.Text,
-                    Biography = biography,
-                    ProfilePicture = ImageEditor.ScaleImage(_profilPicFile),
-                    FaEnabled = FaCheckBox.IsChecked!.Value,
-                };
-
-                var payload = new
-                {
-                    code = OpCode.RequestCreateAccount,
-                    user,
-                };
-                await Client.SendPayloadAsync(payload);
-            };
+            InitSignUpBtn();
         }
 
         private void InitUsernameTextBox()
@@ -307,6 +243,67 @@ namespace ClientMessenger
             };
         }
 
+        private void InitSignUpBtn()
+        {
+            SignUpBtn.Click += async (sender, args) =>
+            {
+                if (!CheckIfAllFieldsAreFilledStage2())
+                {
+                    await Error(UsernameError);
+                    return;
+                }
+
+                if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+                {
+                    await ActivateErrorMessage(timeToWait);
+                    return;
+                }
+
+                var biography = BiographyTextBox.Text == "Biography"
+                    ? ""
+                    : BiographyTextBox.Text;
+
+                var dayItem = (ComboBoxItem)DayBox.SelectedItem;
+                var monthItem = (ComboBoxItem)MonthBox.SelectedItem;
+                var yearItem = (ComboBoxItem)YearBox.SelectedItem;
+
+                var day = int.Parse((string)dayItem.Content).ToString("D2");
+                var month = int.Parse((string)monthItem.Content).ToString("D2");
+                var year = (string)yearItem.Content;
+
+                if (_profilPicFile is "" or null)
+                {
+                    _profilPicFile = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png";
+                }
+
+                var user = new User()
+                {
+                    Email = EmailTextBox.Text,
+                    Password = PasswordTextBox.Text,
+                    Birthday = DateOnly.ParseExact($"{day}-{month}-{year}", "dd-MM-yyyy", CultureInfo.InvariantCulture),
+                    Username = UsernameTextBox.Text,
+                    HashTag = HashTagTextBox.Text,
+                    Biography = biography,
+                    ProfilePicture = ImageEditor.ScaleImage(_profilPicFile),
+                    FaEnabled = FaCheckBox.IsChecked!.Value,
+                };
+
+                var payload = new
+                {
+                    code = OpCode.RequestCreateAccount,
+                    user,
+                };
+                await Client.SendPayloadAsync(payload);
+            };
+        }
+
+        private async Task ActivateErrorMessage(TimeSpan cooldown)
+        {
+            CooldownError.Visibility = Visibility.Visible;
+            await Task.Delay(cooldown);
+            CooldownError.Visibility = Visibility.Hidden;
+        }
+
         #endregion
 
         #region Validation
@@ -400,6 +397,26 @@ namespace ClientMessenger
         }
 
         #endregion
+
+        private void InitGoBackBtn()
+        {
+            GoBackBtn.MouseLeftButtonDown += (sender, args) =>
+            {
+                if (FirstStage.Visibility == Visibility.Visible)
+                {
+                    ClientUI.SwitchWindows<CreateAcc, Login>();
+                }
+                else
+                {
+                    FirstStage.Visibility = Visibility.Visible;
+                    SecondStage.Visibility = Visibility.Collapsed;
+                }
+            };
+
+            GoBackBtn.MouseEnter += (sender, args) => Cursor = Cursors.Hand;
+
+            GoBackBtn.MouseLeave += (sender, args) => Cursor = Cursors.Arrow;
+        }
 
         public async Task AccCreationWentWrong(string column)
         {

@@ -71,6 +71,8 @@
 
             <TextBox x:Name="BiographyTextBox" Width="300" Height="120" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0, 140, 0, 0" Text="Biography" FontSize="18"/>
 
+            <TextBlock x:Name="CooldownError" Visibility="Hidden" Text="Wait a sec!" Foreground="Red" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0, 280, 0, 0"/>
+
             <Button x:Name="SignUpBtn" Background="#343234" Height="45" Width="120" Content="sign up" Margin="0, 350, 0, 0"/>
         </Grid>
 

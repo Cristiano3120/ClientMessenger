@@ -18,26 +18,10 @@ namespace ClientMessenger
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
             InitPasswordTextBox();
             InitEmailTextBox();
+            InitLoginBtn();
 
             CreateAccLink.Click += ((sender, args) 
                 => ClientUI.SwitchWindows<Login, CreateAcc>());
-
-            LoginBtn.Click += async(sender, args) => 
-            { 
-                string email = EmailTextBox.Text;
-                string password = PasswordTextBox.Text;
-
-                if (!await ValidateUserInput(email, password))
-                    return;
-
-                var payload = new
-                {
-                    code = OpCode.RequestLogin,
-                    email,
-                    password,
-                };
-                await Client.SendPayloadAsync(payload);
-            };
         }
 
         private async Task<bool> ValidateUserInput(string email, string password)
@@ -55,6 +39,13 @@ namespace ClientMessenger
             }
 
             return true;
+        }
+
+        private async Task ActivateCooldownError(TimeSpan cooldown)
+        {
+            CooldownError.Visibility = Visibility.Visible;
+            await Task.Delay(cooldown);
+            CooldownError.Visibility = Visibility.Hidden;
         }
 
         #region Init
@@ -88,6 +79,34 @@ namespace ClientMessenger
                     PasswordTextBox.Text = "Password";
             };
         }
+
+        private void InitLoginBtn()
+        {
+            LoginBtn.Click += async (sender, args) =>
+            {
+                string email = EmailTextBox.Text;
+                string password = PasswordTextBox.Text;
+
+                if (!await ValidateUserInput(email, password))
+                    return;
+
+                if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+                {
+                    await ActivateCooldownError(timeToWait);
+                    return;
+                }
+
+                var payload = new
+                {
+                    code = OpCode.RequestLogin,
+                    email,
+                    password,
+                };
+
+                await Client.SendPayloadAsync(payload);
+            };
+        }
+
 
         #endregion
 

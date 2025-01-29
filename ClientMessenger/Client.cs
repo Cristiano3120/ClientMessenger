@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,6 +12,7 @@ namespace ClientMessenger
     {
         public const string PathToConfig = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Settings\Settings.json";
         public static JsonSerializerOptions JsonSerializerOptions { get; private set; } = new();
+        private static readonly Stopwatch _stopwatch = new();
         private static ClientWebSocket _server = new();
         public static User User { get; set; } = new();
 

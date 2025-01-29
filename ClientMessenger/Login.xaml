@@ -31,6 +31,8 @@
             </Hyperlink>
         </TextBlock>
 
+        <TextBlock x:Name="CooldownError" Text="Wait a sec!" Foreground="Red" Margin="0, 200, 0, 0" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Hidden"/>
+
         <Button x:Name="LoginBtn" Background="#343234" Height="30" Width="80" Content="Login" Margin="0, 250, 0, 0"/>
     </Grid>
 </Window>
