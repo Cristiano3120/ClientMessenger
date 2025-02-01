@@ -32,7 +32,7 @@ namespace ClientMessenger
             }
         }
 
-        public static async Task AnswerCreateAccountAsnyc(JsonElement message)
+        public static async Task AnswerCreateAccountAsync(JsonElement message)
         {
             Logger.LogInformation("Received answer to create acc from server");
 
@@ -48,7 +48,7 @@ namespace ClientMessenger
             await HandleNpgsqlErrorAsync(error);
         }
 
-        public static async Task AnswerToLoginAsnyc(JsonElement message)
+        public static async Task AnswerToLoginAsync(JsonElement message)
         {
             Logger.LogInformation("Received answer to login from server");
 
@@ -70,14 +70,14 @@ namespace ClientMessenger
             ClientUI.SwitchWindows<Login, Home>();
         }
 
-        public static async Task AnswerToVerificationRequestAsnyc(JsonElement message)
+        public static async Task AnswerToVerificationRequestAsync(JsonElement message)
         {
             Logger.LogInformation("Received answer to verification request");
             bool success = message.GetProperty("success").GetBoolean();
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(success);
         }
 
-        public static async Task VerificationWentWrongAsnyc()
+        public static async Task VerificationWentWrongAsync()
         {
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(null);
             await Client.CloseConnectionAsync(WebSocketCloseStatus.PolicyViolation, "");
@@ -85,7 +85,7 @@ namespace ClientMessenger
             Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 
-        public static async Task AnswerToAutoLoginRequestAsnyc(JsonElement message)
+        public static async Task AnswerToAutoLoginRequestAsync(JsonElement message)
         {
             Logger.LogInformation("Received answer to login from server");
 
