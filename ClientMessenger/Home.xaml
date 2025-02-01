@@ -55,8 +55,8 @@
         <ListBox x:Name="Dms" Grid.Row="1" Background="Transparent" BorderBrush="Transparent"/>
 
         <!--#region Panels-->
-        
-        <Grid x:Name="FriendsPanel" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+
+        <Grid x:Name="FriendsPanel" Background="#222" Visibility="Visible" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="FriendsPanelTranslateTransform"/>
             </Grid.RenderTransform>

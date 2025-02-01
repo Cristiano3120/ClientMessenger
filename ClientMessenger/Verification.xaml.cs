@@ -35,7 +35,7 @@ namespace ClientMessenger
             if (!success.HasValue)
             {
                 await ChangeMsg("You enterd the code wrong to often!");
-                await Client.CleanUpConnection();
+                await Client.CloseConnection(System.Net.WebSockets.WebSocketCloseStatus.PolicyViolation, "");
                 return;
             }
 

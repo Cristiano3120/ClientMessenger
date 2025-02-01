@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,9 +9,8 @@ namespace ClientMessenger
 {
     internal static class Client
     {
-        public const string PathToConfig = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Settings\Settings.json";
         public static JsonSerializerOptions JsonSerializerOptions { get; private set; } = new();
-        private static readonly Stopwatch _stopwatch = new();
+        public static JsonElement Config { get; private set; } = JsonExtensions.ReadConfig();
         private static ClientWebSocket _server = new();
         public static User User { get; set; } = new();
 
@@ -96,7 +94,7 @@ namespace ClientMessenger
                 catch (Exception ex)
                 {
                     Logger.LogError(ex);
-                    await CleanUpConnection();
+                    await CloseConnection(WebSocketCloseStatus.Empty, "");
                     break;
                 }
             }
@@ -112,7 +110,7 @@ namespace ClientMessenger
                     await HandleServerResponses.ReceiveRSA(message);
                     break;
                 case OpCode.ServerReadyToreceive:
-                    HandleServerResponses.ServerReadyToReceive();
+                    await HandleServerResponses.ServerReadyToReceive();
                     break;
                 case OpCode.AnswerCreateAccount:
                     await HandleServerResponses.AnswerCreateAccount(message);
@@ -124,9 +122,10 @@ namespace ClientMessenger
                     await HandleServerResponses.AnswerToVerificationRequest(message);
                     break;
                 case OpCode.VerificationWentWrong:
-                    await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(null);
-                    await _server.CloseAsync(WebSocketCloseStatus.InternalServerError, "", CancellationToken.None);
-                    Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
+                    await HandleServerResponses.VerificationWentWrong();
+                    break;
+                case OpCode.AutoLoginResponse:
+                    await HandleServerResponses.AnswerToAutoLoginRequest(message);
                     break;
             }
         }
@@ -175,6 +174,12 @@ namespace ClientMessenger
             Logger.LogInformation($"Buffer length: {encryptedData.Length}");
         }
 
+        public static async Task CloseConnection(WebSocketCloseStatus closeStatus, string reason)
+        {
+            await _server.CloseAsync(closeStatus, reason, CancellationToken.None);
+            ClientUI.SwitchWindows<Window, MainWindow>();
+        }
+
         #endregion
 
         #region Helper methods
@@ -187,22 +192,12 @@ namespace ClientMessenger
             ms.SetLength(0);
         }
 
-        public static async Task CleanUpConnection()
-        {
-            if (_server.State == WebSocketState.Open)
-                await _server.CloseAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
-
-            Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
-        }
-
         private static Uri GetUri(bool testing)
         {
             if (testing)
                 return new Uri("ws://127.0.0.1:5000/");
 
-            var fileContent = File.ReadAllText(PathToConfig);
-            JsonElement element = JsonDocument.Parse(fileContent).RootElement;
-            var serverUri = element.GetProperty("ServerUri").GetString();
+            var serverUri = Config.GetProperty("ServerUri").GetString();
 
             if (serverUri == null)
             {

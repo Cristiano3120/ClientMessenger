@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Net.WebSockets;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows;
 
@@ -21,10 +22,14 @@ namespace ClientMessenger
             await Client.SendPayloadAsync(payload, publicKey);
         }
 
-        public static void ServerReadyToReceive()
+        public static async Task ServerReadyToReceive()
         {
             Logger.LogInformation("Server is ready to receive data");
-            ClientUI.SwitchWindows<MainWindow, Login>();
+            
+            if (!await AutoLogin.TryToLogin())
+            {
+                ClientUI.SwitchWindows<MainWindow, Login>();
+            }
         }
 
         public static async Task AnswerCreateAccount(JsonElement message)
@@ -35,6 +40,7 @@ namespace ClientMessenger
             if (error.Exception == NpgsqlExceptions.None)
             {
                 Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
+                AutoLogin.UpsertData(message.GetProperty("token").GetString()!);
                 ClientUI.SwitchWindows<CreateAcc, Verification>();
                 return;
             }
@@ -69,6 +75,37 @@ namespace ClientMessenger
             Logger.LogInformation("Received answer to verification request");
             bool success = message.GetProperty("success").GetBoolean();
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(success);
+        }
+
+        public static async Task VerificationWentWrong()
+        {
+            await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(null);
+            await Client.CloseConnection(WebSocketCloseStatus.PolicyViolation, "");
+            AutoLogin.UpsertData("");
+            Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
+        }
+
+        public static async Task AnswerToAutoLoginRequest(JsonElement message)
+        {
+            Logger.LogInformation("Received answer to login from server");
+
+            NpgsqlExceptionInfos exceptionInfos = message.GetNpgsqlExceptionInfos();
+            NpgsqlExceptions exception = exceptionInfos.Exception;
+
+            if (exception is NpgsqlExceptions.None)
+            {
+                Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
+                ClientUI.SwitchWindows<MainWindow, Home>();
+                return;
+            }
+
+            if (exception is not NpgsqlExceptions.WrongLoginData)
+            {
+                await HandleNpgsqlError(exceptionInfos);
+                return;
+            }
+
+            ClientUI.SwitchWindows<MainWindow, Login>();
         }
 
         #endregion

@@ -7,7 +7,7 @@ namespace ClientMessenger
 {
     public partial class Home : Window
     {
-        private static readonly List<Relationship> _relationships = [];
+        private static readonly HashSet<Relationship> _relationships = [];
         public Home()
         {
             InitializeComponent();
@@ -82,7 +82,7 @@ namespace ClientMessenger
             grid.Visibility = Visibility.Visible;
             var slideInAnimation = new DoubleAnimation
             {
-                From = grid.Width,
+                From = grid.ActualWidth,
                 To = 0,
                 Duration = TimeSpan.FromSeconds(0.3)
             };

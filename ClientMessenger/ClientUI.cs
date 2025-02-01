@@ -20,8 +20,9 @@ namespace ClientMessenger
         /// Takes the type of the window to close (<typeparamref name="TWindowToClose"/>) and the type of the window to open (<typeparamref name="TWindowToOpen"/>).
         /// It then creates a new Instance of <typeparamref name="TWindowToOpen"/> and calls .Show() on it. After that a 300ms delay follows.
         /// At last it searches <see cref="Application.Current.Windows"/> for an window of type <typeparamref name="TWindowToClose"/> and calls .Close() on it.
+        /// <typeparamref name="TWindowToClose"/> has to be of type <see cref="Window"/> if you give it the value <see cref="Window"/> all open Windows will be closed.
         /// </summary>
-        /// <typeparam name="TWindowToClose"></typeparam>
+        /// <typeparam name="TWindowToClose"> If this has the value <see cref="Window"/> all open windows will be closed</typeparam>
         /// <typeparam name="TWindowToOpen"></typeparam>
         public static void SwitchWindows<TWindowToClose, TWindowToOpen>() where TWindowToClose : Window where TWindowToOpen : Window, new()
         {
