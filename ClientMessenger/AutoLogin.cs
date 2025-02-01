@@ -11,7 +11,7 @@
         private static string GetData() 
             => Client.Config.GetProperty("Token").GetString()!;
 
-        public static async Task<bool> TryToLogin()
+        public static async Task<bool> TryToLoginAsync()
         {
             string? token = GetData();
             if (!string.IsNullOrEmpty(token))

@@ -29,10 +29,10 @@ namespace ClientMessenger
             JsonSerializerOptions.Converters.Add(new JsonConverters.UserConverter());
             JsonSerializerOptions.WriteIndented = true;
 
-            await ConnectToServer();
+            await ConnectToServerAsync();
         }
 
-        private static async Task ConnectToServer()
+        private static async Task ConnectToServerAsync()
         {
             while (_server.State != WebSocketState.Open)
             {
@@ -49,14 +49,14 @@ namespace ClientMessenger
             }
 
             Logger.LogWarning("Connected!");
-            _ = Task.Run(ReceiveMessages);
+            _ = Task.Run(ReceiveMessagesAsync);
         }
 
         #endregion
 
         #region Receive and handle message
 
-        private static async Task ReceiveMessages()
+        private static async Task ReceiveMessagesAsync()
         {
             var buffer = new byte[65536];
             var ms = new MemoryStream();
@@ -89,43 +89,43 @@ namespace ClientMessenger
                     Logger.LogInformation(ConsoleColor.Green, logs: $"[RECEIVED]: {completeMessage}");
                     ClearMs(ms);
 
-                    await HandleReceivedMessage(JsonDocument.Parse(completeMessage).RootElement);
+                    await HandleReceivedMessageAsync(JsonDocument.Parse(completeMessage).RootElement);
                 }
                 catch (Exception ex)
                 {
                     Logger.LogError(ex);
-                    await CloseConnection(WebSocketCloseStatus.Empty, "");
+                    await CloseConnectionAsync(WebSocketCloseStatus.Empty, "");
                     break;
                 }
             }
             await Start();
         }
 
-        private static async Task HandleReceivedMessage(JsonElement message)
+        private static async Task HandleReceivedMessageAsync(JsonElement message)
         {
             OpCode code = message.GetProperty("code").GetOpCode();
             switch (code)
             {
                 case OpCode.ReceiveRSA:
-                    await HandleServerResponses.ReceiveRSA(message);
+                    await HandleServerResponses.ReceiveRSAAsync(message);
                     break;
-                case OpCode.ServerReadyToreceive:
-                    await HandleServerResponses.ServerReadyToReceive();
+                case OpCode.ServerReadyToReceive:
+                    await HandleServerResponses.ServerReadyToReceiveAsync();
                     break;
                 case OpCode.AnswerCreateAccount:
-                    await HandleServerResponses.AnswerCreateAccount(message);
+                    await HandleServerResponses.AnswerCreateAccountAsync(message);
                     break;
                 case OpCode.AnswerLogin:
-                    await HandleServerResponses.AnswerToLogin(message);
+                    await HandleServerResponses.AnswerToLoginAsync(message);
                     break;
                 case OpCode.VerificationProcess:
-                    await HandleServerResponses.AnswerToVerificationRequest(message);
+                    await HandleServerResponses.AnswerToVerificationRequestAsync(message);
                     break;
                 case OpCode.VerificationWentWrong:
-                    await HandleServerResponses.VerificationWentWrong();
+                    await HandleServerResponses.VerificationWentWrongAsync();
                     break;
                 case OpCode.AutoLoginResponse:
-                    await HandleServerResponses.AnswerToAutoLoginRequest(message);
+                    await HandleServerResponses.AnswerToAutoLoginRequestAsync(message);
                     break;
             }
         }
@@ -174,7 +174,7 @@ namespace ClientMessenger
             Logger.LogInformation($"Buffer length: {encryptedData.Length}");
         }
 
-        public static async Task CloseConnection(WebSocketCloseStatus closeStatus, string reason)
+        public static async Task CloseConnectionAsync(WebSocketCloseStatus closeStatus, string reason)
         {
             await _server.CloseAsync(closeStatus, reason, CancellationToken.None);
             ClientUI.SwitchWindows<Window, MainWindow>();

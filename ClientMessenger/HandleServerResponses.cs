@@ -8,7 +8,7 @@ namespace ClientMessenger
     public static class HandleServerResponses
     {
         #region Pre logged in
-        public static async Task ReceiveRSA(JsonElement message)
+        public static async Task ReceiveRSAAsync(JsonElement message)
         {
             Logger.LogInformation("Received RSA. Sending Aes now!");
 
@@ -22,17 +22,17 @@ namespace ClientMessenger
             await Client.SendPayloadAsync(payload, publicKey);
         }
 
-        public static async Task ServerReadyToReceive()
+        public static async Task ServerReadyToReceiveAsync()
         {
             Logger.LogInformation("Server is ready to receive data");
             
-            if (!await AutoLogin.TryToLogin())
+            if (!await AutoLogin.TryToLoginAsync())
             {
                 ClientUI.SwitchWindows<MainWindow, Login>();
             }
         }
 
-        public static async Task AnswerCreateAccount(JsonElement message)
+        public static async Task AnswerCreateAccountAsnyc(JsonElement message)
         {
             Logger.LogInformation("Received answer to create acc from server");
 
@@ -45,17 +45,17 @@ namespace ClientMessenger
                 return;
             }
 
-            await HandleNpgsqlError(error);
+            await HandleNpgsqlErrorAsync(error);
         }
 
-        public static async Task AnswerToLogin(JsonElement message)
+        public static async Task AnswerToLoginAsnyc(JsonElement message)
         {
             Logger.LogInformation("Received answer to login from server");
 
             NpgsqlExceptionInfos error = message.GetNpgsqlExceptionInfos();
             if (error.Exception != NpgsqlExceptions.None)
             {
-                await HandleNpgsqlError(error);
+                await HandleNpgsqlErrorAsync(error);
                 return;
             }
 
@@ -70,22 +70,22 @@ namespace ClientMessenger
             ClientUI.SwitchWindows<Login, Home>();
         }
 
-        public static async Task AnswerToVerificationRequest(JsonElement message)
+        public static async Task AnswerToVerificationRequestAsnyc(JsonElement message)
         {
             Logger.LogInformation("Received answer to verification request");
             bool success = message.GetProperty("success").GetBoolean();
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(success);
         }
 
-        public static async Task VerificationWentWrong()
+        public static async Task VerificationWentWrongAsnyc()
         {
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(null);
-            await Client.CloseConnection(WebSocketCloseStatus.PolicyViolation, "");
+            await Client.CloseConnectionAsync(WebSocketCloseStatus.PolicyViolation, "");
             AutoLogin.UpsertData("");
             Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 
-        public static async Task AnswerToAutoLoginRequest(JsonElement message)
+        public static async Task AnswerToAutoLoginRequestAsnyc(JsonElement message)
         {
             Logger.LogInformation("Received answer to login from server");
 
@@ -101,7 +101,7 @@ namespace ClientMessenger
 
             if (exception is not NpgsqlExceptions.WrongLoginData)
             {
-                await HandleNpgsqlError(exceptionInfos);
+                await HandleNpgsqlErrorAsync(exceptionInfos);
                 return;
             }
 
@@ -110,7 +110,7 @@ namespace ClientMessenger
 
         #endregion
 
-        private static async Task HandleNpgsqlError(NpgsqlExceptionInfos errorInfos)
+        private static async Task HandleNpgsqlErrorAsync(NpgsqlExceptionInfos errorInfos)
         {
             (NpgsqlExceptions error, string column) = errorInfos;
 

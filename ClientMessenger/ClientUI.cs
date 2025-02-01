@@ -33,7 +33,7 @@ namespace ClientMessenger
 
                 foreach (Window window in Application.Current.Windows)
                 {
-                    if (typeof(TWindowToClose) == window.GetType())
+                    if (typeof(TWindowToClose).IsAssignableFrom(window.GetType()))
                     {
                         window.Close();
                         return;

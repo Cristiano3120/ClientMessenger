@@ -3,7 +3,6 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Windows.Networking.Sockets;
 
 namespace ClientMessenger.Json
 {

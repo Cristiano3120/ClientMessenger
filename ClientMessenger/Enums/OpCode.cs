@@ -4,7 +4,7 @@
     {
         ReceiveRSA = 0,
         SendAes = 1,
-        ServerReadyToreceive = 2,
+        ServerReadyToReceive = 2,
         RequestCreateAccount = 3,
         AnswerCreateAccount = 4,
         RequestLogin = 5,
