@@ -1,4 +1,5 @@
 {
   "ServerUri": "ws://sweeping-usefully-marten.ngrok-free.app/",
-  "Token": "Q3Jpc0BjcmlzLmNvbQ==2uW1PT9pd40tuZhOOHgjnCp\u002BVf9ftDCpkVhu/PlZVIkzvgiI9bKPIVFo5FkzKLGW"
+  "Token": "Q3Jpc0BjcmlzLmNvbQ==1fUTZtZVOOLKQcvTBOyoZ9lwqQcjHntWrJaqWVWVva8DbsfTUUMFWP0rmlgN6nxN",
+  "AutoLogin": true
 }

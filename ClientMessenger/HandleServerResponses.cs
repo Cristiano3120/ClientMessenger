@@ -25,7 +25,7 @@ namespace ClientMessenger
         public static async Task ServerReadyToReceiveAsync()
         {
             Logger.LogInformation("Server is ready to receive data");
-            
+
             if (!await AutoLogin.TryToLoginAsync())
             {
                 ClientUI.SwitchWindows<MainWindow, Login>();

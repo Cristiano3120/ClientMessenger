@@ -66,13 +66,24 @@ namespace ClientMessenger.Json
         /// <exception cref="InvalidOperationException">
         /// Thrown if the JSON structure in <paramref name="property"/> is not an object.
         /// </exception>
-        public static JsonElement SetString(this JsonElement property, JsonFile file, string propertyName , string content)
+        public static JsonElement SetString(this JsonElement property, JsonFile jsonFile, string propertyName , string content)
         {
             JsonObject jsonObject = JsonNode.Parse(property.GetRawText())!.AsObject();
             jsonObject[propertyName] = content;
 
             string jsonString = jsonObject.ToString();
-            File.WriteAllText(GetPathToJsonFile(file), jsonString);
+            File.WriteAllText(GetPathToJsonFile(jsonFile), jsonString);
+
+            return JsonDocument.Parse(jsonString).RootElement;
+        }
+
+        public static JsonElement SetBoolean(this JsonElement property, JsonFile jsonFile, string propertyName, bool enabled)
+        {
+            JsonObject jsonObject = JsonNode.Parse(property.GetRawText())!.AsObject();
+            jsonObject[propertyName] = enabled;
+
+            string jsonString = jsonObject.ToString();
+            File.WriteAllText(GetPathToJsonFile(jsonFile), jsonString);
 
             return JsonDocument.Parse(jsonString).RootElement;
         }

@@ -96,6 +96,8 @@ namespace ClientMessenger
                     return;
                 }
 
+                Client.Config.SetBoolean(JsonFile.Config, "AutoLogin", AutoLoginCheckBox.IsEnabled);
+
                 var payload = new
                 {
                     code = OpCode.RequestLogin,

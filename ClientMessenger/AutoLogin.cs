@@ -13,6 +13,11 @@
 
         public static async Task<bool> TryToLoginAsync()
         {
+            if (!Client.Config.GetProperty("AutoLogin").GetBoolean())
+            {
+                return false;
+            }
+
             string? token = GetData();
             if (!string.IsNullOrEmpty(token))
             {
