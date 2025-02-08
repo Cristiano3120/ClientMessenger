@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,6 +20,7 @@ namespace ClientMessenger
         public static async Task Start()
         {
             Logger.LogWarning("Connecting to Server...");
+
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 Logger.LogWarning("WARNING: CATCHED AN UNHANDELD EXCEPTION!");
@@ -40,7 +42,7 @@ namespace ClientMessenger
                 {
                     await _server.ConnectAsync(GetUri(true), CancellationToken.None);
                 }
-                catch (OperationCanceledException ex)
+                catch (Exception ex)
                 {
                     await Task.Delay(1000);
                     Logger.LogError(ex);
@@ -94,11 +96,10 @@ namespace ClientMessenger
                 catch (Exception ex)
                 {
                     Logger.LogError(ex);
-                    await CloseConnectionAsync(WebSocketCloseStatus.Empty, "");
                     break;
                 }
             }
-            await Start();
+            await Restart();
         }
 
         private static async Task HandleReceivedMessageAsync(JsonElement message)
@@ -176,8 +177,16 @@ namespace ClientMessenger
 
         public static async Task CloseConnectionAsync(WebSocketCloseStatus closeStatus, string reason)
         {
-            await _server.CloseAsync(closeStatus, reason, CancellationToken.None);
-            ClientUI.SwitchWindows<Window, MainWindow>();
+            if (_server.State is not WebSocketState.Aborted and WebSocketState.Closed)
+                await _server.CloseAsync(closeStatus, reason, CancellationToken.None);
+        }
+
+        private static async Task Restart()
+        {
+            await CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "");
+            string appPath = Environment.ProcessPath!;
+            Process.Start(appPath);
+            Application.Current.Dispatcher.Invoke(Application.Current.Shutdown);
         }
 
         #endregion
