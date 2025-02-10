@@ -8,7 +8,7 @@ namespace ClientMessenger.Json
 {
     internal static class JsonExtensions
     {
-        private const string _pathToConfig = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Settings\Settings.json";
+        private static readonly string _pathToConfig = Client.GetDynamicPath(@"Settings/Settings.json");
 
         #region GetExtensions
         /// <summary>
@@ -100,7 +100,7 @@ namespace ClientMessenger.Json
         #endregion
 
         #region ReadJson
-
+        
         public static JsonElement ReadConfig()
         {
             var jsonFileContent = File.ReadAllText(_pathToConfig);

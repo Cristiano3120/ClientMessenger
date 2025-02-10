@@ -219,5 +219,30 @@ namespace ClientMessenger
         }
 
         #endregion
+
+        /// <summary>
+        /// Resolves a relative path by dynamically adjusting the base directory of the project.
+        /// It removes the portion of the base directory up to and including the specified segment 
+        /// ("ClientMessenger/ClientMessenger/") and combines the remaining path with the given relative path.
+        /// </summary>
+        /// <param name="relativePath"> 
+        /// Example: If you want to get the file "appsettings.json" that is in directory "Settings" you would give this as an param:
+        /// the relativePath = "Settings/appsettings.json" </param>
+        /// <returns>A fully resolved path based on the project's base directory and the given relative path.</returns>
+        public static string GetDynamicPath(string relativePath)
+        {
+            var projectBasePath = AppContext.BaseDirectory;
+
+            var searchPattern = "ClientMessenger" + Path.DirectorySeparatorChar + "ClientMessenger" + Path.DirectorySeparatorChar;
+            var indexToRemove = projectBasePath.IndexOf(searchPattern, StringComparison.Ordinal);
+
+            if (indexToRemove == -1)
+            {
+                throw new Exception("Implementation is wrong!");
+            }
+
+            projectBasePath = projectBasePath[..(indexToRemove + searchPattern.Length)];
+            return Path.Combine(projectBasePath, relativePath);
+        }
     }
 }
