@@ -233,15 +233,14 @@ namespace ClientMessenger
         {
             var projectBasePath = AppContext.BaseDirectory;
 
-            var searchPattern = "ClientMessenger" + Path.DirectorySeparatorChar + "ClientMessenger" + Path.DirectorySeparatorChar;
-            var indexToRemove = projectBasePath.IndexOf(searchPattern, StringComparison.Ordinal);
+            var binIndex = projectBasePath.IndexOf(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar, StringComparison.Ordinal);
 
-            if (indexToRemove == -1)
+            if (binIndex == -1)
             {
-                throw new Exception("Implementation is wrong!");
+                throw new Exception("Could not determine project base path!");
             }
 
-            projectBasePath = projectBasePath[..(indexToRemove + searchPattern.Length)];
+            projectBasePath = projectBasePath[..binIndex];
             return Path.Combine(projectBasePath, relativePath);
         }
     }
