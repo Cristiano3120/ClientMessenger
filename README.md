@@ -14,7 +14,7 @@ This is the client part of the messenger that I'm coding in my free time. If you
    
 5. Now **read** the **rules** and **important infos** below.
    
-6. Go to the [Server Messenger repository](https://github.com/Cristiano3120/ServerMessenger) now and follow the README there.
+6. **Go to** the [Server Messenger repository](https://github.com/Cristiano3120/ServerMessenger) now and follow the README there.
 
 ## Rules and Other Important Infos:
 
