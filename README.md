@@ -6,11 +6,11 @@ This is the client part of the messenger that I'm coding in my free time. If you
 
 1. **Fork this repository.**
 
-2. **Open the project** in your preferred code editor and open the developer console (for Visual Studio: right-click on `ClientMessenger.csproj` -> "Open in Terminal"). If you'd rather use the Windows Command Prompt search for "cmd" in your Windows search bar and open it.
+2. **Open the project** in your preferred code editor and open the developer console (for Visual Studio: right-click on `ClientMessenger.csproj` -> `Open in Terminal`). If you'd rather use the Windows console search for `cmd` in your Windows search bar and open it.
 
 3. **[Step for Windows Terminal only]** In the Windows CMD navigate to your project folder by typing `cd {path to your project}` (for example: `cd C:\Users\Praktikum\source\repos\Cristiano3120\ClientMessenger\ClientMessenger\`). Be sure to use quotes("") if your path contains whitespaces.
 
-4. **Run the following command** to mark the Logging folder as ´unchanged´ in the Git index so it won’t be included in future commits. Make sure you provide the full path to the Logging folder (for example: ´git update-index --assume-unchanged C:\Users\Praktikum\source\repos\Cristiano3120\ClientMessenger\ClientMessenger\Logging\´), and make sure to use quotes("") if the path contains whitespaces. Now you need to **run the second command** which does the same thing just for a different file. This time it's the configuration file **located** at ´Settings/Settings.json´. To mark it as ´unchanged´ type for example: ´git update-index --assume-unchanged C:\Users\Praktikum\source\repos\Cristiano3120\ClientMessenger\ClientMessenger\Settings\Settings.json´.
+4. **Run the following command** to mark the Logging folder as `unchanged` in the Git index so it won’t be included in future commits. Make sure you provide the full path to the Logging folder (for example: `git update-index --assume-unchanged C:\Users\Praktikum\source\repos\Cristiano3120\ClientMessenger\ClientMessenger\Logging\`), and make sure to use quotes("") if the path contains whitespaces. Now you need to **run the second command** which does the same thing just for a different file. This time it's the configuration file **located** at `Settings/Settings.json`. To mark it as `unchanged` type for example: `git update-index --assume-unchanged C:\Users\Praktikum\source\repos\Cristiano3120\ClientMessenger\ClientMessenger\Settings\Settings.json`.
    
 5. Now **read** the **rules** and **important infos** below.
    
