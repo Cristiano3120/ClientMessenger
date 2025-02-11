@@ -61,7 +61,7 @@
 
             <Ellipse x:Name="ProfilPic" Width="75" Height="75" VerticalAlignment="Center" Margin="0, 0, 225, 210" RenderOptions.BitmapScalingMode="HighQuality" Cursor="Hand">
                 <Ellipse.Fill>
-                    <ImageBrush Stretch="UniformToFill" ImageSource="C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png"/>
+                    <ImageBrush Stretch="UniformToFill"/>
                 </Ellipse.Fill>
             </Ellipse>
 

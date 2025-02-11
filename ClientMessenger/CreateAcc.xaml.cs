@@ -25,7 +25,7 @@ namespace ClientMessenger
         [GeneratedRegex(@"^(?!Password$).{8,}$")]
         private static partial Regex PasswordRegex();
 
-        private static string _profilPicFile = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png";
+        private static string _profilPicFile = ClientUI.DefaultProfilPic;
         private static readonly Brush _grayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#343234"));
 
         public CreateAcc()
@@ -213,8 +213,6 @@ namespace ClientMessenger
 
             BiographyTextBox.PreviewTextInput += (sender, args) =>
             {
-                int charAmmount = BiographyTextBox.Text.Length;
-
                 if (BiographyTextBox.Text.Length >= maxChars || !BiographyRegex().IsMatch(args.Text))
                     args.Handled = true;
             };
@@ -273,7 +271,7 @@ namespace ClientMessenger
 
                 if (_profilPicFile is "" or null)
                 {
-                    _profilPicFile = @"C:\Users\Crist\source\repos\ClientMessenger\ClientMessenger\Images\profilPic.png";
+                    _profilPicFile = ClientUI.DefaultProfilPic;
                 }
 
                 var user = new User()
@@ -337,8 +335,8 @@ namespace ClientMessenger
             return true;
         }
 
-        private bool CheckIfAllFieldsAreFilledStage2() =>
-            UsernameTextBox.Text != "Username" && HashTagTextBox.Text != "#";
+        private bool CheckIfAllFieldsAreFilledStage2() 
+            => UsernameTextBox.Text != "Username" && HashTagTextBox.Text != "#";
 
         private static async Task Error(TextBlock textBlock)
         {
