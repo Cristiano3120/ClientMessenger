@@ -64,17 +64,14 @@ namespace ClientMessenger
             DataObject.AddPastingHandler(textBox, (sender, args) =>
             {
                 string clipboardText = Clipboard.GetText();
-                //get the amount of chars that fit into the textBox
                 int availableChars = maxChars - textBox.Text.Length + textBox.SelectedText.Length;
 
-                //If textBox is already full
                 if (availableChars <= 0)
                 {
                     args.CancelCommand();
                     return;
                 }
 
-                // Truncate the clipboard text to fit within the available space in the TextBox
                 if (clipboardText.Length > availableChars)
                 {
                     clipboardText = clipboardText[..availableChars];

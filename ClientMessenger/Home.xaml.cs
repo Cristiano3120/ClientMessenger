@@ -12,7 +12,9 @@ namespace ClientMessenger
         {
             InitializeComponent();
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
+            InitAddFriendUsernameTextBox();
             InitNameAndProfilPic();
+            InitPanels();
             InitBtns();
         }
 
@@ -32,6 +34,38 @@ namespace ClientMessenger
             Username.Text = $"{Client.User.Username} {Client.User.HashTag}";
         }
 
+        private void InitPanels()
+        {
+            HidePanels();
+            FriendsPanel.Visibility = Visibility.Visible;
+        }
+
+        private void InitAddFriendUsernameTextBox()
+        {
+            byte maxChars = 14;
+            ClientUI.RestrictClipboardPasting(AddFriendUsernameTextBox, maxChars);
+
+            AddFriendUsernameTextBox.GotFocus += (sender, args) =>
+            {
+                if (AddFriendUsernameTextBox.Text == "Username")
+                    AddFriendUsernameTextBox.Text = "";
+            };
+
+            AddFriendUsernameTextBox.LostFocus += (sender, args) =>
+            {
+                if (AddFriendUsernameTextBox.Text == "")
+                    AddFriendUsernameTextBox.Text = "Username";
+            };
+
+            AddFriendUsernameTextBox.PreviewTextInput += (sender, args) =>
+            {
+                int charAmount = AddFriendUsernameTextBox.Text.Length;
+
+                if (charAmount >= maxChars)
+                    args.Handled = true;
+            };
+        }
+
         #endregion
 
         private void HidePanels()
@@ -44,12 +78,12 @@ namespace ClientMessenger
 
         private void ChangePanelState(object sender, RoutedEventArgs args)
         {
-            var btn = (Button)sender;   
+            var btn = (Button)sender;
             switch ((string)btn.Tag)
             {
                 case "AddFriend":
                     ChooseAnimation(AddFriendPanelTranslateTransform, AddFriendPanel);
-                        break;
+                    break;
                 case "Friends":
                     ChooseAnimation(FriendsPanelTranslateTransform, FriendsPanel);
                     break;
@@ -66,7 +100,7 @@ namespace ClientMessenger
 
         private void ChooseAnimation(TranslateTransform translateTransform, Grid grid)
         {
-            if (grid.Visibility == Visibility.Visible)
+            if (grid.Visibility == Visibility.Collapsed)
             {
                 SlideInAnimation(translateTransform, grid);
             }
@@ -80,6 +114,8 @@ namespace ClientMessenger
         {
             HidePanels();
             grid.Visibility = Visibility.Visible;
+            grid.UpdateLayout();
+
             var slideInAnimation = new DoubleAnimation
             {
                 From = grid.ActualWidth,
@@ -92,22 +128,19 @@ namespace ClientMessenger
 
         private static void SlideOutAnimation(TranslateTransform translateTransform, Grid grid)
         {
-            if (grid.Visibility == Visibility.Visible)
+            var slideOutAnimation = new DoubleAnimation
             {
-                var slideOutAnimation = new DoubleAnimation
-                {
-                    From = 0,
-                    To = grid.Width,
-                    Duration = TimeSpan.FromSeconds(0.3)
-                };
+                From = 0,
+                To = grid.ActualWidth,
+                Duration = TimeSpan.FromSeconds(0.3)
+            };
 
-                slideOutAnimation.Completed += (s, a) =>
-                {
-                    grid.Visibility = Visibility.Collapsed;
-                };
+            slideOutAnimation.Completed += (s, a) =>
+            {
+                grid.Visibility = Visibility.Collapsed;
+            };
 
-                translateTransform.BeginAnimation(TranslateTransform.XProperty, slideOutAnimation);
-            }
+            translateTransform.BeginAnimation(TranslateTransform.XProperty, slideOutAnimation);
         }
 
         #endregion

@@ -56,31 +56,36 @@
 
         <!--#region Panels-->
 
-        <Grid x:Name="FriendsPanel" Background="#222" Visibility="Visible" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+        <Grid x:Name="FriendsPanel" Width="Auto" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="FriendsPanelTranslateTransform"/>
             </Grid.RenderTransform>
             <ListBox x:Name="FriendsList" Background="#222" Foreground="White" FontSize="16" Margin="10" BorderBrush="#222"/>
         </Grid>
 
-        <Grid x:Name="PendingPanel" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+        <Grid x:Name="PendingPanel" Width="Auto" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="PendingPanelTranslateTransform"/>
             </Grid.RenderTransform>
             <ListBox x:Name="PendingList" Background="#222" Foreground="White" FontSize="16" Margin="10" BorderBrush="#222"/>
         </Grid>
 
-        <Grid x:Name="BlockedPanel" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+        <Grid x:Name="BlockedPanel" Width="Auto" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="BlockedPanelTranslateTransform"/>
             </Grid.RenderTransform>
             <ListBox x:Name="BlockedList" Background="#222" Foreground="White" FontSize="16" Margin="10" BorderBrush="#222"/>
         </Grid>
 
-        <Grid x:Name="AddFriendPanel" Background="#222" Visibility="Collapsed" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+        <Grid x:Name="AddFriendPanel" Width="Auto" Background="#222" Visibility="Visible" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="AddFriendPanelTranslateTransform"/>
             </Grid.RenderTransform>
+
+            <TextBox x:Name="AddFriendUsernameTextBox" Width="150" Height="30" Margin="0, 0, 50, 0" Text="Username"/>
+            <TextBox x:Name="AddFriendHashTagTextBox" Width="50" Height="30" Margin="155, 0, 0, 0" Text="#"/>
+            
+            <Button x:Name="AddAsFriendBtn" Width="80" Height="30" Margin="0, 150, 0, 0" Content="Add"/>
         </Grid>
         
         <!--#endregion-->

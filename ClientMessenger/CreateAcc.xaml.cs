@@ -213,8 +213,6 @@ namespace ClientMessenger
 
             BiographyTextBox.PreviewTextInput += (sender, args) =>
             {
-                int charAmmount = BiographyTextBox.Text.Length;
-
                 if (BiographyTextBox.Text.Length >= maxChars || !BiographyRegex().IsMatch(args.Text))
                     args.Handled = true;
             };
