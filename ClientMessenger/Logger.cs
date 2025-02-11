@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
@@ -12,9 +13,38 @@ namespace ClientMessenger
         [GeneratedRegex("(\"ProfilePicture\": \")[^\"]*(\")")]
         private static partial Regex FilterProfilPicRegex();
 
+        [GeneratedRegex(@"\[[^\]]*\]")]
+        private static partial Regex FilterKeywords();
+
+        private static readonly string _pathToLogFile;
+
         static Logger()
         {
             AllocConsole();
+            _pathToLogFile = MaintainLoggingSystem(maxAmmountLoggingFiles: 5);
+        }
+
+        private static string MaintainLoggingSystem(int maxAmmountLoggingFiles)
+        {
+            string pathToLoggingDic = Client.GetDynamicPath(@"Logging/");
+            string[] files = Directory.GetFiles(pathToLoggingDic, "*.md");
+
+            if (files.Length >= maxAmmountLoggingFiles)
+            {
+                files = [.. files.OrderBy(File.GetCreationTime)];
+                // +1 to make room for a new File
+                int filesToRemove = files.Length - maxAmmountLoggingFiles + 1;
+
+                for (int i = 0; i < filesToRemove; i++)
+                {
+                    File.Delete(files[i]);
+                }
+            }
+
+            var timestamp = DateTime.Now.ToString("dd-MM-yyyy/HH-mm-ss");
+            var pathToNewFile = Client.GetDynamicPath($"Logging/{timestamp}.md");
+            File.Create(pathToNewFile).Close();
+            return pathToNewFile;
         }
 
         #region LogInformation
@@ -22,13 +52,18 @@ namespace ClientMessenger
         public static void LogInformation(ConsoleColor color, params string[] logs)
         {
             Console.ForegroundColor = color;
-            Log(color, logs);
+            Log(color, true, logs);
         }
 
         public static void LogInformation(params string[] logs)
         {
             Console.ForegroundColor = ConsoleColor.White;
-            Log(ConsoleColor.White, logs);
+            Log(ConsoleColor.White, true ,logs);
+        }
+
+        public static void LogInformation(ConsoleColor color, string log, bool makeLineAfter = true)
+        {
+            Log(color, makeLineAfter, log);
         }
 
         #endregion
@@ -38,7 +73,7 @@ namespace ClientMessenger
         /// </summary>
         public static void LogWarning(params string[] logs)
         {
-            Log(ConsoleColor.Yellow, logs);
+            Log(ConsoleColor.Yellow, true, logs);
         }
 
         /// <summary>
@@ -50,7 +85,7 @@ namespace ClientMessenger
         {
             if (exception is string str)
             {
-                Log(ConsoleColor.Red, str);
+                Log(ConsoleColor.Red, true, str);
                 return;
             }
 
@@ -89,10 +124,10 @@ namespace ClientMessenger
                 filename = filename.Remove(0, index);
 
                 var errorInfos = $"ERROR in file {filename}, in {methodName}, at line: {lineNum}, at column: {columnNum}";
-                Log(ConsoleColor.Red, errorInfos);
+                Log(ConsoleColor.Red, false ,errorInfos);
             }
 
-            Log(ConsoleColor.Red, $"ERROR: {ex.Message}");
+            Log(ConsoleColor.Red, ex.InnerException == null, $"ERROR: {ex.Message}");
 
             if (ex.InnerException != null)
                 LogError(ex.InnerException);
@@ -101,15 +136,23 @@ namespace ClientMessenger
         /// <summary>
         /// The method that filters the logs and writes them into the Console
         /// </summary>
-        private static void Log(ConsoleColor color, params string[] logs)
+        private static void Log(ConsoleColor color, bool makeLineAfter , params string[] logs)
         {
+            using StreamWriter streamWriter = new(_pathToLogFile, true);
             Console.ForegroundColor = color;
+
             for (int i = 0; i < logs.Length; i++)
             {
                 string message = FilterProfilPicRegex().Replace(logs[i], "$1[Image]$2");
                 Console.WriteLine($"[{DateTime.Now:HH: dd: ss}]: {message}");
+                streamWriter.WriteLine(FilterKeywords().Replace(message, match => $"**{match.Value}**"));
             }
-            Console.WriteLine("");
+
+            if (makeLineAfter)
+            {
+                streamWriter.WriteLine("");
+                Console.WriteLine("");
+            }
         }
     }
 }

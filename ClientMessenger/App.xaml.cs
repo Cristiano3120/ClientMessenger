@@ -10,5 +10,4 @@ namespace ClientMessenger
     public partial class App : Application
     {
     }
-
 }

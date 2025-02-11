@@ -16,6 +16,8 @@ namespace ClientMessenger
         private const int SC_CLOSE = 0xF060;
 #pragma warning restore
 
+        public static readonly string DefaultProfilPic = Client.GetDynamicPath(@"Images/profilPic.png");
+
         /// <summary>
         /// Takes the type of the window to close (<typeparamref name="TWindowToClose"/>) and the type of the window to open (<typeparamref name="TWindowToOpen"/>).
         /// It then creates a new Instance of <typeparamref name="TWindowToOpen"/> and calls .Show() on it. After that a 300ms delay follows.
@@ -47,8 +49,8 @@ namespace ClientMessenger
         /// If it doesn´t find anything it creates a new Instance of <typeparamref name="T"/>
         /// </summary>
         /// <returns>The window of type <typeparamref name="T"/></returns>
-        public static T GetWindow<T>() where T : Window, new() =>
-            Application.Current.Dispatcher.Invoke(() => Application.Current.Windows.OfType<T>().FirstOrDefault() ?? new T());
+        public static T GetWindow<T>() where T : Window, new() 
+            => Application.Current.Dispatcher.Invoke(() => Application.Current.Windows.OfType<T>().FirstOrDefault() ?? new T());
         
 
         /// <summary>
@@ -85,8 +87,6 @@ namespace ClientMessenger
                 textBox.SelectionStart = selectionStart + clipboardText.Length;
                 textBox.SelectionLength = 0;
             });
-
-
         }
 
         #region Control Window state

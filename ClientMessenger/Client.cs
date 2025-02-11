@@ -69,7 +69,7 @@ namespace ClientMessenger
                 try
                 {
                     WebSocketReceiveResult receivedDataInfo = await _server.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                    Logger.LogInformation(ConsoleColor.Cyan, $"[RECEIVED]: The received payload is {receivedDataInfo.Count} bytes long");
+                    Logger.LogInformation(ConsoleColor.Cyan, $"[RECEIVED]: {receivedDataInfo.Count} bytes", false);
 
                     if (receivedDataInfo.MessageType == WebSocketMessageType.Close)
                     {
@@ -152,8 +152,8 @@ namespace ClientMessenger
 
             await _server.SendAsync(encryptedData, WebSocketMessageType.Binary, true, CancellationToken.None);
 
-            Logger.LogInformation(ConsoleColor.Blue, $"[SENDING(Aes)]: {jsonPayload}");
-            Logger.LogInformation($"Buffer length: {encryptedData.Length}");
+            Logger.LogInformation(ConsoleColor.Cyan, $"[SENDING(RSA)]: {encryptedData.Length} bytes", false);
+            Logger.LogInformation(ConsoleColor.Blue, $"[SENDING(RSA)]: {jsonPayload}");
         }
 
         internal static async Task SendPayloadAsync(object payload)
@@ -172,8 +172,8 @@ namespace ClientMessenger
 
             await _server.SendAsync(encryptedData, WebSocketMessageType.Binary, true, CancellationToken.None);
 
+            Logger.LogInformation(ConsoleColor.Cyan, $"[SENDING(Aes)]: {encryptedData.Length} bytes", false);
             Logger.LogInformation(ConsoleColor.Blue, $"[SENDING(Aes)]: {jsonPayload}");
-            Logger.LogInformation($"Buffer length: {encryptedData.Length}");
         }
 
         public static async Task CloseConnectionAsync(WebSocketCloseStatus closeStatus, string reason)
