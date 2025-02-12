@@ -40,7 +40,7 @@ namespace ClientMessenger.Json
             => DateOnly.Parse(property.GetString()!, new CultureInfo("de-DE"));
 
         /// <summary>
-        /// Needs to be called on the <c>error</c> property of the <see cref="JsonElement"/>.
+        /// Needs to be called on the <c>root</c> property of the <see cref="JsonElement"/>.
         /// </summary>
         /// <returns><c>Returns</c> the NpgsqlException that the Server sent</returns>
         /// <exception cref="InvalidOperationException"></exception>

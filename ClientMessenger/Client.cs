@@ -29,6 +29,7 @@ namespace ClientMessenger
             };
 
             JsonSerializerOptions.Converters.Add(new JsonConverters.UserConverter());
+            JsonSerializerOptions.Converters.Add(new JsonConverters.RelationshipConverter());
             JsonSerializerOptions.WriteIndented = true;
 
             await ConnectToServerAsync();
@@ -129,6 +130,9 @@ namespace ClientMessenger
                 case OpCode.AutoLoginResponse:
                     await HandleServerResponses.AnswerToAutoLoginRequestAsync(message);
                     break;
+                case OpCode.AnswerToRequestedRelationshipUpdate:
+                    await HandleServerResponses.AnswerToRelationshipUpdateRequest(message);
+                    break;
             }
         }
 
@@ -185,9 +189,13 @@ namespace ClientMessenger
         private static async Task Restart()
         {
             await CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "");
+            #if DEBUG == false
+
             string appPath = Environment.ProcessPath!;
             Process.Start(appPath);
             Application.Current.Dispatcher.Invoke(Application.Current.Shutdown);
+
+            #endif
         }
 
         #endregion

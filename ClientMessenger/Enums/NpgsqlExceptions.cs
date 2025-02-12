@@ -7,5 +7,6 @@
         ConnectionError = 2,
         AccCreationError = 3,
         WrongLoginData = 4,
+        UserNotFound = 5,
     }
 }

@@ -2,6 +2,8 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Media;
+using Microsoft.VisualBasic;
 
 namespace ClientMessenger
 {
@@ -110,6 +112,26 @@ namespace ClientMessenger
 
         #endregion
 
+        #region Past Log in
+
+        public static async Task AnswerToRelationshipUpdateRequest(JsonElement message)
+        { 
+            NpgsqlExceptionInfos exceptionInfos = message.GetNpgsqlExceptionInfos()!;
+            if (exceptionInfos.Exception == NpgsqlExceptions.None)
+            {
+                await Application.Current.Dispatcher.InvokeAsync(async() =>
+                {
+                    Home home = ClientUI.GetWindow<Home>();
+                    await home.DisplayInfosAddFriendPanelAsync(Brushes.Green, "Succesfully added");
+                    Logger.LogError("AnswerToRelationshipUpdateRequest()[MUSS ZU PENDING GEADDET WERDEN]");
+                });
+                return;
+            }
+            await HandleNpgsqlErrorAsync(exceptionInfos);
+        }
+
+        #endregion
+
         private static async Task HandleNpgsqlErrorAsync(NpgsqlExceptionInfos errorInfos)
         {
             (NpgsqlExceptions error, string column) = errorInfos;
@@ -140,8 +162,15 @@ namespace ClientMessenger
                         await login.LoginWentWrong();
                     });
                     break;
+                case NpgsqlExceptions.UserNotFound:
+                    await Application.Current.Dispatcher.InvokeAsync(async() =>
+                    {
+                        Home home = ClientUI.GetWindow<Home>();
+                        await home.DisplayInfosAddFriendPanelAsync(Brushes.Red, "Username or hashtag is wrong");
+                    });
+                    break;
                 default:
-                    Logger.LogError("The received database error has no case.");
+                    Logger.LogError($"The received database error has no case(Error: {error}).");
                     break;
             }
         }

@@ -2,8 +2,9 @@
 {
     public enum Relationshipstate : byte
     {
-        Friend = 0,
-        Pending = 1,
-        Blockeed = 2,
+        None = 0,
+        Friend = 1,
+        Pending = 2,
+        Blocked = 3,
     }
 }

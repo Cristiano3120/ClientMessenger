@@ -58,7 +58,7 @@ namespace ClientMessenger
         public static void LogInformation(params string[] logs)
         {
             Console.ForegroundColor = ConsoleColor.White;
-            Log(ConsoleColor.White, true ,logs);
+            Log(ConsoleColor.White, true, logs);
         }
 
         public static void LogInformation(ConsoleColor color, string log, bool makeLineAfter = true)
@@ -124,7 +124,7 @@ namespace ClientMessenger
                 filename = filename.Remove(0, index);
 
                 var errorInfos = $"ERROR in file {filename}, in {methodName}, at line: {lineNum}, at column: {columnNum}";
-                Log(ConsoleColor.Red, false ,errorInfos);
+                Log(ConsoleColor.Red, false, errorInfos);
             }
 
             Log(ConsoleColor.Red, ex.InnerException == null, $"ERROR: {ex.Message}");
@@ -136,21 +136,22 @@ namespace ClientMessenger
         /// <summary>
         /// The method that filters the logs and writes them into the Console
         /// </summary>
-        private static void Log(ConsoleColor color, bool makeLineAfter , params string[] logs)
+        private static void Log(ConsoleColor color, bool makeLineAfter, params string[] logs)
         {
-            using StreamWriter streamWriter = new(_pathToLogFile, true);
+            //braucht ein lock
+            //using StreamWriter streamWriter = new(_pathToLogFile, true);
             Console.ForegroundColor = color;
 
             for (int i = 0; i < logs.Length; i++)
             {
                 string message = FilterProfilPicRegex().Replace(logs[i], "$1[Image]$2");
                 Console.WriteLine($"[{DateTime.Now:HH: dd: ss}]: {message}");
-                streamWriter.WriteLine(FilterKeywords().Replace(message, match => $"**{match.Value}**"));
+                //streamWriter.WriteLine(FilterKeywords().Replace(message, match => $"**{match.Value}**"));
             }
 
             if (makeLineAfter)
             {
-                streamWriter.WriteLine("");
+                //streamWriter.WriteLine("");
                 Console.WriteLine("");
             }
         }

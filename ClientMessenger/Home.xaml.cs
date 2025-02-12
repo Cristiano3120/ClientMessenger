@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Text.RegularExpressions;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -7,13 +8,18 @@ namespace ClientMessenger
 {
     public partial class Home : Window
     {
+        [GeneratedRegex(@"^[A-Za-z0-9._\s]+$")]
+        private static partial Regex UsernameRegex();
+
         private static readonly HashSet<Relationship> _relationships = [];
         public Home()
         {
             InitializeComponent();
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
             InitAddFriendUsernameTextBox();
+            InitAddFriendHashTagTextBox();
             InitNameAndProfilPic();
+            InitAddFriendBtn();
             InitPanels();
             InitBtns();
         }
@@ -40,6 +46,8 @@ namespace ClientMessenger
             FriendsPanel.Visibility = Visibility.Visible;
         }
 
+        #region Init AddFriendPanel
+
         private void InitAddFriendUsernameTextBox()
         {
             byte maxChars = 14;
@@ -61,12 +69,95 @@ namespace ClientMessenger
             {
                 int charAmount = AddFriendUsernameTextBox.Text.Length;
 
-                if (charAmount >= maxChars)
+                if (charAmount >= maxChars || !UsernameRegex().IsMatch(args.Text))
                     args.Handled = true;
             };
         }
 
+        private void InitAddFriendHashTagTextBox()
+        {
+            const byte maxChars = 5;
+            AddFriendHashTagTextBox.PreviewTextInput += (sender, args) =>
+            {
+                if (AddFriendHashTagTextBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
+                {
+                    args.Handled = true;
+                    return;
+                }
+            };
+
+            AddFriendHashTagTextBox.TextChanged += (sender, args) =>
+            {
+                if (!AddFriendHashTagTextBox.Text.StartsWith('#'))
+                {
+                    AddFriendHashTagTextBox.Text = "#" + AddFriendHashTagTextBox.Text.TrimStart('#');
+                    AddFriendHashTagTextBox.CaretIndex = AddFriendHashTagTextBox.Text.Length;
+                }
+            };
+
+            ClientUI.RestrictClipboardPasting(AddFriendHashTagTextBox, maxChars);
+        }
+
+        private void InitAddFriendBtn()
+        {
+            AddFriendAddFriendBtn.Click += async (sender, args) =>
+            {
+                var username = AddFriendUsernameTextBox.Text;
+                var hashTag = AddFriendHashTagTextBox.Text;
+
+                if (!AddFriendValidateData(username, hashTag))
+                {
+                    await DisplayInfosAddFriendPanelAsync(Brushes.Red, "The username and/or password is invalid");
+                    return;
+                }
+
+                Relationship relationship = new()
+                {
+                    Username = username,
+                    HashTag = hashTag
+                };
+
+                RelationshipUpdate relationshipUpdate = new()
+                {
+                    RequestedRelationshipstate = Relationshipstate.Pending,
+                    Relationship = relationship,
+                    User = Client.User
+                };
+
+                var payload = new
+                {
+                    code = OpCode.UpdateRelationship,
+                    relationshipUpdate
+                };
+
+                if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+                {
+                    await DisplayInfosAddFriendPanelAsync(Brushes.Red, $"Pls wait another {timeToWait.TotalSeconds}s");
+                }
+
+                await Client.SendPayloadAsync(payload);
+            };
+        }
+
         #endregion
+
+        #endregion
+
+        public async Task DisplayInfosAddFriendPanelAsync(SolidColorBrush color, string msg)
+        {
+            AddFriendInfoTextBlock.Foreground = color;
+            AddFriendInfoTextBlock.Text = msg;
+
+            await Task.Delay(2000);
+
+            AddFriendInfoTextBlock.Foreground = Brushes.Black;
+            AddFriendInfoTextBlock.Text = "Enter valid data";
+        }
+
+        private static bool AddFriendValidateData(string username, string hashTag)
+            => !string.IsNullOrEmpty(username) || !string.IsNullOrEmpty(hashTag);
+
+        #region ChangePanel
 
         private void HidePanels()
         {
@@ -142,6 +233,8 @@ namespace ClientMessenger
 
             translateTransform.BeginAnimation(TranslateTransform.XProperty, slideOutAnimation);
         }
+
+        #endregion
 
         #endregion
     }
