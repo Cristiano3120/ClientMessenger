@@ -133,6 +133,7 @@ namespace ClientMessenger
                 if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
                 {
                     await DisplayInfosAddFriendPanelAsync(Brushes.Red, $"Pls wait another {timeToWait.TotalSeconds}s");
+                    return;
                 }
 
                 await Client.SendPayloadAsync(payload);

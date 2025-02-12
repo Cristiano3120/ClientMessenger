@@ -17,6 +17,7 @@ namespace ClientMessenger
         private static partial Regex FilterKeywords();
 
         private static readonly string _pathToLogFile;
+        private static Lock _lock = new Lock();
 
         static Logger()
         {
@@ -138,21 +139,23 @@ namespace ClientMessenger
         /// </summary>
         private static void Log(ConsoleColor color, bool makeLineAfter, params string[] logs)
         {
-            //braucht ein lock
-            //using StreamWriter streamWriter = new(_pathToLogFile, true);
-            Console.ForegroundColor = color;
-
-            for (int i = 0; i < logs.Length; i++)
+            lock (_lock)
             {
-                string message = FilterProfilPicRegex().Replace(logs[i], "$1[Image]$2");
-                Console.WriteLine($"[{DateTime.Now:HH: dd: ss}]: {message}");
-                //streamWriter.WriteLine(FilterKeywords().Replace(message, match => $"**{match.Value}**"));
-            }
+                using StreamWriter streamWriter = new(_pathToLogFile, true);
+                Console.ForegroundColor = color;
 
-            if (makeLineAfter)
-            {
-                //streamWriter.WriteLine("");
-                Console.WriteLine("");
+                for (int i = 0; i < logs.Length; i++)
+                {
+                    string message = FilterProfilPicRegex().Replace(logs[i], "$1[Image]$2");
+                    Console.WriteLine($"[{DateTime.Now:HH: dd: ss}]: {message}");
+                    streamWriter.WriteLine(FilterKeywords().Replace(message, match => $"**{match.Value}**"));
+                }
+
+                if (makeLineAfter)
+                {
+                    streamWriter.WriteLine("");
+                    Console.WriteLine("");
+                }
             }
         }
     }
