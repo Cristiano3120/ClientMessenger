@@ -96,13 +96,15 @@ namespace ClientMessenger
                     return;
                 }
 
-                Client.Config.SetBoolean(JsonFile.Config, "AutoLogin", AutoLoginCheckBox.IsEnabled);
+                bool stayLoggedIn = AutoLoginCheckBox.IsEnabled;
+                Client.Config = Client.Config.SetBoolean(JsonFile.Config, "AutoLogin", stayLoggedIn);
 
                 var payload = new
                 {
                     code = OpCode.RequestLogin,
                     email,
                     password,
+                    stayLoggedIn,
                 };
 
                 await Client.SendPayloadAsync(payload);

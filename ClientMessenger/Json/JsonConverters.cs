@@ -31,6 +31,7 @@ namespace ClientMessenger.Json
                             Id = long.Parse(root.GetProperty("Id").GetString()!),
                             Birthday = root.GetProperty("Birthday").GetDateOnly(),
                             FaEnabled = bool.Parse(root.GetProperty("FaEnabled").GetString()!),
+                            Token = root.GetProperty("Token").GetString()!
                         };
                 }
             }

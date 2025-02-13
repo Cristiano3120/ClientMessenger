@@ -19,10 +19,10 @@
             <Button x:Name="CloseBtn" Content="X"  BorderBrush="#1f1e1f" Height="30" Width="30" Margin="0, 0, 0, 0"/>
         </StackPanel>
 
-        <TextBlock x:Name="EmailError" Foreground="Red" Text="Email can´t be empty or unvalid!" Height="20" Width="200" Margin="40, 0, 0, 150" Visibility="Hidden"/>
+        <TextBlock x:Name="EmailError" Foreground="Red" Text="Email can´t be empty or unvalid!" Height="20" Width="200" Margin="0, 0, 0, 150" Visibility="Collapsed" TextAlignment="Center"/>
         <TextBox x:Name="EmailTextBox" Width="160" Height="30" Background="#343234" Margin="0, 0, 0, 100" Text="Email"/>
 
-        <TextBlock x:Name="PasswordError" Foreground="Red" Text="Can´t be empty!" Height="20" Width="160" Margin="0, 0, 0, 0" Visibility="Hidden"/>
+        <TextBlock x:Name="PasswordError" Foreground="Red" Text="Can´t be empty!" Height="20" Width="160" Margin="0, 0, 0, 0" Visibility="Collapsed" TextAlignment="Center"/>
         <TextBox x:Name="PasswordTextBox" Width="160" Height="30" Background="#343234" Margin="0, 50, 0, 0" Text="Password"/>
 
         <CheckBox VerticalAlignment="Center" HorizontalAlignment="Center" x:Name="AutoLoginCheckBox" Margin="100, 0, 10, 43" Width="20" Height="20" Background="#7c7e84" IsChecked="True" IsThreeState="False"/>

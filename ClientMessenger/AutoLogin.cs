@@ -6,7 +6,7 @@
         /// Saves or updates the auto login data
         /// </summary>
         public static void UpsertData(string token)
-           => Client.Config.SetString(JsonFile.Config, "Token", token);
+           => Client.Config = Client.Config.SetString(JsonFile.Config, "Token", token);
 
         private static string GetData() 
             => Client.Config.GetProperty("Token").GetString()!;
@@ -31,5 +31,8 @@
             }
             return false;
         }
+
+        public static void DeleteData()
+        => Client.Config = Client.Config.SetString(JsonFile.Config, "Token", "");
     }
 }

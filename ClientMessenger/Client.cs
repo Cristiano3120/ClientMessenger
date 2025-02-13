@@ -11,7 +11,7 @@ namespace ClientMessenger
     internal static class Client
     {
         public static JsonSerializerOptions JsonSerializerOptions { get; private set; } = new();
-        public static JsonElement Config { get; private set; } = JsonExtensions.ReadConfig();
+        public static JsonElement Config { get; set; } = JsonExtensions.ReadJsonFile(JsonFile.Config);
         private static ClientWebSocket _server = new();
         public static User User { get; set; } = new();
 

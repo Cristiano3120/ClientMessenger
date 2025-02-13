@@ -42,7 +42,7 @@ namespace ClientMessenger
             if (error.Exception == NpgsqlExceptions.None)
             {
                 Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
-                AutoLogin.UpsertData(message.GetProperty("token").GetString()!);
+                AutoLogin.UpsertData(Client.User.Token);
                 ClientUI.SwitchWindows<CreateAcc, Verification>();
                 return;
             }
@@ -62,6 +62,7 @@ namespace ClientMessenger
             }
 
             Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
+            AutoLogin.UpsertData(Client.User.Token);
 
             if (Client.User.FaEnabled)
             {
@@ -168,6 +169,10 @@ namespace ClientMessenger
                         Home home = ClientUI.GetWindow<Home>();
                         await home.DisplayInfosAddFriendPanelAsync(Brushes.Red, "Username or hashtag is wrong");
                     });
+                    break;
+                case NpgsqlExceptions.TokenInvalid:
+                    AutoLogin.DeleteData();
+                    Application.Current.Dispatcher.Invoke(() => ClientUI.SwitchWindows<MainWindow, Login>());
                     break;
                 default:
                     Logger.LogError($"The received database error has no case(Error: {error}).");

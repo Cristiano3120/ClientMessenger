@@ -8,8 +8,6 @@ namespace ClientMessenger.Json
 {
     internal static class JsonExtensions
     {
-        private static readonly string _pathToConfig = Client.GetDynamicPath(@"Settings/Settings.json");
-
         #region GetExtensions
         /// <summary>
         /// Needs to be called on the <c>code</c> property of the <see cref="JsonElement"/>.
@@ -92,7 +90,7 @@ namespace ClientMessenger.Json
         {
             return jsonFile switch
             {
-                JsonFile.Config => _pathToConfig,
+                JsonFile.Config => Client.GetDynamicPath(@"Settings/Settings.json"),
                 _ => throw new NotSupportedException("The JsonFile has no entry")
             };
         }
@@ -101,9 +99,10 @@ namespace ClientMessenger.Json
 
         #region ReadJson
         
-        public static JsonElement ReadConfig()
+        public static JsonElement ReadJsonFile(JsonFile jsonFile)
         {
-            var jsonFileContent = File.ReadAllText(_pathToConfig);
+            string pathToJson = GetPathToJsonFile(jsonFile);    
+            string jsonFileContent = File.ReadAllText(pathToJson);
             return JsonDocument.Parse(jsonFileContent).RootElement;
         }
 
