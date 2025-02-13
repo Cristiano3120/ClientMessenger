@@ -10,13 +10,13 @@ namespace ClientMessenger.Json
     {
         #region GetExtensions
         /// <summary>
-        /// Needs to be called on the <c>code</c> property of the <see cref="JsonElement"/>.
+        /// Needs to be called on the <c>root</c> of the <see cref="JsonElement"/>.
         /// Converts the data that is sent as an byte to the <see cref="OpCode"/> equivalent.
         /// </summary>
         /// <param name="property">The <c>code</c> as an <see cref="JsonElement"/> property</param>
         /// <returns><c>Returns</c> the from the Server received OpCode</returns>
         public static OpCode GetOpCode(this JsonElement property)
-            => (OpCode)property.GetByte();
+            => (OpCode)property.GetProperty("opCode").GetByte();
 
         /// <summary>
         /// Needs to be called on the <c>root</c> of the <see cref="JsonElement"/>.
@@ -38,12 +38,12 @@ namespace ClientMessenger.Json
             => DateOnly.Parse(property.GetString()!, new CultureInfo("de-DE"));
 
         /// <summary>
-        /// Needs to be called on the <c>root</c> property of the <see cref="JsonElement"/>.
+        /// Needs to be called on the <c>root</c> of the <see cref="JsonElement"/>.
         /// </summary>
         /// <returns><c>Returns</c> the NpgsqlException that the Server sent</returns>
         /// <exception cref="InvalidOperationException"></exception>
         public static NpgsqlExceptionInfos GetNpgsqlExceptionInfos(this JsonElement property)
-            => JsonSerializer.Deserialize<NpgsqlExceptionInfos>(property.GetProperty("npgsqlException"))
+            => JsonSerializer.Deserialize<NpgsqlExceptionInfos>(property.GetProperty("npgsqlExceptionInfos"))
             ?? throw new InvalidOperationException("Couldn´t get NpgsqlExceptionInfos");
 
         #endregion

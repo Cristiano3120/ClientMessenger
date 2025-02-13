@@ -1,6 +1,5 @@
 ﻿using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Reflection.PortableExecutable;
 
 namespace ClientMessenger.Json
 {
@@ -14,24 +13,22 @@ namespace ClientMessenger.Json
                 {
                     JsonElement root = doc.RootElement;
 
-                    root = root.TryGetProperty("user", out JsonElement property)
-                        ? property 
-                        : doc.RootElement.GetProperty("User");
+                    root = root.GetProperty("user");
 
                     return root.ValueKind == JsonValueKind.Null
                         ? null
                         : new User()
                         {
-                            ProfilePicture = Converter.ToBitmapImage(root.GetProperty("ProfilePicture").GetBytesFromBase64()),
-                            Username = root.GetProperty("Username").GetString()!,
-                            HashTag = root.GetProperty("HashTag").GetString()!,
-                            Email = root.GetProperty("Email").GetString()!,
-                            Password = root.GetProperty("Password").GetString()!,
-                            Biography = root.GetProperty("Biography").GetString()!,
-                            Id = long.Parse(root.GetProperty("Id").GetString()!),
-                            Birthday = root.GetProperty("Birthday").GetDateOnly(),
-                            FaEnabled = bool.Parse(root.GetProperty("FaEnabled").GetString()!),
-                            Token = root.GetProperty("Token").GetString()!
+                            ProfilePicture = Converter.ToBitmapImage(root.GetProperty("profilePicture").GetBytesFromBase64()),
+                            Username = root.GetProperty("username").GetString()!,
+                            HashTag = root.GetProperty("hashTag").GetString()!,
+                            Email = root.GetProperty("email").GetString()!,
+                            Password = root.GetProperty("password").GetString()!,
+                            Biography = root.GetProperty("biography").GetString()!,
+                            Id = long.Parse(root.GetProperty("id").GetString()!),
+                            Birthday = root.GetProperty("birthday").GetDateOnly(),
+                            FaEnabled = bool.Parse(root.GetProperty("faEnabled").GetString()!),
+                            Token = root.GetProperty("token").GetString()!
                         };
                 }
             }
@@ -74,19 +71,18 @@ namespace ClientMessenger.Json
                 {
                     JsonElement root = doc.RootElement;
 
-                    root = root.TryGetProperty("relationship", out JsonElement property)
-                        ? property
-                        : doc.RootElement.GetProperty("Relationship");
+                    root = root.GetProperty("relationship");
 
                     return root.ValueKind == JsonValueKind.Null
                         ? null
                         : new Relationship()
                         {
-                            ProfilePicture = Converter.ToBitmapImage(root.GetProperty("ProfilePicture").GetBytesFromBase64()),
-                            Username = root.GetProperty("Username").GetString()!,
-                            HashTag = root.GetProperty("HashTag").GetString()!,
-                            Biography = root.GetProperty("Biography").GetString()!,
-                            Id = long.Parse(root.GetProperty("Id").GetString()!),
+                            ProfilePicture = Converter.ToBitmapImage(root.GetProperty("profilePicture").GetBytesFromBase64()),
+                            Username = root.GetProperty("username").GetString()!,
+                            HashTag = root.GetProperty("hashTag").GetString()!,
+                            Biography = root.GetProperty("biography").GetString()!,
+                            Id = long.Parse(root.GetProperty("id").GetString()!),
+                            Relationshipstate = Enum.Parse<Relationshipstate>(root.GetProperty("relationshipstate").GetString()!),
                         };
                 }
             }

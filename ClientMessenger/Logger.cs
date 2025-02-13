@@ -10,7 +10,7 @@ namespace ClientMessenger
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool AllocConsole();
 
-        [GeneratedRegex("(\"ProfilePicture\": \")[^\"]*(\")")]
+        [GeneratedRegex("(\"profilePicture\": \")[^\"]*(\")")]
         private static partial Regex FilterProfilPicRegex();
 
         [GeneratedRegex(@"\[[^\]]*\]")]

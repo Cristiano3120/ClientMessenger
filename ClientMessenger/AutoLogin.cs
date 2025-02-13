@@ -23,7 +23,7 @@
             {
                 var payload = new
                 {
-                    code = OpCode.AutoLoginRequest,
+                    opCode = OpCode.AutoLoginRequest,
                     token
                 };
                 await Client.SendPayloadAsync(payload);

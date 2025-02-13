@@ -34,7 +34,7 @@ namespace ClientMessenger
             return bitmapImage;
         }
 
-        public static byte[] ToByteArray(BitmapImage bitmapImage)
+        public static byte[] ToByteArray(BitmapImage? bitmapImage)
         {
             if (bitmapImage == null)
                 return [];

@@ -245,54 +245,59 @@ namespace ClientMessenger
         {
             SignUpBtn.Click += async (sender, args) =>
             {
-                if (!CheckIfAllFieldsAreFilledStage2())
-                {
-                    await Error(UsernameError);
-                    return;
-                }
-
-                if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
-                {
-                    await ActivateErrorMessage(timeToWait);
-                    return;
-                }
-
-                var biography = BiographyTextBox.Text == "Biography"
-                    ? ""
-                    : BiographyTextBox.Text;
-
-                var dayItem = (ComboBoxItem)DayBox.SelectedItem;
-                var monthItem = (ComboBoxItem)MonthBox.SelectedItem;
-                var yearItem = (ComboBoxItem)YearBox.SelectedItem;
-
-                var day = int.Parse((string)dayItem.Content).ToString("D2");
-                var month = int.Parse((string)monthItem.Content).ToString("D2");
-                var year = (string)yearItem.Content;
-
-                if (_profilPicFile is "" or null)
-                {
-                    _profilPicFile = ClientUI.DefaultProfilPic;
-                }
-
-                var user = new User()
-                {
-                    Email = EmailTextBox.Text,
-                    Password = PasswordTextBox.Text,
-                    Birthday = DateOnly.ParseExact($"{day}-{month}-{year}", "dd-MM-yyyy", CultureInfo.InvariantCulture),
-                    Username = UsernameTextBox.Text,
-                    HashTag = HashTagTextBox.Text,
-                    Biography = biography,
-                    ProfilePicture = ImageEditor.ScaleImage(_profilPicFile),
-                    FaEnabled = FaCheckBox.IsChecked!.Value,
-                };
-
-                var payload = new
-                {
-                    code = OpCode.RequestCreateAccount,
-                    user,
-                };
-                await Client.SendPayloadAsync(payload);
+                await SendCreateAccountRequest();
             };
+        }
+
+        private async Task SendCreateAccountRequest()
+        {
+            if (!CheckIfAllFieldsAreFilledStage2())
+            {
+                await Error(UsernameError);
+                return;
+            }
+
+            if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+            {
+                await ActivateErrorMessage(timeToWait);
+                return;
+            }
+
+            var biography = BiographyTextBox.Text == "Biography"
+                ? ""
+                : BiographyTextBox.Text;
+
+            var dayItem = (ComboBoxItem)DayBox.SelectedItem;
+            var monthItem = (ComboBoxItem)MonthBox.SelectedItem;
+            var yearItem = (ComboBoxItem)YearBox.SelectedItem;
+
+            var day = int.Parse((string)dayItem.Content).ToString("D2");
+            var month = int.Parse((string)monthItem.Content).ToString("D2");
+            var year = (string)yearItem.Content;
+
+            if (_profilPicFile is "" or null)
+            {
+                _profilPicFile = ClientUI.DefaultProfilPic;
+            }
+
+            var user = new User()
+            {
+                Email = EmailTextBox.Text,
+                Password = PasswordTextBox.Text,
+                Birthday = DateOnly.ParseExact($"{day}-{month}-{year}", "dd-MM-yyyy", CultureInfo.InvariantCulture),
+                Username = UsernameTextBox.Text,
+                HashTag = HashTagTextBox.Text,
+                Biography = biography,
+                ProfilePicture = ImageEditor.ScaleImage(_profilPicFile),
+                FaEnabled = FaCheckBox.IsChecked!.Value,
+            };
+
+            var payload = new
+            {
+                opCode = OpCode.RequestCreateAccount,
+                user,
+            };
+            await Client.SendPayloadAsync(payload);
         }
 
         private async Task ActivateErrorMessage(TimeSpan cooldown)

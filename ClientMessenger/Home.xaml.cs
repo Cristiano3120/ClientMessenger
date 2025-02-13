@@ -102,45 +102,50 @@ namespace ClientMessenger
         {
             AddFriendAddFriendBtn.Click += async (sender, args) =>
             {
-                var username = AddFriendUsernameTextBox.Text;
-                var hashTag = AddFriendHashTagTextBox.Text;
-
-                if (!AddFriendValidateData(username, hashTag))
-                {
-                    await DisplayInfosAddFriendPanelAsync(Brushes.Red, "The username and/or password is invalid");
-                    return;
-                }
-
-                Relationship relationship = new()
-                {
-                    Username = username,
-                    HashTag = hashTag
-                };
-
-                RelationshipUpdate relationshipUpdate = new()
-                {
-                    RequestedRelationshipstate = Relationshipstate.Pending,
-                    Relationship = relationship,
-                    User = Client.User
-                };
-
-                var payload = new
-                {
-                    code = OpCode.UpdateRelationship,
-                    relationshipUpdate
-                };
-
-                if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
-                {
-                    await DisplayInfosAddFriendPanelAsync(Brushes.Red, $"Pls wait another {timeToWait.TotalSeconds}s");
-                    return;
-                }
-
-                await Client.SendPayloadAsync(payload);
+                await SendFriendRequest();
             };
         }
 
         #endregion
+
+        private async Task SendFriendRequest()
+        {
+            var username = AddFriendUsernameTextBox.Text;
+            var hashTag = AddFriendHashTagTextBox.Text;
+
+            if (!AddFriendValidateData(username, hashTag))
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "The username and/or password is invalid");
+                return;
+            }
+
+            Relationship relationship = new()
+            {
+                Username = username,
+                HashTag = hashTag
+            };
+
+            RelationshipUpdate relationshipUpdate = new()
+            {
+                RequestedRelationshipstate = Relationshipstate.Pending,
+                Relationship = relationship,
+                User = Client.User
+            };
+
+            var payload = new
+            {
+                opCode = OpCode.UpdateRelationship,
+                relationshipUpdate
+            };
+
+            if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, $"Pls wait another {timeToWait.TotalSeconds}s");
+                return;
+            }
+
+            await Client.SendPayloadAsync(payload);
+        }
 
         #endregion
 

@@ -17,7 +17,7 @@ namespace ClientMessenger
             RSAParameters publicKey = message.GetPublicKey();
             var payload = new
             {
-                code = OpCode.SendAes,
+                opCode = OpCode.SendAes,
                 key = Convert.ToBase64String(Security.Aes.Key),
                 iv = Convert.ToBase64String(Security.Aes.IV),
             };
@@ -84,7 +84,7 @@ namespace ClientMessenger
         {
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(null);
             await Client.CloseConnectionAsync(WebSocketCloseStatus.PolicyViolation, "");
-            AutoLogin.UpsertData("");
+            AutoLogin.DeleteData();
             Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 

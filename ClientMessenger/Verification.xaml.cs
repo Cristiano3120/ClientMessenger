@@ -15,19 +15,24 @@ namespace ClientMessenger
 
             SignUpBtn.Click += async (sender, args) =>
             {
-                if (string.IsNullOrEmpty(VerificationTextBox.Text))
-                {
-                    await ChangeMsg("Enter the verification code");
-                    return;
-                }
-
-                var payload = new
-                {
-                    code = OpCode.VerificationProcess,
-                    verificationCode = int.Parse(VerificationTextBox.Text)
-                };
-                await Client.SendPayloadAsync(payload);
+                await SendVerificationCode();
             };
+        }
+
+        private async Task SendVerificationCode()
+        {
+            if (string.IsNullOrEmpty(VerificationTextBox.Text))
+            {
+                await ChangeMsg("Enter the verification code");
+                return;
+            }
+
+            var payload = new
+            {
+                opCode = OpCode.VerificationProcess,
+                verificationCode = int.Parse(VerificationTextBox.Text)
+            };
+            await Client.SendPayloadAsync(payload);
         }
 
         public async Task AnswerToVerificationRequest(bool? success)

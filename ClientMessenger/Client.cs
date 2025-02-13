@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,6 +27,7 @@ namespace ClientMessenger
                 args.SetObserved();
             };
 
+            JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             JsonSerializerOptions.Converters.Add(new JsonConverters.UserConverter());
             JsonSerializerOptions.Converters.Add(new JsonConverters.RelationshipConverter());
             JsonSerializerOptions.WriteIndented = true;
@@ -106,7 +106,7 @@ namespace ClientMessenger
 
         private static async Task HandleReceivedMessageAsync(JsonElement message)
         {
-            OpCode code = message.GetProperty("code").GetOpCode();
+            OpCode code = message.GetOpCode();
             switch (code)
             {
                 case OpCode.ReceiveRSA:

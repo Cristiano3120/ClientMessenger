@@ -84,35 +84,39 @@ namespace ClientMessenger
         {
             LoginBtn.Click += async (sender, args) =>
             {
-                string email = EmailTextBox.Text;
-                string password = PasswordTextBox.Text;
-
-                if (!await ValidateUserInput(email, password))
-                    return;
-
-                if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
-                {
-                    await ActivateCooldownError(timeToWait);
-                    return;
-                }
-
-                bool stayLoggedIn = AutoLoginCheckBox.IsEnabled;
-                Client.Config = Client.Config.SetBoolean(JsonFile.Config, "AutoLogin", stayLoggedIn);
-
-                var payload = new
-                {
-                    code = OpCode.RequestLogin,
-                    email,
-                    password,
-                    stayLoggedIn,
-                };
-
-                await Client.SendPayloadAsync(payload);
+                await SendLoginRequest();
             };
         }
 
-
         #endregion
+
+        private async Task SendLoginRequest()
+        {
+            string email = EmailTextBox.Text;
+            string password = PasswordTextBox.Text;
+
+            if (!await ValidateUserInput(email, password))
+                return;
+
+            if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+            {
+                await ActivateCooldownError(timeToWait);
+                return;
+            }
+
+            bool stayLoggedIn = AutoLoginCheckBox.IsEnabled;
+            Client.Config = Client.Config.SetBoolean(JsonFile.Config, "AutoLogin", stayLoggedIn);
+
+            var payload = new
+            {
+                opCode = OpCode.RequestLogin,
+                email,
+                password,
+                stayLoggedIn,
+            };
+
+            await Client.SendPayloadAsync(payload);
+        }
 
         #region HandleError
 

@@ -1,8 +1,12 @@
-﻿namespace ClientMessenger
+﻿using System.Text.Json.Serialization;
+
+namespace ClientMessenger
 {
     internal sealed record NpgsqlExceptionInfos
     {
+        [JsonPropertyName("npgsqlExceptions")]
         public NpgsqlExceptions Exception { get; init; }
+        [JsonPropertyName("columnName")]
         public string ColumnName { get; init; }
 
         #region Constructors
