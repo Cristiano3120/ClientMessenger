@@ -119,6 +119,12 @@ namespace ClientMessenger
                 return;
             }
 
+            if (username == Client.User.Username && hashTag == Client.User.HashTag)
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You can´t add yourself :(");
+                return;
+            }
+                
             Relationship relationship = new()
             {
                 Username = username,
