@@ -3,7 +3,6 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Media;
-using Microsoft.VisualBasic;
 
 namespace ClientMessenger
 {
@@ -124,11 +123,32 @@ namespace ClientMessenger
                 {
                     Home home = ClientUI.GetWindow<Home>();
                     await home.DisplayInfosAddFriendPanelAsync(Brushes.Green, "Succesfully added");
-                    Logger.LogError("AnswerToRelationshipUpdateRequest()[MUSS ZU PENDING GEADDET WERDEN]");
+                    home.Add(JsonSerializer.Deserialize<Relationship>(message.GetProperty("affectedUser"), Client.JsonSerializerOptions));
                 });
                 return;
             }
+
             await HandleNpgsqlErrorAsync(exceptionInfos);
+        }
+
+        public static async Task ReceiveRelationships(JsonElement message)
+        {
+            HashSet<Relationship>? relationships = JsonSerializer.Deserialize<HashSet<Relationship>>(message.GetProperty("relationships"), Client.JsonSerializerOptions);
+            NpgsqlExceptionInfos npgsqlExceptionInfos = message.GetNpgsqlExceptionInfos();
+
+            if (npgsqlExceptionInfos.Exception != NpgsqlExceptions.None)
+            {
+                await HandleNpgsqlErrorAsync(npgsqlExceptionInfos);
+                return;
+            }
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Home home = ClientUI.GetWindow<Home>();
+                home.Blocked = [.. relationships!.Where(x => x.Relationshipstate == Relationshipstate.Blocked)];
+                home.Pending = [.. relationships!.Where(x => x.Relationshipstate == Relationshipstate.Pending)];
+                home.Friends = [.. relationships!.Where(x => x.Relationshipstate == Relationshipstate.Friend)];
+            });
         }
 
         #endregion

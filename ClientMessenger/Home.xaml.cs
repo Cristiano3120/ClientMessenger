@@ -10,8 +10,21 @@ namespace ClientMessenger
     {
         [GeneratedRegex(@"^[A-Za-z0-9._\s]+$")]
         private static partial Regex UsernameRegex();
+        /// <summary>
+        /// Use methods like home.Add(Relationship) to access the getter
+        /// </summary>
+        public HashSet<Relationship> Friends { private get; set; } = [];
 
-        private static readonly HashSet<Relationship> _relationships = [];
+        /// <summary>
+        /// Use methods like home.Add(Relationship) to access the getter
+        /// </summary>
+        public HashSet<Relationship> Blocked { private get; set; } = [];
+
+        /// <summary>
+        /// Use methods like home.Add(Relationship) to access the getter
+        /// </summary>
+        public HashSet<Relationship> Pending { private get; set; } = [];
+
         public Home()
         {
             InitializeComponent();
@@ -23,6 +36,56 @@ namespace ClientMessenger
             InitPanels();
             InitBtns();
         }
+
+        #region Relationship lists methods
+
+        public void Add(Relationship? relationship)
+        {
+            ArgumentNullException.ThrowIfNull(relationship);
+
+            switch (relationship.Relationshipstate)
+            {
+                case Relationshipstate.Friend:
+                    Friends.Add(relationship);
+
+                    if (FriendsPanel.Visibility == Visibility.Visible)
+                        UpdateFriendsPanel();
+                    break;
+                case Relationshipstate.Blocked:
+                    Blocked.Add(relationship);
+
+                    if (BlockedPanel.Visibility == Visibility.Visible)
+                        UpdateBlockedPanel();
+                    break;
+                case Relationshipstate.Pending:
+                    Pending.Add(relationship);
+
+                    if (PendingPanel.Visibility == Visibility.Visible)
+                        UpdatePendingPanel();
+                    break;
+            }
+        }
+
+        #endregion
+
+        #region Update Panels
+
+        private void UpdateFriendsPanel()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void UpdateBlockedPanel()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void UpdatePendingPanel()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
 
         #region Init
 
@@ -124,7 +187,7 @@ namespace ClientMessenger
                 await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You can´t add yourself :(");
                 return;
             }
-                
+
             Relationship relationship = new()
             {
                 Username = username,

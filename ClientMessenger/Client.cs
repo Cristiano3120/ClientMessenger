@@ -7,7 +7,7 @@ using System.Windows;
 
 namespace ClientMessenger
 {
-    internal static class Client
+    public static class Client
     {
         public static JsonSerializerOptions JsonSerializerOptions { get; private set; } = new();
         public static JsonElement Config { get; set; } = JsonExtensions.ReadJsonFile(JsonFile.Config);
@@ -132,6 +132,9 @@ namespace ClientMessenger
                     break;
                 case OpCode.AnswerToRequestedRelationshipUpdate:
                     await HandleServerResponses.AnswerToRelationshipUpdateRequest(message);
+                    break;
+                case OpCode.ReceiveFriendships:
+                    await HandleServerResponses.ReceiveRelationships(message);
                     break;
             }
         }

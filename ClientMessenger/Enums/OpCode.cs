@@ -1,6 +1,6 @@
 ﻿namespace ClientMessenger.Enums
 {
-    internal enum OpCode : byte
+    public enum OpCode : byte
     {
         ReceiveRSA = 0,
         SendAes = 1,
@@ -15,5 +15,6 @@
         AutoLoginResponse = 10,
         UpdateRelationship = 11,
         AnswerToRequestedRelationshipUpdate = 12,
+        ReceiveFriendships = 13,
     }
 }
