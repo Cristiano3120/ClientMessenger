@@ -15,6 +15,6 @@
         AutoLoginResponse = 10,
         UpdateRelationship = 11,
         AnswerToRequestedRelationshipUpdate = 12,
-        ReceiveFriendships = 13,
+        ReceiveRelationships = 13,
     }
 }

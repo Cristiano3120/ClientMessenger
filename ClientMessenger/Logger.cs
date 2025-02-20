@@ -17,7 +17,7 @@ namespace ClientMessenger
         private static partial Regex FilterKeywords();
 
         private static readonly string _pathToLogFile;
-        private static Lock _lock = new Lock();
+        private static readonly Lock _lock = new();
 
         static Logger()
         {
@@ -122,7 +122,7 @@ namespace ClientMessenger
                 var columnNum = stackFrame?.GetFileColumnNumber();
 
                 var index = filename.LastIndexOf(@"\") + 1;
-                filename = filename.Remove(0, index);
+                filename = filename[index..];
 
                 var errorInfos = $"ERROR in file {filename}, in {methodName}, at line: {lineNum}, at column: {columnNum}";
                 Log(ConsoleColor.Red, false, errorInfos);

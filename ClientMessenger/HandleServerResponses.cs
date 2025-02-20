@@ -123,7 +123,7 @@ namespace ClientMessenger
                 {
                     Home home = ClientUI.GetWindow<Home>();
                     await home.DisplayInfosAddFriendPanelAsync(Brushes.Green, "Succesfully added");
-                    home.Add(JsonSerializer.Deserialize<Relationship>(message.GetProperty("affectedUser"), Client.JsonSerializerOptions));
+                    home.Add(JsonSerializer.Deserialize<Relationship>(message, Client.JsonSerializerOptions));
                 });
                 return;
             }

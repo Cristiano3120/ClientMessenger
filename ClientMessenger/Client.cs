@@ -133,7 +133,7 @@ namespace ClientMessenger
                 case OpCode.AnswerToRequestedRelationshipUpdate:
                     await HandleServerResponses.AnswerToRelationshipUpdateRequest(message);
                     break;
-                case OpCode.ReceiveFriendships:
+                case OpCode.ReceiveRelationships:
                     await HandleServerResponses.ReceiveRelationships(message);
                     break;
             }
