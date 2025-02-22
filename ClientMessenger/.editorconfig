@@ -113,7 +113,7 @@ csharp_style_prefer_readonly_struct_member = true:suggestion
 
 # Einstellungen für Codeblöcke
 csharp_prefer_braces = true:silent
-csharp_prefer_simple_using_statement = true:suggestion
+csharp_prefer_simple_using_statement = false:suggestion
 csharp_style_namespace_declarations = block_scoped:warning
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_prefer_primary_constructors = false:suggestion
@@ -170,7 +170,7 @@ csharp_space_after_comma = true:suggestion
 csharp_space_after_dot = false:suggestion
 csharp_space_after_keywords_in_control_flow_statements = true:suggestion
 csharp_space_after_semicolon_in_for_statement = true:suggestion
-csharp_space_around_binary_operators = before_and_after:suggestion
+csharp_space_around_binary_operators = before_and_after
 csharp_space_around_declaration_statements = false
 csharp_space_before_colon_in_inheritance_clause = true:suggestion
 csharp_space_before_comma = false:suggestion
@@ -245,9 +245,11 @@ dotnet_naming_style._fieldname.required_suffix =
 dotnet_naming_style._fieldname.word_separator = 
 dotnet_naming_style._fieldname.capitalization = camel_case
 dotnet_diagnostic.CA1805.severity = suggestion
+csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
+csharp_prefer_system_threading_lock = true:suggestion
 
 [*.{cs,vb}]
-dotnet_style_operator_placement_when_wrapping = beginning_of_line:suggestion
+dotnet_style_operator_placement_when_wrapping = beginning_of_line
 end_of_line = crlf
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion

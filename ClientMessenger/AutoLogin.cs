@@ -21,14 +21,16 @@
             string? token = GetData();
             if (!string.IsNullOrEmpty(token))
             {
+                LoginRequest loginRequest = new(token);
                 var payload = new
                 {
-                    opCode = OpCode.AutoLoginRequest,
-                    token
+                    opCode = OpCode.RequestLogin,
+                    loginRequest
                 };
                 await Client.SendPayloadAsync(payload);
                 return true;
             }
+
             return false;
         }
 

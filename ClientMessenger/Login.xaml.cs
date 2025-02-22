@@ -110,9 +110,7 @@ namespace ClientMessenger
             var payload = new
             {
                 opCode = OpCode.RequestLogin,
-                email,
-                password,
-                stayLoggedIn,
+                loginRequest = new LoginRequest(email, password, stayLoggedIn)
             };
 
             await Client.SendPayloadAsync(payload);

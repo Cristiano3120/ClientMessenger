@@ -88,8 +88,8 @@ namespace ClientMessenger
 
         #region Control Window state
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+        [LibraryImport("user32.dll", EntryPoint = "SendMessageW", StringMarshalling = StringMarshalling.Utf16)]
+        private static partial IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
 
         public static void RegisterWindowButtons(Button minimizeButton, Button maximizeButton, Button closeButton)
         {
