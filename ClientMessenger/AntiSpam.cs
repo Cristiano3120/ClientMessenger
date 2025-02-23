@@ -3,7 +3,6 @@
     internal static class AntiSpam
     {
         private static DateTime _lastInputTime = DateTime.MinValue;
-        private const float _preLoginCooldown = 1.5f;
 
         /// <summary>
         /// Checks if the client is allowed to send another payload or if they need to wait.
@@ -15,7 +14,7 @@
         /// <returns>
         /// <c>true</c> if the client can send another payload or <c>false</c> if they need to wait.
         /// </returns>
-        public static bool CheckIfCanSendDataPreLogin(out TimeSpan timeToWait)
+        public static bool CheckIfCanSendData(float cooldown, out TimeSpan timeToWait)
         {
             timeToWait = TimeSpan.Zero;
 
@@ -26,13 +25,13 @@
             }
 
             TimeSpan interval = DateTime.Now - _lastInputTime;
-            if (interval > TimeSpan.FromSeconds(_preLoginCooldown))
+            if (interval > TimeSpan.FromSeconds(cooldown))
             {
                 _lastInputTime = DateTime.Now;
                 return true;
             }
 
-            timeToWait = TimeSpan.FromSeconds(_preLoginCooldown) - interval;
+            timeToWait = TimeSpan.FromSeconds(cooldown) - interval;
             return false;
         }
     }

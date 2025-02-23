@@ -98,7 +98,7 @@ namespace ClientMessenger
             if (!await ValidateUserInput(email, password))
                 return;
 
-            if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+            if (!AntiSpam.CheckIfCanSendData(1.5f, out TimeSpan timeToWait))
             {
                 await ActivateCooldownError(timeToWait);
                 return;
@@ -109,7 +109,7 @@ namespace ClientMessenger
 
             var payload = new
             {
-                opCode = OpCode.RequestLogin,
+                opCode = OpCode.RequestToLogin,
                 loginRequest = new LoginRequest(email, password, stayLoggedIn)
             };
 

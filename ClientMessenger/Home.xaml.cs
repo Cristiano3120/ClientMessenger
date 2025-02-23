@@ -207,7 +207,7 @@ namespace ClientMessenger
                 relationshipUpdate
             };
 
-            if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+            if (!AntiSpam.CheckIfCanSendData(1.5f, out TimeSpan timeToWait))
             {
                 await DisplayInfosAddFriendPanelAsync(Brushes.Red, $"Pls wait another {timeToWait.TotalSeconds}s");
                 return;

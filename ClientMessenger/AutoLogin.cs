@@ -24,7 +24,7 @@
                 LoginRequest loginRequest = new(token);
                 var payload = new
                 {
-                    opCode = OpCode.RequestLogin,
+                    opCode = OpCode.RequestToLogin,
                     loginRequest
                 };
                 await Client.SendPayloadAsync(payload);
@@ -35,6 +35,6 @@
         }
 
         public static void DeleteData()
-        => Client.Config = Client.Config.SetString(JsonFile.Config, "Token", "");
+            => Client.Config = Client.Config.SetString(JsonFile.Config, "Token", "");
     }
 }

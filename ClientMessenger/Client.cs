@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -115,10 +116,10 @@ namespace ClientMessenger
                 case OpCode.ServerReadyToReceive:
                     await HandleServerResponses.ServerReadyToReceiveAsync();
                     break;
-                case OpCode.AnswerCreateAccount:
+                case OpCode.AnswerToCreateAccount:
                     await HandleServerResponses.AnswerCreateAccountAsync(message);
                     break;
-                case OpCode.AnswerLogin:
+                case OpCode.AnswerToLogin:
                     await HandleServerResponses.AnswerToLoginAsync(message);
                     break;
                 case OpCode.VerificationProcess:
@@ -127,7 +128,7 @@ namespace ClientMessenger
                 case OpCode.VerificationWentWrong:
                     await HandleServerResponses.VerificationWentWrongAsync();
                     break;
-                case OpCode.AutoLoginResponse:
+                case OpCode.AnswerToAutoLogin:
                     await HandleServerResponses.AnswerToAutoLoginRequestAsync(message);
                     break;
                 case OpCode.AnswerToRequestedRelationshipUpdate:
@@ -192,13 +193,10 @@ namespace ClientMessenger
         private static async Task Restart()
         {
             await CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "");
-            #if DEBUG == false
 
             string appPath = Environment.ProcessPath!;
             Process.Start(appPath);
             Application.Current.Dispatcher.Invoke(Application.Current.Shutdown);
-
-            #endif
         }
 
         #endregion

@@ -7,8 +7,9 @@ namespace ClientMessenger
 {
     internal static partial class Logger
     {
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool AllocConsole();
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool AllocConsole();
 
         [GeneratedRegex("(\"profilePicture\": \")[^\"]*(\")")]
         private static partial Regex FilterProfilPicRegex();

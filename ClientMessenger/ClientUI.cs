@@ -30,8 +30,11 @@ namespace ClientMessenger
         {
             Application.Current.Dispatcher.InvokeAsync(async () =>
             {
+                //Delay so the switch looks smoother
+                const int windowSwitchDelay = 300;
+
                 new TWindowToOpen().Show();
-                await Task.Delay(300);
+                await Task.Delay(windowSwitchDelay);
 
                 foreach (Window window in Application.Current.Windows)
                 {
@@ -52,7 +55,6 @@ namespace ClientMessenger
         public static T GetWindow<T>() where T : Window, new() 
             => Application.Current.Dispatcher.Invoke(() => Application.Current.Windows.OfType<T>().FirstOrDefault() ?? new T());
         
-
         /// <summary>
         /// Checks if the text being pasted from the clipboard exceeds the specified character limit.
         /// If the pasted content exceeds the limit, the paste operation is canceled.

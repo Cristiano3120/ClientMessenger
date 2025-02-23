@@ -257,7 +257,7 @@ namespace ClientMessenger
                 return;
             }
 
-            if (!AntiSpam.CheckIfCanSendDataPreLogin(out TimeSpan timeToWait))
+            if (!AntiSpam.CheckIfCanSendData(1.5f, out TimeSpan timeToWait))
             {
                 await ActivateErrorMessage(timeToWait);
                 return;
@@ -294,7 +294,7 @@ namespace ClientMessenger
 
             var payload = new
             {
-                opCode = OpCode.RequestCreateAccount,
+                opCode = OpCode.RequestToCreateAccount,
                 user,
             };
             await Client.SendPayloadAsync(payload);

@@ -14,11 +14,16 @@ namespace ClientMessenger
             Logger.LogInformation("Received RSA. Sending Aes now!");
 
             RSAParameters publicKey = message.GetPublicKey();
+            AesKeyData aesKeyData = new()
+            {
+                Key = Convert.ToBase64String(Security.Aes.Key),
+                IV =  Convert.ToBase64String(Security.Aes.IV)
+            };
+
             var payload = new
             {
                 opCode = OpCode.SendAes,
-                key = Convert.ToBase64String(Security.Aes.Key),
-                iv = Convert.ToBase64String(Security.Aes.IV),
+                aesKeyData
             };
             await Client.SendPayloadAsync(payload, publicKey);
         }
