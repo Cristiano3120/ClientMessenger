@@ -71,7 +71,10 @@ namespace ClientMessenger.Json
                 {
                     JsonElement root = doc.RootElement;
 
-                    root = root.GetProperty("relationship");
+                    if (root.TryGetProperty("relationship", out JsonElement relationshipProperty))
+                    {
+                        root = relationshipProperty;
+                    }
 
                     return root.ValueKind == JsonValueKind.Null
                         ? null
@@ -82,7 +85,7 @@ namespace ClientMessenger.Json
                             HashTag = root.GetProperty("hashTag").GetString()!,
                             Biography = root.GetProperty("biography").GetString()!,
                             Id = long.Parse(root.GetProperty("id").GetString()!),
-                            Relationshipstate = Enum.Parse<Relationshipstate>(root.GetProperty("relationshipstate").GetString()!),
+                            RelationshipState = Enum.Parse<RelationshipState>(root.GetProperty("relationshipState").GetString()!),
                         };
                 }
             }

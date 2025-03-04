@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 
 namespace ClientMessenger
 {
@@ -10,20 +11,11 @@ namespace ClientMessenger
     {
         [GeneratedRegex(@"^[A-Za-z0-9._\s]+$")]
         private static partial Regex UsernameRegex();
-        /// <summary>
-        /// Use methods like home.Add(Relationship) to access the getter
-        /// </summary>
-        public HashSet<Relationship> Friends { private get; set; } = [];
 
-        /// <summary>
-        /// Use methods like home.Add(Relationship) to access the getter
-        /// </summary>
-        public HashSet<Relationship> Blocked { private get; set; } = [];
-
-        /// <summary>
-        /// Use methods like home.Add(Relationship) to access the getter
-        /// </summary>
-        public HashSet<Relationship> Pending { private get; set; } = [];
+        public Lock Lock { get; private set; } = new();
+        private List<Relationship> _friends = [];
+        private List<Relationship> _blocked = [];
+        private List<Relationship> _pending = [];
 
         public Home()
         {
@@ -37,52 +29,357 @@ namespace ClientMessenger
             InitBtns();
         }
 
-        #region Relationship lists methods
+        #region Setter
 
-        public void Add(Relationship? relationship)
+        public List<Relationship> Friends
         {
-            ArgumentNullException.ThrowIfNull(relationship);
-
-            switch (relationship.Relationshipstate)
+            get => _friends;
+            set
             {
-                case Relationshipstate.Friend:
-                    Friends.Add(relationship);
+                _friends = value;
+                PopulateFriendsList(value);
+            }
+        }
 
-                    if (FriendsPanel.Visibility == Visibility.Visible)
-                        UpdateFriendsPanel();
-                    break;
-                case Relationshipstate.Blocked:
-                    Blocked.Add(relationship);
+        public List<Relationship> Blocked
+        {
+            get => _blocked;
+            set
+            {
+                _blocked = value;
+                PopulateBlockedList(value);
+            }
+        }
 
-                    if (BlockedPanel.Visibility == Visibility.Visible)
-                        UpdateBlockedPanel();
-                    break;
-                case Relationshipstate.Pending:
-                    Pending.Add(relationship);
-
-                    if (PendingPanel.Visibility == Visibility.Visible)
-                        UpdatePendingPanel();
-                    break;
+        public List<Relationship> Pending
+        {
+            get => _pending;
+            set
+            {
+                _pending = value;
+                PopulatePendingList(_pending);
             }
         }
 
         #endregion
 
-        #region Update Panels
+        #region Relationship lists methods
 
-        private void UpdateFriendsPanel()
+        public void Add(Relationship? relationship)
         {
-            throw new NotImplementedException();
+            if (relationship is null)
+                return;
+
+            lock (Lock)
+            {
+                switch (relationship.RelationshipState)
+                {
+                    case RelationshipState.Friend:
+                        Friends.Add(relationship);
+                        AddOneToFriendsList(relationship);
+                        break;
+
+                    case RelationshipState.Blocked:
+                        Blocked.Add(relationship);
+                        AddOneToBlockedList(relationship);
+                        break;
+
+                    case RelationshipState.Pending:
+                        Pending.Add(relationship);
+                        AddOneToPendingList(relationship);
+                        break;
+                }
+            }
         }
 
-        private void UpdateBlockedPanel()
+        #endregion
+
+        #region BlockedList
+
+        private void PopulateBlockedList(List<Relationship> friends)
         {
-            throw new NotImplementedException();
+            foreach (Relationship friend in friends)
+            {
+                StackPanel stackPanel = BasicUserUI(friend);
+                CreateBtnsForBlockedListUI(stackPanel, friend);
+                BlockedList.Items.Add(stackPanel);
+            }
+            BlockedList.UpdateLayout();
         }
 
-        private void UpdatePendingPanel()
+        private void CreateBtnsForBlockedListUI(StackPanel stackPanel, Relationship blocked)
         {
-            throw new NotImplementedException();
+            RelationshipButtonsData readdButtonData = new(blocked.Id, _blocked, RelationshipState.Pending);
+            var readdButton = new Button
+            {
+                Content = "Re-add",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#288444")),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = readdButtonData
+            };
+
+            RelationshipButtonsData unblockButtonData = new(blocked.Id, _blocked, RelationshipState.None);
+            var unblockButton = new Button
+            {
+                Content = "Unblock",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#302c34")),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = unblockButtonData
+            };
+
+            readdButton.Click += RelationshipStateChange_Click;
+            unblockButton.Click += RelationshipStateChange_Click;
+
+            stackPanel.Children.Add(readdButton);
+            stackPanel.Children.Add(unblockButton);
+        }
+
+        private void AddOneToBlockedList(Relationship blockedUser)
+        {
+            StackPanel stackPanel = BasicUserUI(blockedUser);
+            CreateBtnsForBlockedListUI(stackPanel, blockedUser);
+            BlockedList.Items.Add(stackPanel);
+            BlockedList.UpdateLayout();
+        }
+
+        #endregion
+
+        #region FriendsList
+
+        private void PopulateFriendsList(List<Relationship> friends)
+        {
+            foreach (Relationship friend in friends)
+            {
+                StackPanel stackPanel = BasicUserUI(friend);
+                CreateBtnsForFriendsListUI(stackPanel, friend);
+                FriendsList.Items.Add(stackPanel);
+            }
+            FriendsList.UpdateLayout();
+        }
+
+        private void CreateBtnsForFriendsListUI(StackPanel stackPanel, Relationship friend)
+        {
+            RelationshipButtonsData deleteButtonData = new(friend.Id, _friends, RelationshipState.None);
+            var declineButton = new Button
+            {
+                Content = "Delete",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44038")),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = deleteButtonData
+            };
+
+            RelationshipButtonsData blockButtonData = new(friend.Id, _friends, RelationshipState.Blocked);
+            var blockButton = new Button
+            {
+                Content = "Block",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#302c34")),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = blockButtonData
+            };
+
+            declineButton.Click += RelationshipStateChange_Click;
+            blockButton.Click += RelationshipStateChange_Click;
+
+            stackPanel.Children.Add(declineButton);
+            stackPanel.Children.Add(blockButton);
+        }
+
+        private void AddOneToFriendsList(Relationship pending)
+        {
+            StackPanel stackPanel = BasicUserUI(pending);
+            CreateBtnsForFriendsListUI(stackPanel, pending);
+            FriendsList.Items.Add(stackPanel);
+            FriendsList.UpdateLayout();
+        }
+
+        #endregion
+
+        #region PendingList
+
+        private void PopulatePendingList(List<Relationship> pendingRequest)
+        {
+            foreach (Relationship pending in pendingRequest)
+            {
+                StackPanel stackPanel = BasicUserUI(pending);
+                CreateBtnsForPendingListUI(stackPanel, pending);
+                PendingList.Items.Add(stackPanel);
+            }
+            PendingList.UpdateLayout();
+        }
+
+        private void AddOneToPendingList(Relationship pending)
+        {
+            StackPanel stackPanel = BasicUserUI(pending);
+            CreateBtnsForPendingListUI(stackPanel, pending);
+            PendingList.Items.Add(stackPanel);
+            PendingList.UpdateLayout();
+        }
+
+        private void CreateBtnsForPendingListUI(StackPanel stackPanel, Relationship pendingRequest)
+        {
+            RelationshipButtonsData acceptButtonData = new(pendingRequest.Id, _pending, RelationshipState.Friend);
+            var acceptButton = new Button
+            {
+                Content = "Accept",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#288444")),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = acceptButtonData
+            };
+
+            RelationshipButtonsData declineButtonData = new(pendingRequest.Id, _pending, RelationshipState.None);
+            var declineButton = new Button
+            {
+                Content = "Decline",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44038")),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = declineButtonData
+            };
+
+            RelationshipButtonsData blockButtonData = new(pendingRequest.Id, _pending, RelationshipState.Blocked);
+            var blockButton = new Button
+            {
+                Content = "Block",
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#302c34")),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = blockButtonData
+            };
+
+            acceptButton.Click += RelationshipStateChange_Click;
+            declineButton.Click += RelationshipStateChange_Click;
+            blockButton.Click += RelationshipStateChange_Click;
+
+            stackPanel.Children.Add(acceptButton);
+            stackPanel.Children.Add(declineButton);
+            stackPanel.Children.Add(blockButton);
+        }
+
+        #endregion
+
+        #region GenerelUIStuff
+
+        private static StackPanel BasicUserUI(Relationship user)
+        {
+            var stackPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(5),
+                //Tag = (user.Username, user.HashTag),
+            };
+
+            var ellipse = new Ellipse
+            {
+                Width = 45,
+                Height = 45,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+
+            var imageBrush = new ImageBrush()
+            {
+                ImageSource = user.ProfilePicture,
+                Stretch = Stretch.UniformToFill,
+            };
+
+            ellipse.Fill = imageBrush;
+
+            var textBlockUsername = new TextBlock
+            {
+                Text = user.Username,
+                Foreground = Brushes.White,
+                FontSize = 18,
+                Margin = new Thickness(10)
+            };
+
+            stackPanel.Children.Add(ellipse);
+            stackPanel.Children.Add(textBlockUsername);
+            stackPanel.Tag = (user.Username, user.HashTag);
+            return stackPanel;
+        }
+
+        private async void RelationshipStateChange_Click(object sender, RoutedEventArgs args)
+        {
+            if (sender is Button button && button.Tag is RelationshipButtonsData buttonData)
+            {
+                var stackPanelParent = (StackPanel)button.Parent;
+                var listboxParent = (ListBox)stackPanelParent.Parent;
+
+                (long relationshipId, List<Relationship> targetSet, RelationshipState wantedState) = buttonData;
+                RelationshipUpdate relationshipUpdate = new()
+                {
+                    UserId = Client.User.Id,
+                    Relationship = targetSet.FirstOrDefault(x => x.Id == relationshipId)!,
+                    RequestedRelationshipState = wantedState,
+                };
+
+                var payload = new
+                {
+                    opCode = OpCode.UpdateRelationship,
+                    relationshipUpdate
+                };
+
+                await Client.SendPayloadAsync(payload);
+
+                listboxParent.Items.Remove(stackPanelParent);
+                switch (wantedState)
+                {         
+                    case RelationshipState.Friend:
+                        lock (Lock)
+                        {
+                            _friends.Add(relationshipUpdate.Relationship);
+                            AddOneToFriendsList(relationshipUpdate.Relationship);
+                            targetSet.Remove(relationshipUpdate.Relationship);
+                        }
+                        break;
+
+                    case RelationshipState.Blocked:
+                        lock (Lock)
+                        {
+                            _blocked.Add(relationshipUpdate.Relationship);
+                            AddOneToBlockedList(relationshipUpdate.Relationship);
+                            targetSet.Remove(relationshipUpdate.Relationship);
+                        }
+                        break;
+
+                    case RelationshipState.Pending:
+                        lock (Lock)
+                        {
+                            targetSet.Remove(relationshipUpdate.Relationship);
+                        }
+                        break;
+
+                    case RelationshipState.None:
+                        lock (Lock)
+                        {
+                            targetSet.Remove(relationshipUpdate.Relationship);
+                            break;
+                        }
+                }
+
+                PendingList.UpdateLayout();
+                BlockedList.UpdateLayout();
+                FriendsList.UpdateLayout();
+            }
         }
 
         #endregion
@@ -188,6 +485,34 @@ namespace ClientMessenger
                 return;
             }
 
+            Predicate<Relationship> predicate = x => x.Username == username && x.HashTag == hashTag;
+
+            if (_friends.Exists(predicate))
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You are already friends with this person");
+                return;
+            }
+
+            if (_pending.Exists(predicate))
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You already have a pending friend request from this person");
+                return;
+            }
+
+            if (_blocked.Exists(predicate))
+            {
+                foreach (object item in BlockedList.Items)
+                {
+                    var stackPanel = (StackPanel)item;
+                    (string usernameInList, string hashTagInList) = (ValueTuple<string, string>)stackPanel.Tag;
+                    if (usernameInList == username && hashTagInList == hashTag)
+                    {
+                        BlockedList.Items.Remove(item);
+                        break;
+                    }
+                }
+            }
+
             Relationship relationship = new()
             {
                 Username = username,
@@ -196,9 +521,9 @@ namespace ClientMessenger
 
             RelationshipUpdate relationshipUpdate = new()
             {
-                RequestedRelationshipstate = Relationshipstate.Pending,
+                RequestedRelationshipState = RelationshipState.Pending,
                 Relationship = relationship,
-                User = Client.User
+                UserId = Client.User.Id
             };
 
             var payload = new

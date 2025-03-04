@@ -43,8 +43,7 @@ namespace ClientMessenger.Json
         /// <returns><c>Returns</c> the NpgsqlException that the Server sent</returns>
         /// <exception cref="InvalidOperationException"></exception>
         public static NpgsqlExceptionInfos GetNpgsqlExceptionInfos(this JsonElement property)
-            => JsonSerializer.Deserialize<NpgsqlExceptionInfos>(property.GetProperty("npgsqlExceptionInfos"))
-            ?? throw new InvalidOperationException("Couldn´t get NpgsqlExceptionInfos");
+            => JsonSerializer.Deserialize<NpgsqlExceptionInfos>(property.GetProperty("npgsqlExceptionInfos"));
 
         #endregion
 

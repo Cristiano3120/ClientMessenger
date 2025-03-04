@@ -194,9 +194,9 @@ namespace ClientMessenger
         {
             await CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "");
 
-            string appPath = Environment.ProcessPath!;
-            Process.Start(appPath);
-            Application.Current.Dispatcher.Invoke(Application.Current.Shutdown);
+            //string appPath = Environment.ProcessPath!;
+            //Process.Start(appPath);
+            //Application.Current.Dispatcher.Invoke(Application.Current.Shutdown);
         }
 
         #endregion

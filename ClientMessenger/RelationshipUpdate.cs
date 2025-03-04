@@ -2,13 +2,15 @@
 
 namespace ClientMessenger
 {
-    internal sealed record RelationshipUpdate()
+    internal readonly record struct RelationshipUpdate()
     {
-        [JsonPropertyName("user")]
-        public required User User { get; init; }
+        [JsonPropertyName("userId")]
+        public required long UserId { get; init; }
+
         [JsonPropertyName("relationship")]
         public required Relationship Relationship { get; init; }
-        [JsonPropertyName("requestedRelationshipstate")]
-        public required Relationshipstate RequestedRelationshipstate { get; init; }
+
+        [JsonPropertyName("requestedRelationshipState")]
+        public required RelationshipState RequestedRelationshipState { get; init; }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace ClientMessenger
 {
-    public readonly struct AesKeyData
+    public readonly record struct AesKeyData
     {
         [JsonPropertyName("key")]
         public string Key { get; init; }

@@ -150,9 +150,12 @@ namespace ClientMessenger
             Application.Current.Dispatcher.Invoke(() =>
             {
                 Home home = ClientUI.GetWindow<Home>();
-                home.Blocked = [.. relationships!.Where(x => x.Relationshipstate == Relationshipstate.Blocked)];
-                home.Pending = [.. relationships!.Where(x => x.Relationshipstate == Relationshipstate.Pending)];
-                home.Friends = [.. relationships!.Where(x => x.Relationshipstate == Relationshipstate.Friend)];
+                lock (home.Lock)
+                {
+                    home.Blocked = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Blocked)];
+                    home.Pending = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Pending)];
+                    home.Friends = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Friend)];
+                }
             });
         }
 
