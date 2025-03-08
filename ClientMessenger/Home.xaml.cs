@@ -376,7 +376,6 @@ namespace ClientMessenger
                         lock (Lock)
                         {
                             _friends.Add(relationshipUpdate.Relationship);
-                            AddOneToFriendsList(relationshipUpdate.Relationship);
                             targetSet.Remove(relationshipUpdate.Relationship);
                         }
                         break;
@@ -385,26 +384,17 @@ namespace ClientMessenger
                         lock (Lock)
                         {
                             _blocked.Add(relationshipUpdate.Relationship);
-                            AddOneToBlockedList(relationshipUpdate.Relationship);
                             targetSet.Remove(relationshipUpdate.Relationship);
                         }
                         break;
 
-                    case RelationshipState.Pending:
+                    case RelationshipState.Pending or RelationshipState.None:
                         lock (Lock)
                         {
                             targetSet.Remove(relationshipUpdate.Relationship);
                         }
                         break;
-
-                    case RelationshipState.None:
-                        lock (Lock)
-                        {
-                            targetSet.Remove(relationshipUpdate.Relationship);
-                            break;
-                        }
                 }
-
                 PendingList.UpdateLayout();
             }
         }
