@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Specialized;
+using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -13,9 +15,9 @@ namespace ClientMessenger
         private static partial Regex UsernameRegex();
 
         public Lock Lock { get; private set; } = new();
-        private List<Relationship> _friends = [];
-        private List<Relationship> _blocked = [];
-        private List<Relationship> _pending = [];
+        private ObservableCollection<Relationship> _friends = [];
+        private ObservableCollection<Relationship> _blocked = [];
+        private ObservableCollection<Relationship> _pending = [];
 
         public Home()
         {
@@ -27,11 +29,51 @@ namespace ClientMessenger
             InitAddFriendBtn();
             InitPanels();
             InitBtns();
+            InitCollections();
+        }
+
+        private void InitCollections()
+        {
+            Friends.CollectionChanged += (sender, args) =>
+            {
+                if (args.Action == NotifyCollectionChangedAction.Add)
+                {
+                    AddOneToFriendsList((Relationship)args.NewItems![0]!);
+                }
+                else if (args.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    RemoveOneFromFriendsList(args.OldItems![0] as Relationship);
+                }
+            };
+
+            Blocked.CollectionChanged += (sender, args) =>
+            {
+                if (args.Action == NotifyCollectionChangedAction.Add)
+                {
+                    AddOneToBlockedList((Relationship)args.NewItems![0]!);
+                }
+                else if (args.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    RemoveOneFromBlockedList(args.OldItems![0] as Relationship);
+                }
+            };
+
+            Pending.CollectionChanged += (sender, args) =>
+            {
+                if (args.Action == NotifyCollectionChangedAction.Add)
+                {
+                    AddOneToPendingList((Relationship)args.NewItems![0]!);
+                }
+                else if (args.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    RemoveOneFromPendingList(args.OldItems![0] as Relationship);
+                }
+            };
         }
 
         #region Setter
 
-        public List<Relationship> Friends
+        public ObservableCollection<Relationship> Friends
         {
             get => _friends;
             set
@@ -41,7 +83,7 @@ namespace ClientMessenger
             }
         }
 
-        public List<Relationship> Blocked
+        public ObservableCollection<Relationship> Blocked
         {
             get => _blocked;
             set
@@ -51,7 +93,7 @@ namespace ClientMessenger
             }
         }
 
-        public List<Relationship> Pending
+        public ObservableCollection<Relationship> Pending
         {
             get => _pending;
             set
@@ -63,40 +105,9 @@ namespace ClientMessenger
 
         #endregion
 
-        #region Relationship lists methods
-
-        public void Add(Relationship? relationship)
-        {
-            if (relationship is null)
-                return;
-
-            lock (Lock)
-            {
-                switch (relationship.RelationshipState)
-                {
-                    case RelationshipState.Friend:
-                        Friends.Add(relationship);
-                        AddOneToFriendsList(relationship);
-                        break;
-
-                    case RelationshipState.Blocked:
-                        Blocked.Add(relationship);
-                        AddOneToBlockedList(relationship);
-                        break;
-
-                    case RelationshipState.Pending:
-                        Pending.Add(relationship);
-                        AddOneToPendingList(relationship);
-                        break;
-                }
-            }
-        }
-
-        #endregion
-
         #region BlockedList
 
-        private void PopulateBlockedList(List<Relationship> friends)
+        private void PopulateBlockedList(IList<Relationship> friends)
         {
             foreach (Relationship friend in friends)
             {
@@ -109,7 +120,7 @@ namespace ClientMessenger
 
         private void CreateBtnsForBlockedListUI(StackPanel stackPanel, Relationship blocked)
         {
-            RelationshipButtonsData readdButtonData = new(blocked.Id, _blocked, RelationshipState.Pending);
+            RelationshipButtonsData readdButtonData = new(blocked.Id, Blocked, RelationshipState.Pending);
             var readdButton = new Button
             {
                 Content = "Re-add",
@@ -121,7 +132,7 @@ namespace ClientMessenger
                 Tag = readdButtonData
             };
 
-            RelationshipButtonsData unblockButtonData = new(blocked.Id, _blocked, RelationshipState.None);
+            RelationshipButtonsData unblockButtonData = new(blocked.Id, Blocked, RelationshipState.None);
             var unblockButton = new Button
             {
                 Content = "Unblock",
@@ -148,11 +159,18 @@ namespace ClientMessenger
             BlockedList.UpdateLayout();
         }
 
+        private void RemoveOneFromBlockedList(Relationship? friend)
+        {
+            ArgumentNullException.ThrowIfNull(friend);
+            BlockedList.Items.Remove(BlockedList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.HashTag)));
+            BlockedList.UpdateLayout();
+        }
+
         #endregion
 
         #region FriendsList
 
-        private void PopulateFriendsList(List<Relationship> friends)
+        private void PopulateFriendsList(IList<Relationship> friends)
         {
             foreach (Relationship friend in friends)
             {
@@ -165,7 +183,7 @@ namespace ClientMessenger
 
         private void CreateBtnsForFriendsListUI(StackPanel stackPanel, Relationship friend)
         {
-            RelationshipButtonsData deleteButtonData = new(friend.Id, _friends, RelationshipState.None);
+            RelationshipButtonsData deleteButtonData = new(friend.Id, Friends, RelationshipState.None);
             var declineButton = new Button
             {
                 Content = "Delete",
@@ -177,7 +195,7 @@ namespace ClientMessenger
                 Tag = deleteButtonData
             };
 
-            RelationshipButtonsData blockButtonData = new(friend.Id, _friends, RelationshipState.Blocked);
+            RelationshipButtonsData blockButtonData = new(friend.Id, Friends, RelationshipState.Blocked);
             var blockButton = new Button
             {
                 Content = "Block",
@@ -196,11 +214,18 @@ namespace ClientMessenger
             stackPanel.Children.Add(blockButton);
         }
 
-        private void AddOneToFriendsList(Relationship pending)
+        private void AddOneToFriendsList(Relationship friend)
         {
-            StackPanel stackPanel = BasicUserUI(pending);
-            CreateBtnsForFriendsListUI(stackPanel, pending);
+            StackPanel stackPanel = BasicUserUI(friend);
+            CreateBtnsForFriendsListUI(stackPanel, friend);
             FriendsList.Items.Add(stackPanel);
+            FriendsList.UpdateLayout();
+        }
+
+        private void RemoveOneFromFriendsList(Relationship? friend)
+        {
+            ArgumentNullException.ThrowIfNull(friend);
+            FriendsList.Items.Remove(FriendsList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.HashTag)));
             FriendsList.UpdateLayout();
         }
 
@@ -208,7 +233,7 @@ namespace ClientMessenger
 
         #region PendingList
 
-        private void PopulatePendingList(List<Relationship> pendingRequest)
+        private void PopulatePendingList(IList<Relationship> pendingRequest)
         {
             foreach (Relationship pending in pendingRequest)
             {
@@ -229,7 +254,7 @@ namespace ClientMessenger
 
         private void CreateBtnsForPendingListUI(StackPanel stackPanel, Relationship pendingRequest)
         {
-            RelationshipButtonsData acceptButtonData = new(pendingRequest.Id, _pending, RelationshipState.Friend);
+            RelationshipButtonsData acceptButtonData = new(pendingRequest.Id, Pending, RelationshipState.Friend);
             var acceptButton = new Button
             {
                 Content = "Accept",
@@ -241,7 +266,7 @@ namespace ClientMessenger
                 Tag = acceptButtonData
             };
 
-            RelationshipButtonsData declineButtonData = new(pendingRequest.Id, _pending, RelationshipState.None);
+            RelationshipButtonsData declineButtonData = new(pendingRequest.Id, Pending, RelationshipState.None);
             var declineButton = new Button
             {
                 Content = "Decline",
@@ -253,7 +278,7 @@ namespace ClientMessenger
                 Tag = declineButtonData
             };
 
-            RelationshipButtonsData blockButtonData = new(pendingRequest.Id, _pending, RelationshipState.Blocked);
+            RelationshipButtonsData blockButtonData = new(pendingRequest.Id, Pending, RelationshipState.Blocked);
             var blockButton = new Button
             {
                 Content = "Block",
@@ -274,9 +299,14 @@ namespace ClientMessenger
             stackPanel.Children.Add(blockButton);
         }
 
-        #endregion
+        private void RemoveOneFromPendingList(Relationship? pending)
+        {
+            ArgumentNullException.ThrowIfNull(pending);
+            PendingList.Items.Remove(PendingList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (pending.Username, pending.HashTag)));
+            PendingList.UpdateLayout();
+        }
 
-        #region GenerelUIStuff
+        #endregion
 
         private static StackPanel BasicUserUI(Relationship user)
         {
@@ -284,9 +314,8 @@ namespace ClientMessenger
             {
                 Orientation = Orientation.Horizontal,
                 Margin = new Thickness(5),
-                //Tag = (user.Username, user.HashTag),
             };
-
+            
             var ellipse = new Ellipse
             {
                 Width = 45,
@@ -324,10 +353,10 @@ namespace ClientMessenger
                 var stackPanelParent = (StackPanel)button.Parent;
                 var listboxParent = (ListBox)stackPanelParent.Parent;
 
-                (long relationshipId, List<Relationship> targetSet, RelationshipState wantedState) = buttonData;
+                (long relationshipId, IList<Relationship> targetSet, RelationshipState wantedState) = buttonData;
                 RelationshipUpdate relationshipUpdate = new()
                 {
-                    UserId = Client.User.Id,
+                    User = Client.User,
                     Relationship = targetSet.FirstOrDefault(x => x.Id == relationshipId)!,
                     RequestedRelationshipState = wantedState,
                 };
@@ -342,7 +371,7 @@ namespace ClientMessenger
 
                 listboxParent.Items.Remove(stackPanelParent);
                 switch (wantedState)
-                {         
+                {
                     case RelationshipState.Friend:
                         lock (Lock)
                         {
@@ -377,12 +406,8 @@ namespace ClientMessenger
                 }
 
                 PendingList.UpdateLayout();
-                BlockedList.UpdateLayout();
-                FriendsList.UpdateLayout();
             }
         }
-
-        #endregion
 
         #region Init
 
@@ -485,21 +510,21 @@ namespace ClientMessenger
                 return;
             }
 
-            Predicate<Relationship> predicate = x => x.Username == username && x.HashTag == hashTag;
+            Func<Relationship, bool> relationshipInListFunc = x => x.Username == username && x.HashTag == hashTag;
 
-            if (_friends.Exists(predicate))
+            if (Friends.Any(relationshipInListFunc))
             {
                 await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You are already friends with this person");
                 return;
             }
 
-            if (_pending.Exists(predicate))
+            if (Pending.Any(relationshipInListFunc))
             {
                 await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You already have a pending friend request from this person");
                 return;
             }
 
-            if (_blocked.Exists(predicate))
+            if (Blocked.Any(relationshipInListFunc))
             {
                 foreach (object item in BlockedList.Items)
                 {
@@ -523,7 +548,7 @@ namespace ClientMessenger
             {
                 RequestedRelationshipState = RelationshipState.Pending,
                 Relationship = relationship,
-                UserId = Client.User.Id
+                User = Client.User
             };
 
             var payload = new

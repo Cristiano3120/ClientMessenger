@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -91,7 +90,7 @@ namespace ClientMessenger
                     byte[] decompressedBytes = Security.DecompressData(decryptedBytes);
                     var completeMessage = Encoding.UTF8.GetString(decompressedBytes);
 
-                    Logger.LogInformation(ConsoleColor.Green, logs: $"[RECEIVED]: {completeMessage}");
+                    Logger.LogPayload(ConsoleColor.Green, completeMessage, "[RECEIVED]:");
                     ClearMs(ms);
 
                     await HandleReceivedMessageAsync(JsonDocument.Parse(completeMessage).RootElement);
@@ -137,6 +136,9 @@ namespace ClientMessenger
                 case OpCode.ReceiveRelationships:
                     await HandleServerResponses.ReceiveRelationships(message);
                     break;
+                case OpCode.ARelationshipWasUpdated:
+                    await HandleServerResponses.ARelationshipWasUpdated(message);
+                    break;
             }
         }
 
@@ -161,7 +163,7 @@ namespace ClientMessenger
             await _server.SendAsync(encryptedData, WebSocketMessageType.Binary, true, CancellationToken.None);
 
             Logger.LogInformation(ConsoleColor.Cyan, $"[SENDING(RSA)]: {encryptedData.Length} bytes", false);
-            Logger.LogInformation(ConsoleColor.Blue, $"[SENDING(RSA)]: {jsonPayload}");
+            Logger.LogPayload(ConsoleColor.Blue, jsonPayload, "[SENDING(RSA)]:");
         }
 
         internal static async Task SendPayloadAsync(object payload)
@@ -181,7 +183,7 @@ namespace ClientMessenger
             await _server.SendAsync(encryptedData, WebSocketMessageType.Binary, true, CancellationToken.None);
 
             Logger.LogInformation(ConsoleColor.Cyan, $"[SENDING(Aes)]: {encryptedData.Length} bytes", false);
-            Logger.LogInformation(ConsoleColor.Blue, $"[SENDING(Aes)]: {jsonPayload}");
+            Logger.LogPayload(ConsoleColor.Blue, jsonPayload, "[SENDING(Aes)]:");
         }
 
         public static async Task CloseConnectionAsync(WebSocketCloseStatus closeStatus, string reason)
@@ -192,6 +194,7 @@ namespace ClientMessenger
 
         private static async Task Restart()
         {
+            Logger.LogError("Server closed the connection. Restarting the application...");
             await CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "");
 
             //string appPath = Environment.ProcessPath!;
@@ -240,16 +243,15 @@ namespace ClientMessenger
         /// <returns>A fully resolved path based on the project's base directory and the given relative path.</returns>
         public static string GetDynamicPath(string relativePath)
         {
-            var projectBasePath = AppContext.BaseDirectory;
+            var projectBasePath = AppDomain.CurrentDomain.BaseDirectory;
 
             var binIndex = projectBasePath.IndexOf(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar, StringComparison.Ordinal);
 
-            if (binIndex == -1)
+            if (binIndex != -1)
             {
-                throw new Exception("Could not determine project base path!");
+                projectBasePath = projectBasePath[..binIndex];
             }
 
-            projectBasePath = projectBasePath[..binIndex];
             return Path.Combine(projectBasePath, relativePath);
         }
     }

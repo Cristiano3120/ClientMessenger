@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace ClientMessenger
@@ -29,17 +30,24 @@ namespace ClientMessenger
         private static string MaintainLoggingSystem(int maxAmmountLoggingFiles)
         {
             string pathToLoggingDic = Client.GetDynamicPath(@"Logging/");
-            string[] files = Directory.GetFiles(pathToLoggingDic, "*.md");
-
-            if (files.Length >= maxAmmountLoggingFiles)
+            if (!Directory.Exists(pathToLoggingDic))
             {
-                files = [.. files.OrderBy(File.GetCreationTime)];
-                // +1 to make room for a new File
-                int filesToRemove = files.Length - maxAmmountLoggingFiles + 1;
+                Directory.CreateDirectory(pathToLoggingDic);
+            }
+            else
+            {
+                string[] files = Directory.GetFiles(pathToLoggingDic, "*.md");
 
-                for (int i = 0; i < filesToRemove; i++)
+                if (files.Length >= maxAmmountLoggingFiles)
                 {
-                    File.Delete(files[i]);
+                    files = [.. files.OrderBy(File.GetCreationTime)];
+                    // +1 to make room for a new File
+                    int filesToRemove = files.Length - maxAmmountLoggingFiles + 1;
+
+                    for (int i = 0; i < filesToRemove; i++)
+                    {
+                        File.Delete(files[i]);
+                    }
                 }
             }
 
@@ -135,6 +143,26 @@ namespace ClientMessenger
                 LogError(ex.InnerException);
         }
 
+        public static void LogPayload(ConsoleColor color, string payload, string prefix)
+        {
+            lock (_lock)
+            {
+                using StreamWriter streamWriter = new(_pathToLogFile, true);
+                Console.ForegroundColor = color;
+
+
+                string message = FilterProfilPicRegex().Replace(payload, "$1[Image]$2");
+                JsonNode jsonNode = JsonNode.Parse(message)!;
+                jsonNode["opCode"] = Enum.Parse<OpCode>(jsonNode["opCode"]!.ToString()).ToString();
+
+                Console.WriteLine($"[{DateTime.Now:HH: mm: ss}]: {prefix} {jsonNode}");
+                streamWriter.WriteLine($"{prefix} {FilterKeywords().Replace(jsonNode.ToString(), match => $"**{match.Value}**")}");
+
+                streamWriter.WriteLine("");
+                Console.WriteLine("");
+            }
+        }
+
         /// <summary>
         /// The method that filters the logs and writes them into the Console
         /// </summary>
@@ -148,7 +176,8 @@ namespace ClientMessenger
                 for (int i = 0; i < logs.Length; i++)
                 {
                     string message = FilterProfilPicRegex().Replace(logs[i], "$1[Image]$2");
-                    Console.WriteLine($"[{DateTime.Now:HH: dd: ss}]: {message}");
+                    Console.WriteLine($"[{DateTime.Now:HH: mm: ss}]: {message}");
+                    streamWriter.WriteLine($"[{DateTime.Now:HH: mm: ss}]:");
                     streamWriter.WriteLine(FilterKeywords().Replace(message, match => $"**{match.Value}**"));
                 }
 

@@ -15,5 +15,6 @@
         UpdateRelationship = 11,
         AnswerToRequestedRelationshipUpdate = 12,
         ReceiveRelationships = 13,
+        ARelationshipWasUpdated = 14,
     }
 }

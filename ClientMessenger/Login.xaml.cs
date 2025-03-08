@@ -104,7 +104,7 @@ namespace ClientMessenger
                 return;
             }
 
-            bool stayLoggedIn = AutoLoginCheckBox.IsEnabled;
+            bool stayLoggedIn = (bool)AutoLoginCheckBox.IsChecked!;
             Client.Config = Client.Config.SetBoolean(JsonFile.Config, "AutoLogin", stayLoggedIn);
 
             var payload = new

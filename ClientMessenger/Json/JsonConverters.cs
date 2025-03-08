@@ -13,7 +13,10 @@ namespace ClientMessenger.Json
                 {
                     JsonElement root = doc.RootElement;
 
-                    root = root.GetProperty("user");
+                    if (root.TryGetProperty("user", out JsonElement userProperty))
+                    {
+                        root = userProperty;
+                    }
 
                     return root.ValueKind == JsonValueKind.Null
                         ? null

@@ -1,5 +1,4 @@
-﻿using LiteDB;
-using System.Collections;
+﻿using System.Collections;
 using System.Globalization;
 using System.Windows.Media.Imaging;
 
@@ -7,7 +6,6 @@ namespace ClientMessenger
 {
     public sealed class User : IEnumerable<(string name, string value)>
     {
-        [BsonId]
         public long Id { get; init; }
         public BitmapImage? ProfilePicture { get; set; }
         public string Username { get; set; }

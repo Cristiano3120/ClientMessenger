@@ -11,8 +11,6 @@ namespace ClientMessenger
         #region Pre logged in
         public static async Task ReceiveRSAAsync(JsonElement message)
         {
-            Logger.LogInformation("Received RSA. Sending Aes now!");
-
             RSAParameters publicKey = message.GetPublicKey();
             AesKeyData aesKeyData = new()
             {
@@ -30,8 +28,6 @@ namespace ClientMessenger
 
         public static async Task ServerReadyToReceiveAsync()
         {
-            Logger.LogInformation("Server is ready to receive data");
-
             if (!await AutoLogin.TryToLoginAsync())
             {
                 ClientUI.SwitchWindows<MainWindow, Login>();
@@ -40,8 +36,6 @@ namespace ClientMessenger
 
         public static async Task AnswerCreateAccountAsync(JsonElement message)
         {
-            Logger.LogInformation("Received answer to create acc from server");
-
             NpgsqlExceptionInfos error = message.GetNpgsqlExceptionInfos();
             if (error.Exception == NpgsqlExceptions.None)
             {
@@ -56,8 +50,6 @@ namespace ClientMessenger
 
         public static async Task AnswerToLoginAsync(JsonElement message)
         {
-            Logger.LogInformation("Received answer to login from server");
-
             NpgsqlExceptionInfos error = message.GetNpgsqlExceptionInfos();
             if (error.Exception != NpgsqlExceptions.None)
             {
@@ -79,7 +71,6 @@ namespace ClientMessenger
 
         public static async Task AnswerToVerificationRequestAsync(JsonElement message)
         {
-            Logger.LogInformation("Received answer to verification request");
             bool success = message.GetProperty("success").GetBoolean();
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(success);
         }
@@ -94,8 +85,6 @@ namespace ClientMessenger
 
         public static async Task AnswerToAutoLoginRequestAsync(JsonElement message)
         {
-            Logger.LogInformation("Received answer to login from server");
-
             NpgsqlExceptionInfos exceptionInfos = message.GetNpgsqlExceptionInfos();
             NpgsqlExceptions exception = exceptionInfos.Exception;
 
@@ -128,7 +117,6 @@ namespace ClientMessenger
                 {
                     Home home = ClientUI.GetWindow<Home>();
                     await home.DisplayInfosAddFriendPanelAsync(Brushes.Green, "Succesfully added");
-                    home.Add(JsonSerializer.Deserialize<Relationship>(message, Client.JsonSerializerOptions));
                 });
                 return;
             }
@@ -156,6 +144,32 @@ namespace ClientMessenger
                     home.Pending = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Pending)];
                     home.Friends = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Friend)];
                 }
+            });
+        }
+
+        public static async Task ARelationshipWasUpdated(JsonElement message)
+        {
+            RelationshipUpdate relationshipUpdate = JsonSerializer.Deserialize<RelationshipUpdate>(message.GetProperty("relationshipUpdate"), Client.JsonSerializerOptions);
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                Home home = ClientUI.GetWindow<Home>();
+                lock (home.Lock)
+                {
+                    switch (relationshipUpdate.RequestedRelationshipState)
+                    {
+                        case RelationshipState.Pending:
+                            home.Pending.Add(relationshipUpdate.Relationship!);
+                            break;
+                        case RelationshipState.Friend:
+                            home.Friends.Add(relationshipUpdate.Relationship!);
+                            break;
+                        case RelationshipState.None or RelationshipState.Blocked:
+                            home.Pending.Remove(relationshipUpdate.Relationship!);
+                            home.Friends.Remove(relationshipUpdate.Relationship!);
+                            break;
+                    }
+                }
+                
             });
         }
 
