@@ -183,11 +183,9 @@ namespace ClientMessenger
             {
                 case NpgsqlExceptions.UnknownError:
                     Logger.LogError("Unknown error! Server is closing the connection");
-                    Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
                     break;
                 case NpgsqlExceptions.ConnectionError:
                     Logger.LogError("Connection lost! Server is closing the connection");
-                    Application.Current.Shutdown();
                     break;
                 case NpgsqlExceptions.AccCreationError:
                     Logger.LogError("Account creation error");
@@ -215,6 +213,23 @@ namespace ClientMessenger
                 case NpgsqlExceptions.TokenInvalid:
                     AutoLogin.DeleteData();
                     Application.Current.Dispatcher.Invoke(() => ClientUI.SwitchWindows<MainWindow, Login>());
+                    break;
+                case NpgsqlExceptions.NoDataEntrys:
+                    Logger.LogError("The sent data was invalid! Restarting the application");
+                    await Client.CloseConnectionAsync(WebSocketCloseStatus.InvalidPayloadData, "");
+                    break;
+                case NpgsqlExceptions.UnexpectedEx:
+                    Logger.LogError("Unexpected exception");
+                    break;
+                case NpgsqlExceptions.RequestedUserIsBlocked:
+                    await Application.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+                        Home home = ClientUI.GetWindow<Home>();
+                        await home.DisplayInfosAddFriendPanelAsync(Brushes.Red, "You are blocked by that user :(");
+                    });
+                    break;
+                case NpgsqlExceptions.PayloadDataMissing:
+                    Logger.LogError("Payload data missing");
                     break;
                 default:
                     Logger.LogError($"The received database error has no case(Error: {error}).");

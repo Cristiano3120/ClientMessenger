@@ -54,6 +54,7 @@ namespace ClientMessenger
             var timestamp = DateTime.Now.ToString("dd-MM-yyyy/HH-mm-ss");
             var pathToNewFile = Client.GetDynamicPath($"Logging/{timestamp}.md");
             File.Create(pathToNewFile).Close();
+
             return pathToNewFile;
         }
 

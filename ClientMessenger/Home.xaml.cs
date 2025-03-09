@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using SharpVectors.Converters;
+using System.IO;
 using System.Windows.Shapes;
 
 namespace ClientMessenger
@@ -27,9 +29,31 @@ namespace ClientMessenger
             InitAddFriendHashTagTextBox();
             InitNameAndProfilPic();
             InitAddFriendBtn();
+            InitCollections();
             InitPanels();
             InitBtns();
-            InitCollections();
+        } 
+
+        #region Init
+
+        private void InitBtns()
+        {
+            AddFriendBtn.Click += ChangePanelState;
+            FriendsBtn.Click += ChangePanelState;
+            BlockedBtn.Click += ChangePanelState;
+            PendingBtn.Click += ChangePanelState;
+        }
+
+        private void InitNameAndProfilPic()
+        {
+            ProfilPic.ImageSource = Client.User.ProfilePicture;
+            Username.Text = $"{Client.User.Username} {Client.User.HashTag}";
+        }
+
+        private void InitPanels()
+        {
+            HidePanels();
+            FriendsPanel.Visibility = Visibility.Visible;
         }
 
         private void InitCollections()
@@ -38,11 +62,13 @@ namespace ClientMessenger
             {
                 if (args.Action == NotifyCollectionChangedAction.Add)
                 {
-                    AddOneToFriendsList((Relationship)args.NewItems![0]!);
+                    var relationshipToAdd = (Relationship)args.NewItems![0]!;
+                    AddOneToFriendsList(relationshipToAdd);
                 }
                 else if (args.Action == NotifyCollectionChangedAction.Remove)
                 {
-                    RemoveOneFromFriendsList(args.OldItems![0] as Relationship);
+                    var relationshipToRemove = (Relationship)args.OldItems![0]!;
+                    RemoveOneFromFriendsList(relationshipToRemove);
                 }
             };
 
@@ -69,356 +95,6 @@ namespace ClientMessenger
                     RemoveOneFromPendingList(args.OldItems![0] as Relationship);
                 }
             };
-        }
-
-        #region Setter
-
-        public ObservableCollection<Relationship> Friends
-        {
-            get => _friends;
-            set
-            {
-                _friends = value;
-                PopulateFriendsList(value);
-            }
-        }
-
-        public ObservableCollection<Relationship> Blocked
-        {
-            get => _blocked;
-            set
-            {
-                _blocked = value;
-                PopulateBlockedList(value);
-            }
-        }
-
-        public ObservableCollection<Relationship> Pending
-        {
-            get => _pending;
-            set
-            {
-                _pending = value;
-                PopulatePendingList(_pending);
-            }
-        }
-
-        #endregion
-
-        #region BlockedList
-
-        private void PopulateBlockedList(IList<Relationship> friends)
-        {
-            foreach (Relationship friend in friends)
-            {
-                StackPanel stackPanel = BasicUserUI(friend);
-                CreateBtnsForBlockedListUI(stackPanel, friend);
-                BlockedList.Items.Add(stackPanel);
-            }
-            BlockedList.UpdateLayout();
-        }
-
-        private void CreateBtnsForBlockedListUI(StackPanel stackPanel, Relationship blocked)
-        {
-            RelationshipButtonsData readdButtonData = new(blocked.Id, Blocked, RelationshipState.Pending);
-            var readdButton = new Button
-            {
-                Content = "Re-add",
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#288444")),
-                Foreground = Brushes.White,
-                Width = 80,
-                Height = 30,
-                Margin = new Thickness(5),
-                Tag = readdButtonData
-            };
-
-            RelationshipButtonsData unblockButtonData = new(blocked.Id, Blocked, RelationshipState.None);
-            var unblockButton = new Button
-            {
-                Content = "Unblock",
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#302c34")),
-                Foreground = Brushes.White,
-                Width = 80,
-                Height = 30,
-                Margin = new Thickness(5),
-                Tag = unblockButtonData
-            };
-
-            readdButton.Click += RelationshipStateChange_Click;
-            unblockButton.Click += RelationshipStateChange_Click;
-
-            stackPanel.Children.Add(readdButton);
-            stackPanel.Children.Add(unblockButton);
-        }
-
-        private void AddOneToBlockedList(Relationship blockedUser)
-        {
-            StackPanel stackPanel = BasicUserUI(blockedUser);
-            CreateBtnsForBlockedListUI(stackPanel, blockedUser);
-            BlockedList.Items.Add(stackPanel);
-            BlockedList.UpdateLayout();
-        }
-
-        private void RemoveOneFromBlockedList(Relationship? friend)
-        {
-            ArgumentNullException.ThrowIfNull(friend);
-            BlockedList.Items.Remove(BlockedList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.HashTag)));
-            BlockedList.UpdateLayout();
-        }
-
-        #endregion
-
-        #region FriendsList
-
-        private void PopulateFriendsList(IList<Relationship> friends)
-        {
-            foreach (Relationship friend in friends)
-            {
-                StackPanel stackPanel = BasicUserUI(friend);
-                CreateBtnsForFriendsListUI(stackPanel, friend);
-                FriendsList.Items.Add(stackPanel);
-            }
-            FriendsList.UpdateLayout();
-        }
-
-        private void CreateBtnsForFriendsListUI(StackPanel stackPanel, Relationship friend)
-        {
-            RelationshipButtonsData deleteButtonData = new(friend.Id, Friends, RelationshipState.None);
-            var declineButton = new Button
-            {
-                Content = "Delete",
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44038")),
-                Foreground = Brushes.White,
-                Width = 80,
-                Height = 30,
-                Margin = new Thickness(5),
-                Tag = deleteButtonData
-            };
-
-            RelationshipButtonsData blockButtonData = new(friend.Id, Friends, RelationshipState.Blocked);
-            var blockButton = new Button
-            {
-                Content = "Block",
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#302c34")),
-                Foreground = Brushes.White,
-                Width = 80,
-                Height = 30,
-                Margin = new Thickness(5),
-                Tag = blockButtonData
-            };
-
-            declineButton.Click += RelationshipStateChange_Click;
-            blockButton.Click += RelationshipStateChange_Click;
-
-            stackPanel.Children.Add(declineButton);
-            stackPanel.Children.Add(blockButton);
-        }
-
-        private void AddOneToFriendsList(Relationship friend)
-        {
-            StackPanel stackPanel = BasicUserUI(friend);
-            CreateBtnsForFriendsListUI(stackPanel, friend);
-            FriendsList.Items.Add(stackPanel);
-            FriendsList.UpdateLayout();
-        }
-
-        private void RemoveOneFromFriendsList(Relationship? friend)
-        {
-            ArgumentNullException.ThrowIfNull(friend);
-            FriendsList.Items.Remove(FriendsList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.HashTag)));
-            FriendsList.UpdateLayout();
-        }
-
-        #endregion
-
-        #region PendingList
-
-        private void PopulatePendingList(IList<Relationship> pendingRequest)
-        {
-            foreach (Relationship pending in pendingRequest)
-            {
-                StackPanel stackPanel = BasicUserUI(pending);
-                CreateBtnsForPendingListUI(stackPanel, pending);
-                PendingList.Items.Add(stackPanel);
-            }
-            PendingList.UpdateLayout();
-        }
-
-        private void AddOneToPendingList(Relationship pending)
-        {
-            StackPanel stackPanel = BasicUserUI(pending);
-            CreateBtnsForPendingListUI(stackPanel, pending);
-            PendingList.Items.Add(stackPanel);
-            PendingList.UpdateLayout();
-        }
-
-        private void CreateBtnsForPendingListUI(StackPanel stackPanel, Relationship pendingRequest)
-        {
-            RelationshipButtonsData acceptButtonData = new(pendingRequest.Id, Pending, RelationshipState.Friend);
-            var acceptButton = new Button
-            {
-                Content = "Accept",
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#288444")),
-                Foreground = Brushes.White,
-                Width = 80,
-                Height = 30,
-                Margin = new Thickness(5),
-                Tag = acceptButtonData
-            };
-
-            RelationshipButtonsData declineButtonData = new(pendingRequest.Id, Pending, RelationshipState.None);
-            var declineButton = new Button
-            {
-                Content = "Decline",
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f44038")),
-                Foreground = Brushes.White,
-                Width = 80,
-                Height = 30,
-                Margin = new Thickness(5),
-                Tag = declineButtonData
-            };
-
-            RelationshipButtonsData blockButtonData = new(pendingRequest.Id, Pending, RelationshipState.Blocked);
-            var blockButton = new Button
-            {
-                Content = "Block",
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#302c34")),
-                Foreground = Brushes.White,
-                Width = 80,
-                Height = 30,
-                Margin = new Thickness(5),
-                Tag = blockButtonData
-            };
-
-            acceptButton.Click += RelationshipStateChange_Click;
-            declineButton.Click += RelationshipStateChange_Click;
-            blockButton.Click += RelationshipStateChange_Click;
-
-            stackPanel.Children.Add(acceptButton);
-            stackPanel.Children.Add(declineButton);
-            stackPanel.Children.Add(blockButton);
-        }
-
-        private void RemoveOneFromPendingList(Relationship? pending)
-        {
-            ArgumentNullException.ThrowIfNull(pending);
-            PendingList.Items.Remove(PendingList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (pending.Username, pending.HashTag)));
-            PendingList.UpdateLayout();
-        }
-
-        #endregion
-
-        private static StackPanel BasicUserUI(Relationship user)
-        {
-            var stackPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Margin = new Thickness(5),
-            };
-            
-            var ellipse = new Ellipse
-            {
-                Width = 45,
-                Height = 45,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 10, 0)
-            };
-
-            var imageBrush = new ImageBrush()
-            {
-                ImageSource = user.ProfilePicture,
-                Stretch = Stretch.UniformToFill,
-            };
-
-            ellipse.Fill = imageBrush;
-
-            var textBlockUsername = new TextBlock
-            {
-                Text = user.Username,
-                Foreground = Brushes.White,
-                FontSize = 18,
-                Margin = new Thickness(10)
-            };
-
-            stackPanel.Children.Add(ellipse);
-            stackPanel.Children.Add(textBlockUsername);
-            stackPanel.Tag = (user.Username, user.HashTag);
-            return stackPanel;
-        }
-
-        private async void RelationshipStateChange_Click(object sender, RoutedEventArgs args)
-        {
-            if (sender is Button button && button.Tag is RelationshipButtonsData buttonData)
-            {
-                var stackPanelParent = (StackPanel)button.Parent;
-                var listboxParent = (ListBox)stackPanelParent.Parent;
-
-                (long relationshipId, IList<Relationship> targetSet, RelationshipState wantedState) = buttonData;
-                RelationshipUpdate relationshipUpdate = new()
-                {
-                    User = Client.User,
-                    Relationship = targetSet.FirstOrDefault(x => x.Id == relationshipId)!,
-                    RequestedRelationshipState = wantedState,
-                };
-
-                var payload = new
-                {
-                    opCode = OpCode.UpdateRelationship,
-                    relationshipUpdate
-                };
-
-                await Client.SendPayloadAsync(payload);
-
-                listboxParent.Items.Remove(stackPanelParent);
-                switch (wantedState)
-                {
-                    case RelationshipState.Friend:
-                        lock (Lock)
-                        {
-                            _friends.Add(relationshipUpdate.Relationship);
-                            targetSet.Remove(relationshipUpdate.Relationship);
-                        }
-                        break;
-
-                    case RelationshipState.Blocked:
-                        lock (Lock)
-                        {
-                            _blocked.Add(relationshipUpdate.Relationship);
-                            targetSet.Remove(relationshipUpdate.Relationship);
-                        }
-                        break;
-
-                    case RelationshipState.Pending or RelationshipState.None:
-                        lock (Lock)
-                        {
-                            targetSet.Remove(relationshipUpdate.Relationship);
-                        }
-                        break;
-                }
-                PendingList.UpdateLayout();
-            }
-        }
-
-        #region Init
-
-        private void InitBtns()
-        {
-            AddFriendBtn.Click += ChangePanelState;
-            FriendsBtn.Click += ChangePanelState;
-            BlockedBtn.Click += ChangePanelState;
-            PendingBtn.Click += ChangePanelState;
-        }
-
-        private void InitNameAndProfilPic()
-        {
-            ProfilPic.ImageSource = Client.User.ProfilePicture;
-            Username.Text = $"{Client.User.Username} {Client.User.HashTag}";
-        }
-
-        private void InitPanels()
-        {
-            HidePanels();
-            FriendsPanel.Visibility = Visibility.Visible;
         }
 
         #region Init AddFriendPanel
@@ -558,19 +234,319 @@ namespace ClientMessenger
 
         #endregion
 
-        public async Task DisplayInfosAddFriendPanelAsync(SolidColorBrush color, string msg)
+        #region Setter
+
+        public ObservableCollection<Relationship> Friends
         {
-            AddFriendInfoTextBlock.Foreground = color;
-            AddFriendInfoTextBlock.Text = msg;
-
-            await Task.Delay(2000);
-
-            AddFriendInfoTextBlock.Foreground = Brushes.Black;
-            AddFriendInfoTextBlock.Text = "Enter valid data";
+            get => _friends;
+            set
+            {
+                _friends = value;
+                PopulateFriendsList(value);
+                PopulateDmList(value);
+            }
         }
 
-        private static bool AddFriendValidateData(string username, string hashTag)
-            => !string.IsNullOrEmpty(username) || !string.IsNullOrEmpty(hashTag);
+        public ObservableCollection<Relationship> Blocked
+        {
+            get => _blocked;
+            set
+            {
+                _blocked = value;
+                PopulateBlockedList(value);
+            }
+        }
+
+        public ObservableCollection<Relationship> Pending
+        {
+            get => _pending;
+            set
+            {
+                _pending = value;
+                PopulatePendingList(_pending);
+            }
+        }
+
+        #endregion
+
+        #region BlockedList
+
+        private void PopulateBlockedList(IList<Relationship> friends)
+        {
+            Colors colors = new();
+            foreach (Relationship friend in friends)
+            {
+                StackPanel stackPanel = BasicUserUI(friend);
+                CreateBtnsForBlockedListUI(stackPanel, friend, in colors);
+                BlockedList.Items.Add(stackPanel);
+            }
+            BlockedList.UpdateLayout();
+        }
+
+        private void AddOneToBlockedList(Relationship blockedUser)
+        {
+            StackPanel stackPanel = BasicUserUI(blockedUser);
+            CreateBtnsForBlockedListUI(stackPanel, blockedUser, new Colors());
+            BlockedList.Items.Add(stackPanel);
+            BlockedList.UpdateLayout();
+        }
+
+        private void RemoveOneFromBlockedList(Relationship? friend)
+        {
+            ArgumentNullException.ThrowIfNull(friend);
+            BlockedList.Items.Remove(BlockedList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.HashTag)));
+            BlockedList.UpdateLayout();
+        }
+
+        private void CreateBtnsForBlockedListUI(StackPanel stackPanel, Relationship blocked, in Colors colors)
+        {
+            RelationshipButtonsData readdButtonData = new(blocked.Id, Blocked, RelationshipState.Pending);
+            var readdButton = new Button
+            {
+                Content = "Re-add",
+                Background = new SolidColorBrush(colors.Green),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = readdButtonData
+            };
+
+            RelationshipButtonsData unblockButtonData = new(blocked.Id, Blocked, RelationshipState.None);
+            var unblockButton = new Button
+            {
+                Content = "Unblock",
+                Background = new SolidColorBrush(colors.Gray),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = unblockButtonData
+            };
+
+            readdButton.Click += RelationshipStateChange_Click;
+            unblockButton.Click += RelationshipStateChange_Click;
+
+            stackPanel.Children.Add(readdButton);
+            stackPanel.Children.Add(unblockButton);
+        }
+
+        #endregion
+
+        #region FriendsList
+
+        private void PopulateFriendsList(IList<Relationship> friends)
+        {
+            Colors colors = new();
+            foreach (Relationship friend in friends)
+            {
+                StackPanel stackPanel = BasicUserUI(friend);
+                CreateBtnsForFriendsListUI(stackPanel, friend, in colors);
+                FriendsList.Items.Add(stackPanel);
+            }
+            FriendsList.UpdateLayout();
+        }
+
+        private void AddOneToFriendsList(Relationship friend)
+        {
+            StackPanel stackPanel = BasicUserUI(friend);
+            CreateBtnsForFriendsListUI(stackPanel, friend, new Colors());
+            FriendsList.Items.Add(stackPanel);
+            FriendsList.UpdateLayout();
+        }
+
+        private void RemoveOneFromFriendsList(Relationship? friend)
+        {
+            ArgumentNullException.ThrowIfNull(friend);
+            FriendsList.Items.Remove(FriendsList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.HashTag)));
+            FriendsList.UpdateLayout();
+        }
+
+        private void CreateBtnsForFriendsListUI(StackPanel stackPanel, Relationship friend, in Colors colors)
+        {
+            RelationshipButtonsData deleteButtonData = new(friend.Id, Friends, RelationshipState.None);
+            var declineButton = new Button
+            {
+                Content = "Delete",
+                Background = new SolidColorBrush(colors.Red),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = deleteButtonData
+            };
+
+            RelationshipButtonsData blockButtonData = new(friend.Id, Friends, RelationshipState.Blocked);
+            var blockButton = new Button
+            {
+                Content = "Block",
+                Background = new SolidColorBrush(colors.Gray),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = blockButtonData
+            };
+
+            var msgButton = new Button
+            {
+                Width = 40,
+                Height = 30,
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Margin = new Thickness(5),
+                Tag = friend.Id
+            };
+
+            var svgViewbox = new SvgViewbox
+            {
+                Source = new Uri(Client.GetDynamicPath(@"Images/msg.svg")),
+                Stretch = Stretch.Uniform
+            };
+
+            msgButton.Content = svgViewbox;
+
+            declineButton.Click += RelationshipStateChange_Click;
+            blockButton.Click += RelationshipStateChange_Click;
+            msgButton.Click += CreateChat_Click;
+
+            stackPanel.Children.Add(declineButton);
+            stackPanel.Children.Add(blockButton);
+            stackPanel.Children.Add(msgButton);
+        }
+
+        #endregion
+
+        #region PendingList
+
+        private void PopulatePendingList(IList<Relationship> pendingRequests)
+        {
+            Colors colors = new();
+            foreach (Relationship pending in pendingRequests)
+            {
+                StackPanel stackPanel = BasicUserUI(pending);
+                CreateBtnsForPendingListUI(stackPanel, pending, in colors);
+                PendingList.Items.Add(stackPanel);
+            }
+            PendingList.UpdateLayout();
+        }
+
+        private void AddOneToPendingList(Relationship pending)
+        {
+            StackPanel stackPanel = BasicUserUI(pending);
+            CreateBtnsForPendingListUI(stackPanel, pending, new Colors());
+            PendingList.Items.Add(stackPanel);
+            PendingList.UpdateLayout();
+        }
+
+        private void RemoveOneFromPendingList(Relationship? pending)
+        {
+            ArgumentNullException.ThrowIfNull(pending);
+            PendingList.Items.Remove(PendingList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (pending.Username, pending.HashTag)));
+            PendingList.UpdateLayout();
+        }
+
+        private void CreateBtnsForPendingListUI(StackPanel stackPanel, Relationship pendingRequest, in Colors colors)
+        {
+            RelationshipButtonsData acceptButtonData = new(pendingRequest.Id, Pending, RelationshipState.Friend);
+            var acceptButton = new Button
+            {
+                Content = "Accept",
+                Background = new SolidColorBrush(colors.Green),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = acceptButtonData
+            };
+
+            RelationshipButtonsData declineButtonData = new(pendingRequest.Id, Pending, RelationshipState.None);
+            var declineButton = new Button
+            {
+                Content = "Decline",
+                Background = new SolidColorBrush(colors.Red),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = declineButtonData
+            };
+
+            RelationshipButtonsData blockButtonData = new(pendingRequest.Id, Pending, RelationshipState.Blocked);
+            var blockButton = new Button
+            {
+                Content = "Block",
+                Background = new SolidColorBrush(colors.Gray),
+                Foreground = Brushes.White,
+                Width = 80,
+                Height = 30,
+                Margin = new Thickness(5),
+                Tag = blockButtonData
+            };
+
+            acceptButton.Click += RelationshipStateChange_Click;
+            declineButton.Click += RelationshipStateChange_Click;
+            blockButton.Click += RelationshipStateChange_Click;
+
+            stackPanel.Children.Add(acceptButton);
+            stackPanel.Children.Add(declineButton);
+            stackPanel.Children.Add(blockButton);
+        }
+
+        #endregion
+
+        #region DmList
+
+        private void PopulateDmList(IList<Relationship> relationships)
+        {
+            foreach (Relationship relationship in relationships)
+            {
+                StackPanel stackPanel = BasicUserUI(relationship);
+                CreateBtnForDmListUI(stackPanel);
+                Dms.Items.Add(stackPanel);
+                Dms.UpdateLayout();
+            }
+        }
+
+        private void AddOneToDmList(Relationship relationship)
+        {
+            List<StackPanel> stackPanels = [.. Dms.Items.Cast<StackPanel>()];
+            StackPanel? match = stackPanels.FirstOrDefault(x => x.Tag is (string username, string hashTag) 
+                && username == relationship.Username && hashTag == relationship.HashTag);
+
+            if (match == null)
+            {
+                StackPanel stackPanel = BasicUserUI(relationship);
+                CreateBtnForDmListUI(stackPanel);
+                Dms.Items.Add(stackPanel);
+                Dms.UpdateLayout();
+            } 
+        }
+
+        private void RemoveOneFromDmList(StackPanel stackPanel)
+        {
+            Dms.Items.Remove(stackPanel);
+            Dms.UpdateLayout();
+        }
+
+        private void CreateBtnForDmListUI(StackPanel stackPanel)
+        {
+            var deleteButton = new Button
+            { 
+                Content = "X",
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Foreground = Brushes.White,
+                Width = 30,
+                Height = 30,
+                Margin = new Thickness(0, 0, 0, 0),
+            };
+
+            deleteButton.Click += CloseChat_Click;
+            stackPanel.Children.Add(deleteButton);
+        }
+
+        #endregion
 
         #region ChangePanel
 
@@ -652,5 +628,124 @@ namespace ClientMessenger
         #endregion
 
         #endregion
+
+        private static StackPanel BasicUserUI(Relationship user)
+        {
+            var stackPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(5),
+                Tag = (user.Username, user.HashTag)
+            };
+            
+            var ellipse = new Ellipse
+            {
+                Width = 45,
+                Height = 45,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+
+            var imageBrush = new ImageBrush()
+            {
+                ImageSource = user.ProfilePicture,
+                Stretch = Stretch.UniformToFill,
+            };
+
+            ellipse.Fill = imageBrush;
+
+            var textBlockUsername = new TextBlock
+            {
+                Text = user.Username,
+                Foreground = Brushes.White,
+                FontSize = 18,
+                Margin = new Thickness(10)
+            };
+
+            stackPanel.Children.Add(ellipse);
+            stackPanel.Children.Add(textBlockUsername);
+            return stackPanel;
+        }
+
+        private async void RelationshipStateChange_Click(object sender, RoutedEventArgs args)
+        {
+            if (sender is Button button && button.Tag is RelationshipButtonsData buttonData)
+            {
+                var stackPanelParent = (StackPanel)button.Parent;
+                var listboxParent = (ListBox)stackPanelParent.Parent;
+
+                (long relationshipId, IList<Relationship> targetSet, RelationshipState wantedState) = buttonData;
+                RelationshipUpdate relationshipUpdate = new()
+                {
+                    User = Client.User,
+                    Relationship = targetSet.FirstOrDefault(x => x.Id == relationshipId)!,
+                    RequestedRelationshipState = wantedState,
+                };
+
+                var payload = new
+                {
+                    opCode = OpCode.UpdateRelationship,
+                    relationshipUpdate
+                };
+
+                await Client.SendPayloadAsync(payload);
+
+                listboxParent.Items.Remove(stackPanelParent);
+                switch (wantedState)
+                {
+                    case RelationshipState.Friend:
+                        lock (Lock)
+                        {
+                            _friends.Add(relationshipUpdate.Relationship);
+                            targetSet.Remove(relationshipUpdate.Relationship);
+                        }
+                        break;
+
+                    case RelationshipState.Blocked:
+                        lock (Lock)
+                        {
+                            _blocked.Add(relationshipUpdate.Relationship);
+                            targetSet.Remove(relationshipUpdate.Relationship);
+                        }
+                        break;
+
+                    case RelationshipState.Pending or RelationshipState.None:
+                        lock (Lock)
+                        {
+                            targetSet.Remove(relationshipUpdate.Relationship);
+                            RemoveOneFromDmList(stackPanelParent);
+                        }
+                        break;
+                }
+                PendingList.UpdateLayout();
+            }
+        }
+        private void CreateChat_Click(object sender, RoutedEventArgs args)
+        {
+            var button = (Button)sender;
+            Relationship relationship = _friends.FirstOrDefault(x => x.Id == (long)button.Tag)!;
+            AddOneToDmList(relationship);
+        }
+
+        private void CloseChat_Click(object sender, RoutedEventArgs args)
+        {
+            var button = (Button)sender;
+            var stackPanel = (StackPanel)button.Parent;
+            RemoveOneFromDmList(stackPanel);
+        }
+
+        public async Task DisplayInfosAddFriendPanelAsync(SolidColorBrush color, string msg)
+        {
+            AddFriendInfoTextBlock.Foreground = color;
+            AddFriendInfoTextBlock.Text = msg;
+
+            await Task.Delay(2000);
+
+            AddFriendInfoTextBlock.Foreground = Brushes.Black;
+            AddFriendInfoTextBlock.Text = "Enter valid data";
+        }
+
+        private static bool AddFriendValidateData(string username, string hashTag)
+            => !string.IsNullOrEmpty(username) || !string.IsNullOrEmpty(hashTag);
     }
 }
