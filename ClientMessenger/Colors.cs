@@ -2,7 +2,7 @@
 
 namespace ClientMessenger
 {
-    public record struct Colors()
+    public ref struct Colors()
     {
         public Color Green { get; private set; } = (Color)ColorConverter.ConvertFromString("#288444");
         public Color Gray { get; private set; } = (Color)ColorConverter.ConvertFromString("#302c34");

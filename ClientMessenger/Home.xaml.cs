@@ -6,7 +6,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using SharpVectors.Converters;
-using System.IO;
 using System.Windows.Shapes;
 
 namespace ClientMessenger
@@ -269,6 +268,59 @@ namespace ClientMessenger
 
         #endregion
 
+        #region DmList
+
+        private void PopulateDmList(IList<Relationship> relationships)
+        {
+            foreach (Relationship relationship in relationships)
+            {
+                StackPanel stackPanel = BasicUserUI(relationship);
+                CreateBtnForDmListUI(stackPanel);
+                Dms.Items.Add(stackPanel);
+                Dms.UpdateLayout();
+            }
+        }
+
+        private void AddOneToDmList(Relationship relationship)
+        {
+            List<StackPanel> stackPanels = [.. Dms.Items.Cast<StackPanel>()];
+            StackPanel? match = stackPanels.FirstOrDefault(x => x.Tag is (string username, string hashTag)
+                && username == relationship.Username && hashTag == relationship.HashTag);
+
+            if (match == null)
+            {
+                StackPanel stackPanel = BasicUserUI(relationship);
+                CreateBtnForDmListUI(stackPanel);
+                Dms.Items.Add(stackPanel);
+                Dms.UpdateLayout();
+            }
+        }
+
+        private void RemoveOneFromDmList(StackPanel stackPanel)
+        {
+            Dms.Items.Remove(stackPanel);
+            Dms.UpdateLayout();
+        }
+
+        private void CreateBtnForDmListUI(StackPanel stackPanel)
+        {
+            var deleteButton = new Button
+            {
+                Content = "X",
+                Background = Brushes.Transparent,
+                BorderBrush = Brushes.Transparent,
+                Foreground = Brushes.White,
+                Width = 30,
+                Height = 30,
+                Margin = new Thickness(0, 0, 0, 0),
+            };
+
+            deleteButton.Click += CloseChat_Click;
+            stackPanel.Children.Add(deleteButton);
+        }
+
+        #endregion
+
         #region BlockedList
 
         private void PopulateBlockedList(IList<Relationship> friends)
@@ -495,59 +547,6 @@ namespace ClientMessenger
 
         #endregion
 
-        #region DmList
-
-        private void PopulateDmList(IList<Relationship> relationships)
-        {
-            foreach (Relationship relationship in relationships)
-            {
-                StackPanel stackPanel = BasicUserUI(relationship);
-                CreateBtnForDmListUI(stackPanel);
-                Dms.Items.Add(stackPanel);
-                Dms.UpdateLayout();
-            }
-        }
-
-        private void AddOneToDmList(Relationship relationship)
-        {
-            List<StackPanel> stackPanels = [.. Dms.Items.Cast<StackPanel>()];
-            StackPanel? match = stackPanels.FirstOrDefault(x => x.Tag is (string username, string hashTag) 
-                && username == relationship.Username && hashTag == relationship.HashTag);
-
-            if (match == null)
-            {
-                StackPanel stackPanel = BasicUserUI(relationship);
-                CreateBtnForDmListUI(stackPanel);
-                Dms.Items.Add(stackPanel);
-                Dms.UpdateLayout();
-            } 
-        }
-
-        private void RemoveOneFromDmList(StackPanel stackPanel)
-        {
-            Dms.Items.Remove(stackPanel);
-            Dms.UpdateLayout();
-        }
-
-        private void CreateBtnForDmListUI(StackPanel stackPanel)
-        {
-            var deleteButton = new Button
-            { 
-                Content = "X",
-                Background = Brushes.Transparent,
-                BorderBrush = Brushes.Transparent,
-                Foreground = Brushes.White,
-                Width = 30,
-                Height = 30,
-                Margin = new Thickness(0, 0, 0, 0),
-            };
-
-            deleteButton.Click += CloseChat_Click;
-            stackPanel.Children.Add(deleteButton);
-        }
-
-        #endregion
-
         #region ChangePanel
 
         private void HidePanels()
@@ -629,43 +628,7 @@ namespace ClientMessenger
 
         #endregion
 
-        private static StackPanel BasicUserUI(Relationship user)
-        {
-            var stackPanel = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Margin = new Thickness(5),
-                Tag = (user.Username, user.HashTag)
-            };
-            
-            var ellipse = new Ellipse
-            {
-                Width = 45,
-                Height = 45,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 10, 0)
-            };
-
-            var imageBrush = new ImageBrush()
-            {
-                ImageSource = user.ProfilePicture,
-                Stretch = Stretch.UniformToFill,
-            };
-
-            ellipse.Fill = imageBrush;
-
-            var textBlockUsername = new TextBlock
-            {
-                Text = user.Username,
-                Foreground = Brushes.White,
-                FontSize = 18,
-                Margin = new Thickness(10)
-            };
-
-            stackPanel.Children.Add(ellipse);
-            stackPanel.Children.Add(textBlockUsername);
-            return stackPanel;
-        }
+        #region ClickEvents
 
         private async void RelationshipStateChange_Click(object sender, RoutedEventArgs args)
         {
@@ -720,6 +683,7 @@ namespace ClientMessenger
                 PendingList.UpdateLayout();
             }
         }
+
         private void CreateChat_Click(object sender, RoutedEventArgs args)
         {
             var button = (Button)sender;
@@ -734,6 +698,8 @@ namespace ClientMessenger
             RemoveOneFromDmList(stackPanel);
         }
 
+        #endregion
+
         public async Task DisplayInfosAddFriendPanelAsync(SolidColorBrush color, string msg)
         {
             AddFriendInfoTextBlock.Foreground = color;
@@ -747,5 +713,43 @@ namespace ClientMessenger
 
         private static bool AddFriendValidateData(string username, string hashTag)
             => !string.IsNullOrEmpty(username) || !string.IsNullOrEmpty(hashTag);
+
+        private static StackPanel BasicUserUI(Relationship user)
+        {
+            var stackPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(5),
+                Tag = (user.Username, user.HashTag)
+            };
+
+            var ellipse = new Ellipse
+            {
+                Width = 45,
+                Height = 45,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+
+            var imageBrush = new ImageBrush()
+            {
+                ImageSource = user.ProfilePicture,
+                Stretch = Stretch.UniformToFill,
+            };
+
+            ellipse.Fill = imageBrush;
+
+            var textBlockUsername = new TextBlock
+            {
+                Text = user.Username,
+                Foreground = Brushes.White,
+                FontSize = 18,
+                Margin = new Thickness(10)
+            };
+
+            stackPanel.Children.Add(ellipse);
+            stackPanel.Children.Add(textBlockUsername);
+            return stackPanel;
+        }
     }
 }

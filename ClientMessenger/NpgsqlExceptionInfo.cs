@@ -6,7 +6,6 @@ namespace ClientMessenger
     {
         [JsonPropertyName("npgsqlExceptions")]
         public NpgsqlExceptions Exception { get; init; }
-        [JsonPropertyName("columnName")]
         public string ColumnName { get; init; }
 
         #region Constructors

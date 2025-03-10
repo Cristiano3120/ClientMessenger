@@ -15,7 +15,7 @@ namespace ClientMessenger
             AesKeyData aesKeyData = new()
             {
                 Key = Convert.ToBase64String(Security.Aes.Key),
-                IV =  Convert.ToBase64String(Security.Aes.IV)
+                Iv =  Convert.ToBase64String(Security.Aes.IV)
             };
 
             var payload = new
@@ -168,8 +168,7 @@ namespace ClientMessenger
                             home.Friends.Remove(relationshipUpdate.Relationship!);
                             break;
                     }
-                }
-                
+                }   
             });
         }
 
