@@ -29,18 +29,26 @@ namespace ClientMessenger
             InitNameAndProfilPic();
             InitAddFriendBtn();
             InitCollections();
+            InitDmList();
             InitPanels();
             InitBtns();
-        } 
+        }
 
         #region Init
 
         private void InitBtns()
         {
             AddFriendBtn.Click += ChangePanelState;
+            AddFriendBtn.Tag = Panels.AddFriend;
+
             FriendsBtn.Click += ChangePanelState;
+            FriendsBtn.Tag = Panels.Friends;
+
             BlockedBtn.Click += ChangePanelState;
+            BlockedBtn.Tag = Panels.Blocked;
+
             PendingBtn.Click += ChangePanelState;
+            PendingBtn.Tag = Panels.Pending;
         }
 
         private void InitNameAndProfilPic()
@@ -92,6 +100,21 @@ namespace ClientMessenger
                 else if (args.Action == NotifyCollectionChangedAction.Remove)
                 {
                     RemoveOneFromPendingList(args.OldItems![0] as Relationship);
+                }
+            };
+        }
+
+        private void InitDmList()
+        {
+            Dms.SelectionChanged += (sender, args) =>
+            {
+                if (Dms.SelectedItem is StackPanel stackPanel)
+                {
+                    var tagUserData = (TagUserData)stackPanel.Tag;
+                    Relationship relationship = _friends.FirstOrDefault(x => x.Username == tagUserData.Username
+                        && x.HashTag == tagUserData.HashTag)!;
+
+                    PopulateChat(relationship);
                 }
             };
         }
@@ -158,78 +181,163 @@ namespace ClientMessenger
 
         #endregion
 
-        private async Task SendFriendRequest()
+        #endregion
+
+        #region Chat
+
+        private void CreateChat()
         {
-            var username = AddFriendUsernameTextBox.Text;
-            var hashTag = AddFriendHashTagTextBox.Text;
-
-            if (!AddFriendValidateData(username, hashTag))
+            var scrollViewer = new ScrollViewer
             {
-                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "The username and/or password is invalid");
-                return;
-            }
-
-            if (username == Client.User.Username && hashTag == Client.User.HashTag)
-            {
-                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You can´t add yourself :(");
-                return;
-            }
-
-            Func<Relationship, bool> relationshipInListFunc = x => x.Username == username && x.HashTag == hashTag;
-
-            if (Friends.Any(relationshipInListFunc))
-            {
-                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You are already friends with this person");
-                return;
-            }
-
-            if (Pending.Any(relationshipInListFunc))
-            {
-                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You already have a pending friend request from this person");
-                return;
-            }
-
-            if (Blocked.Any(relationshipInListFunc))
-            {
-                foreach (object item in BlockedList.Items)
-                {
-                    var stackPanel = (StackPanel)item;
-                    (string usernameInList, string hashTagInList) = (ValueTuple<string, string>)stackPanel.Tag;
-                    if (usernameInList == username && hashTagInList == hashTag)
-                    {
-                        BlockedList.Items.Remove(item);
-                        break;
-                    }
-                }
-            }
-
-            Relationship relationship = new()
-            {
-                Username = username,
-                HashTag = hashTag
+                VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             };
 
-            RelationshipUpdate relationshipUpdate = new()
+            var chatPanel = new StackPanel
             {
-                RequestedRelationshipState = RelationshipState.Pending,
-                Relationship = relationship,
-                User = Client.User
+                Orientation = Orientation.Vertical,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(10),
             };
 
-            var payload = new
-            {
-                opCode = OpCode.UpdateRelationship,
-                relationshipUpdate
-            };
+            scrollViewer.Content = chatPanel;
 
-            if (!AntiSpam.CheckIfCanSendData(1.5f, out TimeSpan timeToWait))
-            {
-                await DisplayInfosAddFriendPanelAsync(Brushes.Red, $"Pls wait another {timeToWait.TotalSeconds}s");
-                return;
-            }
-
-            await Client.SendPayloadAsync(payload);
+            //TODO:
+            //1. Speichere den neu erstellten Scrollviewer in einer Liste boxed in einem chat struct. 
+                //Die Chats sollen aus der Liste nach einer gewissen Zeit deleted werden.
+                //Speichere dafür das Datum + Uhrzeit wann der Chat zuletzt geöffnet wurde.
+                //Wenn der Chat länger als 5 Minuten nicht geöffnet wurde, wird er gelöscht.
+                //Dementsprechend muss auch geupdated werden wenn der Chat geöffnet wird.
+                //Falls der Chat dann gelöscht wurde baue ihn anhand der local LiteDb Database wider auf.
+            //2. Clear die Children des Chatpanels
+            //3. Hole aus dem chat struct die teilnehmer des chats und schreib sie ganz oben hin wie bei dc.
+            //4. Add den scrollviewer aus dem Chat struct zum ChatPanel
+            //5. ChatPanel.UpdateLayout();
+            ChatPanel.Children.Add(scrollViewer);
+            ChatPanel.UpdateLayout();
         }
+
+        // MUSS GELÖSCHT WERDEN CREATECHAT IST DIE BENÖTIGTE METHODE
+        private void PopulateChat(Relationship relationship)
+        {
+            HidePanels();
+
+            Message message1 = new()
+            {
+                SenderId = 15,
+                Content = "Hello",
+                DateTime = DateTime.Now
+            };
+
+            Message message2 = new()
+            {
+                SenderId = 15,
+                Content = "How are you?",
+                DateTime = DateTime.Now.AddMinutes(1)
+            };
+
+            var scrollViewer = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            };
+
+            var chatPanel = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(10),
+            };
+
+            AddMessage(chatPanel, relationship, message1);
+            AddMessage(chatPanel, relationship, message2);
+            AddMessage(chatPanel, relationship, message2);
+            AddMessage(chatPanel, relationship, message2);
+            AddMessage(chatPanel, relationship, message2); 
+            AddMessage(chatPanel, relationship, message2);
+            AddMessage(chatPanel, relationship, message2);
+            AddMessage(chatPanel, relationship, message2);
+            AddMessage(chatPanel, relationship, message2);
+            AddMessage(chatPanel, relationship, message2);
+
+            scrollViewer.Content = chatPanel;
+            ChatPanel.Children.Add(scrollViewer);
+
+            SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
+        }
+
+        private static void AddMessage(StackPanel chat, Relationship relationship, Message message)
+        {
+            var outerStackPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(10),
+            };
+
+            Relationship sender = message.SenderId == Client.User.Id
+                ? (Relationship)Client.User
+                : relationship;
+
+            var ellipse = new Ellipse
+            {
+                Width = 45,
+                Height = 45,
+                Margin = new Thickness(0, 0, 10, 0),
+                Fill = new ImageBrush
+                {
+                    ImageSource = sender.ProfilePicture,
+                    Stretch = Stretch.UniformToFill
+                }
+            };
+
+            var innerStackPanel = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                MaxWidth = 400
+            };
+
+            var nameAndTimePanel = new DockPanel();
+
+            var nameTextBlock = new TextBlock
+            {
+                Text = sender.Username,
+                FontWeight = FontWeights.Bold,
+                FontSize = 16,
+                Foreground = Brushes.LightGray,
+                Margin = new Thickness(0, 0, 20, 0)
+            };
+            DockPanel.SetDock(nameTextBlock, Dock.Left);
+
+            var dateTimeTextBlock = new TextBlock
+            {
+                Text = message.DateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
+                FontSize = 12,
+                Foreground = Brushes.Gray,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            DockPanel.SetDock(dateTimeTextBlock, Dock.Right);
+
+            nameAndTimePanel.Children.Add(nameTextBlock);
+            nameAndTimePanel.Children.Add(dateTimeTextBlock);
+
+            var messageTextBlock = new TextBlock
+            {
+                Text = message.Content,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 5, 0, 0),
+                FontSize = 14,
+                Foreground = Brushes.LightGray
+            };
+
+            innerStackPanel.Children.Add(nameAndTimePanel);
+            innerStackPanel.Children.Add(messageTextBlock);
+            outerStackPanel.Children.Add(ellipse);
+            outerStackPanel.Children.Add(innerStackPanel);
+
+            chat.Children.Add(outerStackPanel);
+        }
+
 
         #endregion
 
@@ -555,23 +663,24 @@ namespace ClientMessenger
             PendingPanel.Visibility = Visibility.Collapsed;
             FriendsPanel.Visibility = Visibility.Collapsed;
             BlockedPanel.Visibility = Visibility.Collapsed;
+            ChatPanel.Visibility = Visibility.Collapsed;
         }
 
         private void ChangePanelState(object sender, RoutedEventArgs args)
         {
             var btn = (Button)sender;
-            switch ((string)btn.Tag)
+            switch ((Panels)btn.Tag)
             {
-                case "AddFriend":
+                case Panels.AddFriend:
                     ChooseAnimation(AddFriendPanelTranslateTransform, AddFriendPanel);
                     break;
-                case "Friends":
+                case Panels.Friends:
                     ChooseAnimation(FriendsPanelTranslateTransform, FriendsPanel);
                     break;
-                case "Blocked":
+                case Panels.Blocked:
                     ChooseAnimation(BlockedPanelTranslateTransform, BlockedPanel);
                     break;
-                case "Pending":
+                case Panels.Pending:
                     ChooseAnimation(PendingPanelTranslateTransform, PendingPanel);
                     break;
             }
@@ -588,6 +697,7 @@ namespace ClientMessenger
             else
             {
                 SlideOutAnimation(translateTransform, grid);
+                SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
             }
         }
 
@@ -689,6 +799,7 @@ namespace ClientMessenger
             var button = (Button)sender;
             Relationship relationship = _friends.FirstOrDefault(x => x.Id == (long)button.Tag)!;
             AddOneToDmList(relationship);
+            PopulateChat(relationship);
         }
 
         private void CloseChat_Click(object sender, RoutedEventArgs args)
@@ -696,7 +807,10 @@ namespace ClientMessenger
             var button = (Button)sender;
             var stackPanel = (StackPanel)button.Parent;
             RemoveOneFromDmList(stackPanel);
+            ChatPanel.Visibility = Visibility.Collapsed;
         }
+
+
 
         #endregion
 
@@ -718,9 +832,9 @@ namespace ClientMessenger
         {
             var stackPanel = new StackPanel
             {
+                Tag = new TagUserData(user.Username, user.HashTag),
                 Orientation = Orientation.Horizontal,
                 Margin = new Thickness(5),
-                Tag = (user.Username, user.HashTag)
             };
 
             var ellipse = new Ellipse
@@ -750,6 +864,79 @@ namespace ClientMessenger
             stackPanel.Children.Add(ellipse);
             stackPanel.Children.Add(textBlockUsername);
             return stackPanel;
+        }
+
+        private async Task SendFriendRequest()
+        {
+            var username = AddFriendUsernameTextBox.Text;
+            var hashTag = AddFriendHashTagTextBox.Text;
+
+            if (!AddFriendValidateData(username, hashTag))
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "The username and/or password is invalid");
+                return;
+            }
+
+            if (username == Client.User.Username && hashTag == Client.User.HashTag)
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You can´t add yourself :(");
+                return;
+            }
+
+            Func<Relationship, bool> relationshipInListFunc = x => x.Username == username && x.HashTag == hashTag;
+
+            if (Friends.Any(relationshipInListFunc))
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You are already friends with this person");
+                return;
+            }
+
+            if (Pending.Any(relationshipInListFunc))
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You already have a pending friend request from this person");
+                return;
+            }
+
+            if (Blocked.Any(relationshipInListFunc))
+            {
+                foreach (object item in BlockedList.Items)
+                {
+                    var stackPanel = (StackPanel)item;
+                    (string usernameInList, string hashTagInList) = (ValueTuple<string, string>)stackPanel.Tag;
+                    if (usernameInList == username && hashTagInList == hashTag)
+                    {
+                        BlockedList.Items.Remove(item);
+                        break;
+                    }
+                }
+            }
+
+            Relationship relationship = new()
+            {
+                Username = username,
+                HashTag = hashTag
+            };
+
+            RelationshipUpdate relationshipUpdate = new()
+            {
+                RequestedRelationshipState = RelationshipState.Pending,
+                Relationship = relationship,
+                User = Client.User
+            };
+
+            var payload = new
+            {
+                opCode = OpCode.UpdateRelationship,
+                relationshipUpdate
+            };
+
+            if (!AntiSpam.CheckIfCanSendData(1.5f, out TimeSpan timeToWait))
+            {
+                await DisplayInfosAddFriendPanelAsync(Brushes.Red, $"Pls wait another {timeToWait.TotalSeconds}s");
+                return;
+            }
+
+            await Client.SendPayloadAsync(payload);
         }
     }
 }

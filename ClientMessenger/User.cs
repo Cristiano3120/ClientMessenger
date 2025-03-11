@@ -30,6 +30,19 @@ namespace ClientMessenger
             Token = "";
         }
 
+        public static explicit operator Relationship(User? user)
+        {
+            ArgumentNullException.ThrowIfNull(user, nameof(user));
+            return new()
+            {
+                Username = user.Username,
+                HashTag = user.HashTag,
+                Id = user.Id,
+                Biography = user.Biography,
+                ProfilePicture = user.ProfilePicture,
+            };
+        }
+
         public IEnumerator<(string name, string value)> GetEnumerator()
         {
             yield return (nameof(Username).ToCamelCase(), Username);

@@ -42,13 +42,13 @@
       
         <!--#region Btns-->
 
-        <Button x:Name="FriendsBtn" Tag="Friends" Grid.Column="1" Width = "100" Height="30" Content="Friends" Margin="0, 0, 450, 0"/>
+        <Button x:Name="FriendsBtn" Grid.Column="1" Width = "100" Height="30" Content="Friends" Margin="0, 0, 450, 0"/>
 
-        <Button x:Name="PendingBtn" Tag="Pending" Grid.Column="1" Width ="100" Height="30" Content="Pending" Margin="0, 0, 200, 0"/>
+        <Button x:Name="PendingBtn" Grid.Column="1" Width ="100" Height="30" Content="Pending" Margin="0, 0, 200, 0"/>
 
-        <Button x:Name="BlockedBtn" Tag="Blocked" Grid.Column="1" Width = "100" Height="30" Margin="50, 0, 0, 0" Content="Blocked"/>
+        <Button x:Name="BlockedBtn" Grid.Column="1" Width = "100" Height="30" Margin="50, 0, 0, 0" Content="Blocked"/>
 
-        <Button x:Name="AddFriendBtn" Tag="AddFriend" Grid.Column="1" Width = "100" Height="30" Margin="290, 0, 0, 0" Content="Add Friend"/>
+        <Button x:Name="AddFriendBtn" Grid.Column="1" Width = "100" Height="30" Margin="290, 0, 0, 0" Content="Add Friend"/>
         
         <!--#endregion-->
 
@@ -87,6 +87,12 @@
             <TextBox x:Name="AddFriendHashTagTextBox" Width="50" Height="30" Margin="155, 0, 0, 0" Text="#"/>
             
             <Button x:Name="AddFriendAddFriendBtn" Width="80" Height="30" Margin="0, 150, 0, 0" Content="Add"/>
+        </Grid>
+
+        <Grid x:Name="ChatPanel" Width="Auto" Background="#222" Visibility="Hidden" RenderTransformOrigin="1,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1" Grid.Row="1">
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="ChatPanelTranslateTransform"/>
+            </Grid.RenderTransform>
         </Grid>
         
         <!--#endregion-->
