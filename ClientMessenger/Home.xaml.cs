@@ -19,6 +19,7 @@ namespace ClientMessenger
         private ObservableCollection<Relationship> _friends = [];
         private ObservableCollection<Relationship> _blocked = [];
         private ObservableCollection<Relationship> _pending = [];
+        private readonly Dictionary<TagUserData, Chat> _chats = new();
 
         public Home()
         {
@@ -27,6 +28,7 @@ namespace ClientMessenger
             InitAddFriendUsernameTextBox();
             InitAddFriendHashTagTextBox();
             InitNameAndProfilPic();
+            _ = CleanUpChats();
             InitAddFriendBtn();
             InitCollections();
             InitDmList();
@@ -114,7 +116,7 @@ namespace ClientMessenger
                     Relationship relationship = _friends.FirstOrDefault(x => x.Username == tagUserData.Username
                         && x.HashTag == tagUserData.HashTag)!;
 
-                    PopulateChat(relationship);
+                    CreateOrOpenChat(relationship);
                 }
             };
         }
@@ -185,57 +187,28 @@ namespace ClientMessenger
 
         #region Chat
 
-        private void CreateChat()
-        {
-            var scrollViewer = new ScrollViewer
-            {
-                VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            };
-
-            var chatPanel = new StackPanel
-            {
-                Orientation = Orientation.Vertical,
-                VerticalAlignment = VerticalAlignment.Top,
-                Margin = new Thickness(10),
-            };
-
-            scrollViewer.Content = chatPanel;
-
-            //TODO:
-            //1. Speichere den neu erstellten Scrollviewer in einer Liste boxed in einem chat struct. 
-                //Die Chats sollen aus der Liste nach einer gewissen Zeit deleted werden.
-                //Speichere dafür das Datum + Uhrzeit wann der Chat zuletzt geöffnet wurde.
-                //Wenn der Chat länger als 5 Minuten nicht geöffnet wurde, wird er gelöscht.
-                //Dementsprechend muss auch geupdated werden wenn der Chat geöffnet wird.
-                //Falls der Chat dann gelöscht wurde baue ihn anhand der local LiteDb Database wider auf.
-            //2. Clear die Children des Chatpanels
-            //3. Hole aus dem chat struct die teilnehmer des chats und schreib sie ganz oben hin wie bei dc.
-            //4. Add den scrollviewer aus dem Chat struct zum ChatPanel
-            //5. ChatPanel.UpdateLayout();
-            ChatPanel.Children.Add(scrollViewer);
-            ChatPanel.UpdateLayout();
-        }
-
-        // MUSS GELÖSCHT WERDEN CREATECHAT IST DIE BENÖTIGTE METHODE
-        private void PopulateChat(Relationship relationship)
+        private void CreateOrOpenChat(Relationship relationship)
         {
             HidePanels();
 
-            Message message1 = new()
+            if (_chats.TryGetValue(new TagUserData(relationship.Username, relationship.HashTag), out Chat? chat))
             {
-                SenderId = 15,
-                Content = "Hello",
-                DateTime = DateTime.Now
-            };
+                chat.LastOpend = DateTime.Now;
 
-            Message message2 = new()
-            {
-                SenderId = 15,
-                Content = "How are you?",
-                DateTime = DateTime.Now.AddMinutes(1)
-            };
+                ChatPanel.Children.Clear();
+                ChatPanel.Children.Add(chat.ChatPanel);
+                ChatPanel.UpdateLayout();
+                SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
 
+                return;
+            }
+
+            CreateChat(relationship);
+        }
+    
+        private void CreateChat(Relationship relationship)
+        {
+            //HOL DATA AUS LOCAL DATABASE WENN VORHANDEN!!!!
             var scrollViewer = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
@@ -249,25 +222,19 @@ namespace ClientMessenger
                 Margin = new Thickness(10),
             };
 
-            AddMessage(chatPanel, relationship, message1);
-            AddMessage(chatPanel, relationship, message2);
-            AddMessage(chatPanel, relationship, message2);
-            AddMessage(chatPanel, relationship, message2);
-            AddMessage(chatPanel, relationship, message2); 
-            AddMessage(chatPanel, relationship, message2);
-            AddMessage(chatPanel, relationship, message2);
-            AddMessage(chatPanel, relationship, message2);
-            AddMessage(chatPanel, relationship, message2);
-            AddMessage(chatPanel, relationship, message2);
-
             scrollViewer.Content = chatPanel;
+
+            ChatPanel.Children.Clear();
             ChatPanel.Children.Add(scrollViewer);
+            ChatPanel.UpdateLayout();
 
             SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
+            _chats.Add(new TagUserData(relationship.Username, relationship.HashTag), new Chat(scrollViewer, DateTime.Now));
         }
 
-        private static void AddMessage(StackPanel chat, Relationship relationship, Message message)
+        private static void AddMessage(ScrollViewer scrollViewer, Relationship relationship, Message message)
         {
+            var chatPanel = (StackPanel)scrollViewer.Content;
             var outerStackPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
@@ -335,7 +302,23 @@ namespace ClientMessenger
             outerStackPanel.Children.Add(ellipse);
             outerStackPanel.Children.Add(innerStackPanel);
 
-            chat.Children.Add(outerStackPanel);
+            chatPanel.Children.Add(outerStackPanel);
+        }
+
+        private async Task CleanUpChats()
+        {
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10));
+                foreach (KeyValuePair<TagUserData, Chat> chat in _chats)
+                {
+                    if (ChatPanel.Children[0] != chat.Value.ChatPanel && DateTime.Now - chat.Value.LastOpend > TimeSpan.FromSeconds(10))
+                    {
+                        Logger.LogInformation($"Chat deleted from {nameof(_chats)}");
+                        _chats.Remove(chat.Key);
+                    }
+                }
+            }
         }
 
 
@@ -799,7 +782,7 @@ namespace ClientMessenger
             var button = (Button)sender;
             Relationship relationship = _friends.FirstOrDefault(x => x.Id == (long)button.Tag)!;
             AddOneToDmList(relationship);
-            PopulateChat(relationship);
+            CreateOrOpenChat(relationship);
         }
 
         private void CloseChat_Click(object sender, RoutedEventArgs args)
