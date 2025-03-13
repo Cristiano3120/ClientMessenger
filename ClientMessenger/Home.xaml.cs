@@ -31,6 +31,7 @@ namespace ClientMessenger
             _ = CleanUpChats();
             InitAddFriendBtn();
             InitCollections();
+            InitChatPanel();
             InitDmList();
             InitPanels();
             InitBtns();
@@ -121,6 +122,24 @@ namespace ClientMessenger
             };
         }
 
+        private void InitChatPanel()
+        {
+            ChatPanel.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // For the messages
+            ChatPanel.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // For the input textbox
+
+            TextBox inputTextBox = new()
+            {
+                Width = 300,
+                Height = 30,
+                Margin = new Thickness(0, 0, 0, 15),
+                BorderBrush = Brushes.Transparent,
+            }; 
+            
+            Grid.SetRow(inputTextBox, 1);
+            ChatPanel.Children.Add(inputTextBox);
+            ChatPanel.UpdateLayout();
+        }
+
         #region Init AddFriendPanel
 
         private void InitAddFriendUsernameTextBox()
@@ -205,10 +224,11 @@ namespace ClientMessenger
 
             CreateChat(relationship);
         }
-    
+
         private void CreateChat(Relationship relationship)
         {
             //HOL DATA AUS LOCAL DATABASE WENN VORHANDEN!!!!
+
             var scrollViewer = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
@@ -223,96 +243,111 @@ namespace ClientMessenger
             };
 
             scrollViewer.Content = chatPanel;
+            Grid.SetRow(scrollViewer, 0);
 
-            ChatPanel.Children.Clear();
+            AddMessage(scrollViewer, relationship, new(10, DateTime.Now, "Hi"));
+
+            foreach (UIElement child in ChatPanel.Children.Cast<UIElement>().Where(child => Grid.GetRow(child) == 0).ToArray())
+            {
+                ChatPanel.Children.Remove(child);
+            }
+
             ChatPanel.Children.Add(scrollViewer);
             ChatPanel.UpdateLayout();
-
+            
             SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
             _chats.Add(new TagUserData(relationship.Username, relationship.HashTag), new Chat(scrollViewer, DateTime.Now));
         }
 
         private static void AddMessage(ScrollViewer scrollViewer, Relationship relationship, Message message)
         {
-            var chatPanel = (StackPanel)scrollViewer.Content;
-            var outerStackPanel = new StackPanel
+            try
             {
-                Orientation = Orientation.Horizontal,
-                VerticalAlignment = VerticalAlignment.Top,
-                Margin = new Thickness(10),
-            };
-
-            Relationship sender = message.SenderId == Client.User.Id
-                ? (Relationship)Client.User
-                : relationship;
-
-            var ellipse = new Ellipse
-            {
-                Width = 45,
-                Height = 45,
-                Margin = new Thickness(0, 0, 10, 0),
-                Fill = new ImageBrush
+                var chatPanel = (StackPanel)scrollViewer.Content;
+                var outerStackPanel = new StackPanel
                 {
-                    ImageSource = sender.ProfilePicture,
-                    Stretch = Stretch.UniformToFill
-                }
-            };
+                    Orientation = Orientation.Horizontal,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(10),
+                };
 
-            var innerStackPanel = new StackPanel
+                Relationship sender = message.SenderId == Client.User.Id
+                    ? (Relationship)Client.User
+                    : relationship;
+
+                var ellipse = new Ellipse
+                {
+                    Width = 45,
+                    Height = 45,
+                    Margin = new Thickness(0, 0, 10, 0),
+                    Fill = new ImageBrush
+                    {
+                        ImageSource = sender.ProfilePicture,
+                        Stretch = Stretch.UniformToFill
+                    }
+                };
+
+                var innerStackPanel = new StackPanel
+                {
+                    Orientation = Orientation.Vertical,
+                    MaxWidth = 400
+                };
+
+                var nameAndTimePanel = new DockPanel();
+
+                var nameTextBlock = new TextBlock
+                {
+                    Text = sender.Username,
+                    FontWeight = FontWeights.Bold,
+                    FontSize = 16,
+                    Foreground = Brushes.LightGray,
+                    Margin = new Thickness(0, 0, 20, 0)
+                };
+                DockPanel.SetDock(nameTextBlock, Dock.Left);
+
+                var dateTimeTextBlock = new TextBlock
+                {
+                    Text = message.DateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
+                    FontSize = 12,
+                    Foreground = Brushes.Gray,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                DockPanel.SetDock(dateTimeTextBlock, Dock.Right);
+
+                nameAndTimePanel.Children.Add(nameTextBlock);
+                nameAndTimePanel.Children.Add(dateTimeTextBlock);
+
+                var messageTextBlock = new TextBlock
+                {
+                    Text = message.Content,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 5, 0, 0),
+                    FontSize = 14,
+                    Foreground = Brushes.LightGray
+                };
+
+                innerStackPanel.Children.Add(nameAndTimePanel);
+                innerStackPanel.Children.Add(messageTextBlock);
+                outerStackPanel.Children.Add(ellipse);
+                outerStackPanel.Children.Add(innerStackPanel);
+
+                chatPanel.Children.Add(outerStackPanel);
+                chatPanel.UpdateLayout();
+            }
+            catch (Exception ex)
             {
-                Orientation = Orientation.Vertical,
-                MaxWidth = 400
-            };
-
-            var nameAndTimePanel = new DockPanel();
-
-            var nameTextBlock = new TextBlock
-            {
-                Text = sender.Username,
-                FontWeight = FontWeights.Bold,
-                FontSize = 16,
-                Foreground = Brushes.LightGray,
-                Margin = new Thickness(0, 0, 20, 0)
-            };
-            DockPanel.SetDock(nameTextBlock, Dock.Left);
-
-            var dateTimeTextBlock = new TextBlock
-            {
-                Text = message.DateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
-                FontSize = 12,
-                Foreground = Brushes.Gray,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-            DockPanel.SetDock(dateTimeTextBlock, Dock.Right);
-
-            nameAndTimePanel.Children.Add(nameTextBlock);
-            nameAndTimePanel.Children.Add(dateTimeTextBlock);
-
-            var messageTextBlock = new TextBlock
-            {
-                Text = message.Content,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 5, 0, 0),
-                FontSize = 14,
-                Foreground = Brushes.LightGray
-            };
-
-            innerStackPanel.Children.Add(nameAndTimePanel);
-            innerStackPanel.Children.Add(messageTextBlock);
-            outerStackPanel.Children.Add(ellipse);
-            outerStackPanel.Children.Add(innerStackPanel);
-
-            chatPanel.Children.Add(outerStackPanel);
+                Logger.LogError(ex);
+            }
         }
 
         private async Task CleanUpChats()
         {
             while (true)
             {
-                await Task.Delay(TimeSpan.FromSeconds(10));
+                await Task.Delay(TimeSpan.FromMinutes(5));
                 foreach (KeyValuePair<TagUserData, Chat> chat in _chats)
                 {
-                    if (ChatPanel.Children[0] != chat.Value.ChatPanel && DateTime.Now - chat.Value.LastOpend > TimeSpan.FromSeconds(10))
+                    if (ChatPanel.Children[0] != chat.Value.ChatPanel && DateTime.Now - chat.Value.LastOpend > TimeSpan.FromMinutes(5))
                     {
                         Logger.LogInformation($"Chat deleted from {nameof(_chats)}");
                         _chats.Remove(chat.Key);
@@ -320,7 +355,6 @@ namespace ClientMessenger
                 }
             }
         }
-
 
         #endregion
 
@@ -792,8 +826,6 @@ namespace ClientMessenger
             RemoveOneFromDmList(stackPanel);
             ChatPanel.Visibility = Visibility.Collapsed;
         }
-
-
 
         #endregion
 
