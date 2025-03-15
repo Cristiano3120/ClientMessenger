@@ -2,7 +2,9 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Threading;
 using System.Windows.Media;
+using ClientMessenger.LocalChatDatabase;
 
 namespace ClientMessenger
 {
@@ -108,7 +110,7 @@ namespace ClientMessenger
 
         #region Past Log in
 
-        public static async Task AnswerToRelationshipUpdateRequest(JsonElement message)
+        public static async Task AnswerToRelationshipUpdateRequestAsync(JsonElement message)
         { 
             NpgsqlExceptionInfos exceptionInfos = message.GetNpgsqlExceptionInfos()!;
             if (exceptionInfos.Exception == NpgsqlExceptions.None)
@@ -124,30 +126,7 @@ namespace ClientMessenger
             await HandleNpgsqlErrorAsync(exceptionInfos);
         }
 
-        public static async Task ReceiveRelationships(JsonElement message)
-        {
-            HashSet<Relationship>? relationships = JsonSerializer.Deserialize<HashSet<Relationship>>(message.GetProperty("relationships"), Client.JsonSerializerOptions);
-            NpgsqlExceptionInfos npgsqlExceptionInfos = message.GetNpgsqlExceptionInfos();
-
-            if (npgsqlExceptionInfos.Exception != NpgsqlExceptions.None)
-            {
-                await HandleNpgsqlErrorAsync(npgsqlExceptionInfos);
-                return;
-            }
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                Home home = ClientUI.GetWindow<Home>();
-                lock (home.Lock)
-                {
-                    home.Blocked = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Blocked)];
-                    home.Pending = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Pending)];
-                    home.Friends = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Friend)];
-                }
-            });
-        }
-
-        public static async Task ARelationshipWasUpdated(JsonElement message)
+        public static async Task ARelationshipWasUpdatedAsync(JsonElement message)
         {
             RelationshipUpdate relationshipUpdate = JsonSerializer.Deserialize<RelationshipUpdate>(message.GetProperty("relationshipUpdate"), Client.JsonSerializerOptions);
             await Application.Current.Dispatcher.InvokeAsync(() =>
@@ -168,8 +147,49 @@ namespace ClientMessenger
                             home.Friends.Remove(relationshipUpdate.Relationship!);
                             break;
                     }
-                }   
+                }
             });
+        }
+
+        public static async Task ReceiveRelationshipsAsync(JsonElement message)
+        {
+            HashSet<Relationship>? relationships = JsonSerializer.Deserialize<HashSet<Relationship>>(message.GetProperty("relationships"), Client.JsonSerializerOptions);
+            NpgsqlExceptionInfos npgsqlExceptionInfos = message.GetNpgsqlExceptionInfos();
+
+            if (npgsqlExceptionInfos.Exception != NpgsqlExceptions.None)
+            {
+                await HandleNpgsqlErrorAsync(npgsqlExceptionInfos);
+                return;
+            }
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Home home = ClientUI.GetWindow<Home>();
+                lock (home.Lock)
+                {
+                    home.Blocked = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Blocked)];
+                    home.Pending = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Pending)];
+                    home.Friends = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Friend)];
+                }
+                
+            }, DispatcherPriority.Render);
+        }
+
+        public static void ReceiveChatMessage(JsonElement message)
+        {
+            Message chatMessage = JsonSerializer.Deserialize<Message>(message.GetProperty("chatMessage"), Client.JsonSerializerOptions);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Home home = ClientUI.GetWindow<Home>();
+                home.AddMessage(chatMessage);
+            }, DispatcherPriority.Render);
+        }
+
+        public static void ReceiveChats(JsonElement message)
+        {
+            List<ChatInfos>? chatInfos = JsonSerializer.Deserialize<List<ChatInfos>>(message.GetProperty("chats"), Client.JsonSerializerOptions);
+            ChatDatabase chatDatabase = new();
+            chatDatabase.AddChats(chatInfos!);
         }
 
         #endregion

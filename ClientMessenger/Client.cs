@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
+using ClientMessenger.LocalChatDatabase;
 
 namespace ClientMessenger
 {
@@ -33,6 +34,9 @@ namespace ClientMessenger
             JsonSerializerOptions.WriteIndented = true;
 
             await ConnectToServerAsync();
+
+            ChatDatabase chatDatabase = new();
+            chatDatabase.DeleteChats();
         }
 
         private static async Task ConnectToServerAsync()
@@ -131,13 +135,19 @@ namespace ClientMessenger
                     await HandleServerResponses.AnswerToAutoLoginRequestAsync(message);
                     break;
                 case OpCode.AnswerToRequestedRelationshipUpdate:
-                    await HandleServerResponses.AnswerToRelationshipUpdateRequest(message);
+                    await HandleServerResponses.AnswerToRelationshipUpdateRequestAsync(message);
                     break;
                 case OpCode.ReceiveRelationships:
-                    await HandleServerResponses.ReceiveRelationships(message);
+                    await HandleServerResponses.ReceiveRelationshipsAsync(message);
                     break;
                 case OpCode.ARelationshipWasUpdated:
-                    await HandleServerResponses.ARelationshipWasUpdated(message);
+                    await HandleServerResponses.ARelationshipWasUpdatedAsync(message);
+                    break;
+                case OpCode.ReceiveChatMessage:
+                    HandleServerResponses.ReceiveChatMessage(message);
+                    break;
+                case OpCode.ReceiveChats:
+                    HandleServerResponses.ReceiveChats(message);
                     break;
             }
         }

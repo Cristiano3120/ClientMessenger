@@ -16,5 +16,8 @@
         AnswerToRequestedRelationshipUpdate = 12,
         ReceiveRelationships = 13,
         ARelationshipWasUpdated = 14,
+        SendChatMessage = 15,
+        ReceiveChatMessage = 16,
+        ReceiveChats = 17,
     }
 }

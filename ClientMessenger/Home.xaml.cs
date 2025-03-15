@@ -1,12 +1,14 @@
-﻿using System.Collections.Specialized;
+﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using SharpVectors.Converters;
 using System.Windows.Shapes;
+using ClientMessenger.LocalChatDatabase;
+using SharpVectors.Converters;
 
 namespace ClientMessenger
 {
@@ -16,10 +18,11 @@ namespace ClientMessenger
         private static partial Regex UsernameRegex();
 
         public Lock Lock { get; private set; } = new();
+        private readonly ConcurrentDictionary<TagUserData, Chat> _chats = new();
         private ObservableCollection<Relationship> _friends = [];
         private ObservableCollection<Relationship> _blocked = [];
         private ObservableCollection<Relationship> _pending = [];
-        private readonly Dictionary<TagUserData, Chat> _chats = new();
+        private TagUserData _currentOpenChat;
 
         public Home()
         {
@@ -113,7 +116,7 @@ namespace ClientMessenger
             {
                 if (Dms.SelectedItem is StackPanel stackPanel)
                 {
-                    var tagUserData = (TagUserData)stackPanel.Tag;
+                    TagUserData tagUserData = (TagUserData)stackPanel.Tag;
                     Relationship relationship = _friends.FirstOrDefault(x => x.Username == tagUserData.Username
                         && x.HashTag == tagUserData.HashTag)!;
 
@@ -133,8 +136,18 @@ namespace ClientMessenger
                 Height = 30,
                 Margin = new Thickness(0, 0, 0, 15),
                 BorderBrush = Brushes.Transparent,
-            }; 
-            
+            };
+
+            inputTextBox.KeyDown += async (sender, args) =>
+            {
+                if (args.Key == System.Windows.Input.Key.Enter && !string.IsNullOrEmpty(inputTextBox.Text))
+                {
+                    Message message = new(Client.User.Id, DateTime.Now, inputTextBox.Text);
+                    await SendChatMessageAsync(message);
+                    inputTextBox.Text = string.Empty;
+                }
+            };
+
             Grid.SetRow(inputTextBox, 1);
             ChatPanel.Children.Add(inputTextBox);
             ChatPanel.UpdateLayout();
@@ -196,7 +209,7 @@ namespace ClientMessenger
         {
             AddFriendAddFriendBtn.Click += async (sender, args) =>
             {
-                await SendFriendRequest();
+                await SendFriendRequestAsync();
             };
         }
 
@@ -208,17 +221,20 @@ namespace ClientMessenger
 
         private void CreateOrOpenChat(Relationship relationship)
         {
+            ChangeNotificationAmount(relationship, true);
             HidePanels();
 
-            if (_chats.TryGetValue(new TagUserData(relationship.Username, relationship.HashTag), out Chat? chat))
+            _currentOpenChat = new TagUserData(relationship.Username, relationship.HashTag);
+            if (_chats.TryGetValue(_currentOpenChat, out Chat? chat))
             {
                 chat.LastOpend = DateTime.Now;
 
-                ChatPanel.Children.Clear();
+                DeleteMessagesFromChat();
                 ChatPanel.Children.Add(chat.ChatPanel);
+                chat.ChatPanel.ScrollToEnd();
                 ChatPanel.UpdateLayout();
-                SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
 
+                SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
                 return;
             }
 
@@ -227,8 +243,6 @@ namespace ClientMessenger
 
         private void CreateChat(Relationship relationship)
         {
-            //HOL DATA AUS LOCAL DATABASE WENN VORHANDEN!!!!
-
             var scrollViewer = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
@@ -245,98 +259,170 @@ namespace ClientMessenger
             scrollViewer.Content = chatPanel;
             Grid.SetRow(scrollViewer, 0);
 
-            AddMessage(scrollViewer, relationship, new(10, DateTime.Now, "Hi"));
+            DeleteMessagesFromChat();
 
-            foreach (UIElement child in ChatPanel.Children.Cast<UIElement>().Where(child => Grid.GetRow(child) == 0).ToArray())
+            ChatDatabase chatDatabase = new();
+            Message[]? messages = chatDatabase.GetMessages(relationship.Id);
+            if (messages != null)
             {
-                ChatPanel.Children.Remove(child);
+                foreach (Message message in messages)
+                {
+                    AddMessage(scrollViewer, relationship, message);
+                }
             }
 
             ChatPanel.Children.Add(scrollViewer);
+            scrollViewer.ScrollToEnd();
             ChatPanel.UpdateLayout();
-            
+
             SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
-            _chats.Add(new TagUserData(relationship.Username, relationship.HashTag), new Chat(scrollViewer, DateTime.Now));
+            _chats.TryAdd(new TagUserData(relationship.Username, relationship.HashTag), new Chat(scrollViewer, DateTime.Now));
+        }
+
+        public void AddMessage(Message message)
+        {
+            ChatDatabase chatDatabase = new();
+            chatDatabase.AddMessage(message.SenderId, message);
+            PlaySound("Sounds/messageSound.wav");
+
+            Relationship relationship;
+            lock (Lock)
+            {
+                relationship = _friends.First(x => x.Id == message.SenderId);
+                TagUserData tagUserData = new(relationship.Username, relationship.HashTag);
+
+                if (ChatPanel.Children.Count >= 2 && ChatPanel.Children[1] is ScrollViewer scrollViewer
+                    && _currentOpenChat == relationship)
+                {
+                    AddMessage(scrollViewer, relationship, message);
+                    return;
+                }
+
+                ChangeNotificationAmount(relationship, false);
+                _chats.Remove(tagUserData, out _);
+            }
+        }
+
+        private void ChangeNotificationAmount(Relationship relationship, bool removeNotifications)
+        {
+            IEnumerable<StackPanel> openDms = Dms.Items.Cast<StackPanel>();
+
+            foreach (StackPanel stackPanel in openDms)
+            {
+                if (stackPanel.Tag is TagUserData tagUserData && relationship == tagUserData)
+                {
+                    TextBlock notificationTextBlock = stackPanel.Children.OfType<TextBlock>()
+                        .First(tb => tb.Tag is string tag && tag == "Notification");
+
+                    if (removeNotifications)
+                    {
+                        notificationTextBlock.Text = string.Empty;
+                        return;
+                    }
+
+                    if (notificationTextBlock.Text == "99+")
+                        return;
+
+                    _ = byte.TryParse(notificationTextBlock.Text, out byte notificationAmount);
+                    notificationAmount++;
+
+                    notificationTextBlock.Text = notificationAmount <= 99
+                        ? notificationAmount.ToString()
+                        : "99+";
+                }
+            }
         }
 
         private static void AddMessage(ScrollViewer scrollViewer, Relationship relationship, Message message)
         {
-            try
+            ChatDatabase chatDatabase = new();
+            chatDatabase.AddMessage(relationship.Id, message);
+
+            var chatPanel = (StackPanel)scrollViewer.Content;
+            var outerStackPanel = new StackPanel
             {
-                var chatPanel = (StackPanel)scrollViewer.Content;
-                var outerStackPanel = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    VerticalAlignment = VerticalAlignment.Top,
-                    Margin = new Thickness(10),
-                };
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(10),
+            };
 
-                Relationship sender = message.SenderId == Client.User.Id
-                    ? (Relationship)Client.User
-                    : relationship;
+            Relationship sender = message.SenderId == Client.User.Id
+                ? (Relationship)Client.User
+                : relationship;
 
-                var ellipse = new Ellipse
-                {
-                    Width = 45,
-                    Height = 45,
-                    Margin = new Thickness(0, 0, 10, 0),
-                    Fill = new ImageBrush
-                    {
-                        ImageSource = sender.ProfilePicture,
-                        Stretch = Stretch.UniformToFill
-                    }
-                };
-
-                var innerStackPanel = new StackPanel
-                {
-                    Orientation = Orientation.Vertical,
-                    MaxWidth = 400
-                };
-
-                var nameAndTimePanel = new DockPanel();
-
-                var nameTextBlock = new TextBlock
-                {
-                    Text = sender.Username,
-                    FontWeight = FontWeights.Bold,
-                    FontSize = 16,
-                    Foreground = Brushes.LightGray,
-                    Margin = new Thickness(0, 0, 20, 0)
-                };
-                DockPanel.SetDock(nameTextBlock, Dock.Left);
-
-                var dateTimeTextBlock = new TextBlock
-                {
-                    Text = message.DateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
-                    FontSize = 12,
-                    Foreground = Brushes.Gray,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                DockPanel.SetDock(dateTimeTextBlock, Dock.Right);
-
-                nameAndTimePanel.Children.Add(nameTextBlock);
-                nameAndTimePanel.Children.Add(dateTimeTextBlock);
-
-                var messageTextBlock = new TextBlock
-                {
-                    Text = message.Content,
-                    TextWrapping = TextWrapping.Wrap,
-                    Margin = new Thickness(0, 5, 0, 0),
-                    FontSize = 14,
-                    Foreground = Brushes.LightGray
-                };
-
-                innerStackPanel.Children.Add(nameAndTimePanel);
-                innerStackPanel.Children.Add(messageTextBlock);
-                outerStackPanel.Children.Add(ellipse);
-                outerStackPanel.Children.Add(innerStackPanel);
-
-                chatPanel.Children.Add(outerStackPanel);
-                chatPanel.UpdateLayout();
-            }
-            catch (Exception ex)
+            var ellipse = new Ellipse
             {
-                Logger.LogError(ex);
+                Width = 45,
+                Height = 45,
+                Margin = new Thickness(0, 0, 10, 0),
+                Fill = new ImageBrush
+                {
+                    ImageSource = sender.ProfilePicture,
+                    Stretch = Stretch.UniformToFill
+                }
+            };
+
+            var innerStackPanel = new StackPanel
+            {
+                Orientation = Orientation.Vertical,
+                MaxWidth = 400
+            };
+
+            var nameAndTimePanel = new DockPanel();
+
+            var nameTextBlock = new TextBlock
+            {
+                Text = sender.Username,
+                FontWeight = FontWeights.Bold,
+                FontSize = 16,
+                Foreground = Brushes.LightGray,
+                Margin = new Thickness(0, 0, 20, 0)
+            };
+            DockPanel.SetDock(nameTextBlock, Dock.Left);
+
+            var dateTimeTextBlock = new TextBlock
+            {
+                Text = message.DateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
+                FontSize = 12,
+                Foreground = Brushes.Gray,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            DockPanel.SetDock(dateTimeTextBlock, Dock.Right);
+
+            nameAndTimePanel.Children.Add(nameTextBlock);
+            nameAndTimePanel.Children.Add(dateTimeTextBlock);
+
+            var messageTextBlock = new TextBlock
+            {
+                Text = message.Content,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 5, 0, 0),
+                FontSize = 14,
+                Foreground = Brushes.LightGray
+            };
+
+            innerStackPanel.Children.Add(nameAndTimePanel);
+            innerStackPanel.Children.Add(messageTextBlock);
+            outerStackPanel.Children.Add(ellipse);
+            outerStackPanel.Children.Add(innerStackPanel);
+
+            chatPanel.Children.Add(outerStackPanel);
+            scrollViewer.ScrollToEnd();
+            chatPanel.UpdateLayout();
+        }
+
+        private static void PlaySound(string pathToSound)
+        {
+            MediaPlayer mediaPlayer = new();
+            mediaPlayer.Open(new Uri(Client.GetDynamicPath(pathToSound)));
+            mediaPlayer.Play();
+        }
+
+        private void DeleteMessagesFromChat()
+        {
+            foreach (UIElement child in ChatPanel.Children.Cast<UIElement>().Where(child => Grid.GetRow(child) == 0).ToArray())
+            {
+                ChatPanel.Children.Remove(child);
             }
         }
 
@@ -350,7 +436,7 @@ namespace ClientMessenger
                     if (ChatPanel.Children[0] != chat.Value.ChatPanel && DateTime.Now - chat.Value.LastOpend > TimeSpan.FromMinutes(5))
                     {
                         Logger.LogInformation($"Chat deleted from {nameof(_chats)}");
-                        _chats.Remove(chat.Key);
+                        _chats.Remove(chat.Key, out _);
                     }
                 }
             }
@@ -400,7 +486,7 @@ namespace ClientMessenger
             foreach (Relationship relationship in relationships)
             {
                 StackPanel stackPanel = BasicUserUI(relationship);
-                CreateBtnForDmListUI(stackPanel);
+                CreateUIForDmListUI(stackPanel);
                 Dms.Items.Add(stackPanel);
                 Dms.UpdateLayout();
             }
@@ -415,7 +501,7 @@ namespace ClientMessenger
             if (match == null)
             {
                 StackPanel stackPanel = BasicUserUI(relationship);
-                CreateBtnForDmListUI(stackPanel);
+                CreateUIForDmListUI(stackPanel);
                 Dms.Items.Add(stackPanel);
                 Dms.UpdateLayout();
             }
@@ -427,7 +513,7 @@ namespace ClientMessenger
             Dms.UpdateLayout();
         }
 
-        private void CreateBtnForDmListUI(StackPanel stackPanel)
+        private void CreateUIForDmListUI(StackPanel stackPanel)
         {
             var deleteButton = new Button
             {
@@ -440,7 +526,15 @@ namespace ClientMessenger
                 Margin = new Thickness(0, 0, 0, 0),
             };
 
+            Colors colors = new();
+            var textBlock = new TextBlock()
+            {
+                Foreground = colors.ColorToSolidColorBrush(colors.Red),
+                Tag = "Notification"
+            };
+
             deleteButton.Click += CloseChat_Click;
+            stackPanel.Children.Add(textBlock);
             stackPanel.Children.Add(deleteButton);
         }
 
@@ -829,64 +923,35 @@ namespace ClientMessenger
 
         #endregion
 
-        public async Task DisplayInfosAddFriendPanelAsync(SolidColorBrush color, string msg)
+        #region Send Payloads
+
+        private async Task SendChatMessageAsync(Message message)
         {
-            AddFriendInfoTextBlock.Foreground = color;
-            AddFriendInfoTextBlock.Text = msg;
+            long otherUserId = _friends.FirstOrDefault(x => x.Username == _currentOpenChat.Username && x.HashTag == _currentOpenChat.HashTag)!.Id;
+            var payload = new
+            {
+                opCode = OpCode.SendChatMessage,
+                otherUserId,
+                message
+            };
 
-            await Task.Delay(2000);
+            await Client.SendPayloadAsync(payload);
 
-            AddFriendInfoTextBlock.Foreground = Brushes.Black;
-            AddFriendInfoTextBlock.Text = "Enter valid data";
+            if (ChatPanel.Children.Count >= 2 && ChatPanel.Children[1] is ScrollViewer scrollViewer)
+            {
+                AddMessage(scrollViewer, (Relationship)Client.User, message);
+            }
+
+            ChatDatabase chatDatabase = new();
+            chatDatabase.AddMessage(otherUserId, message);
         }
 
-        private static bool AddFriendValidateData(string username, string hashTag)
-            => !string.IsNullOrEmpty(username) || !string.IsNullOrEmpty(hashTag);
-
-        private static StackPanel BasicUserUI(Relationship user)
-        {
-            var stackPanel = new StackPanel
-            {
-                Tag = new TagUserData(user.Username, user.HashTag),
-                Orientation = Orientation.Horizontal,
-                Margin = new Thickness(5),
-            };
-
-            var ellipse = new Ellipse
-            {
-                Width = 45,
-                Height = 45,
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 10, 0)
-            };
-
-            var imageBrush = new ImageBrush()
-            {
-                ImageSource = user.ProfilePicture,
-                Stretch = Stretch.UniformToFill,
-            };
-
-            ellipse.Fill = imageBrush;
-
-            var textBlockUsername = new TextBlock
-            {
-                Text = user.Username,
-                Foreground = Brushes.White,
-                FontSize = 18,
-                Margin = new Thickness(10)
-            };
-
-            stackPanel.Children.Add(ellipse);
-            stackPanel.Children.Add(textBlockUsername);
-            return stackPanel;
-        }
-
-        private async Task SendFriendRequest()
+        private async Task SendFriendRequestAsync()
         {
             var username = AddFriendUsernameTextBox.Text;
             var hashTag = AddFriendHashTagTextBox.Text;
 
-            if (!AddFriendValidateData(username, hashTag))
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(hashTag))
             {
                 await DisplayInfosAddFriendPanelAsync(Brushes.Red, "The username and/or password is invalid");
                 return;
@@ -952,6 +1017,57 @@ namespace ClientMessenger
             }
 
             await Client.SendPayloadAsync(payload);
+        }
+
+        #endregion
+
+        public async Task DisplayInfosAddFriendPanelAsync(SolidColorBrush color, string msg)
+        {
+            AddFriendInfoTextBlock.Foreground = color;
+            AddFriendInfoTextBlock.Text = msg;
+
+            await Task.Delay(2000);
+
+            AddFriendInfoTextBlock.Foreground = Brushes.Black;
+            AddFriendInfoTextBlock.Text = "Enter valid data";
+        }
+
+        private static StackPanel BasicUserUI(Relationship user)
+        {
+            var stackPanel = new StackPanel
+            {
+                Tag = new TagUserData(user.Username, user.HashTag),
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(5),
+            };
+
+            var ellipse = new Ellipse
+            {
+                Width = 45,
+                Height = 45,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+
+            var imageBrush = new ImageBrush()
+            {
+                ImageSource = user.ProfilePicture,
+                Stretch = Stretch.UniformToFill,
+            };
+
+            ellipse.Fill = imageBrush;
+
+            var textBlockUsername = new TextBlock
+            {
+                Text = user.Username,
+                Foreground = Brushes.White,
+                FontSize = 18,
+                Margin = new Thickness(10)
+            };
+
+            stackPanel.Children.Add(ellipse);
+            stackPanel.Children.Add(textBlockUsername);
+            return stackPanel;
         }
     }
 }
