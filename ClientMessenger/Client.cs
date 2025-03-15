@@ -67,7 +67,7 @@ namespace ClientMessenger
         {
             Logger.LogInformation("Listening for messages!");
             var buffer = new byte[65536];
-            var ms = new MemoryStream();
+            MemoryStream ms = new();
 
             while (_server.State == WebSocketState.Open)
             {

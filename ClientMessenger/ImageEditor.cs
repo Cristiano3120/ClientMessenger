@@ -9,13 +9,13 @@ namespace ClientMessenger
     {
         public static BitmapImage ScaleImage(string filepath)
         {
-            using (var originalImage = Image.FromFile(filepath))
+            using (Image originalImage = Image.FromFile(filepath))
             {
                 const int ellipseSize = 150;
 
                 using (Bitmap result = new(ellipseSize, ellipseSize))
                 {
-                    using (var graphics = Graphics.FromImage(result))
+                    using (Graphics graphics = Graphics.FromImage(result))
                     {
                         graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
                         graphics.CompositingQuality = CompositingQuality.HighQuality;

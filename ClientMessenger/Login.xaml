@@ -29,7 +29,7 @@
         <TextBlock Text="Stay logged in? :" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 0, 50, 50"/>
 
         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0, 100, 0, 0">
-            <Hyperlink x:Name="CreateAccLink">
+            <Hyperlink x:Name="CreateAccLink" Foreground="Gray">
                 No acc? Sign up here!
             </Hyperlink>
         </TextBlock>

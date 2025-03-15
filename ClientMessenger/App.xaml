@@ -10,7 +10,25 @@
             <Setter Property="Foreground" Value="#7c7e84"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Padding" Value="0, 3, 0, 0"/>
+            <Setter Property="BorderBrush" Value="White"/>
+
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border" 
+                            BorderThickness="2" 
+                            BorderBrush="Gray" 
+                            Background="{TemplateBinding Background}">
+                            <ScrollViewer Margin="4" x:Name="PART_ContentHost"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#F0F0F0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <!--Style for all TextBlocks by default-->

@@ -6,4 +6,5 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Performance", "CA1822:Member als statisch markieren", Justification = "<Ausstehend>", Scope = "member", Target = "~M:ClientMessenger.Colors.ColorToSolidColorBrush(System.Windows.Media.Color)~System.Windows.Media.SolidColorBrush")]
-[assembly: SuppressMessage("Style", "IDE0046:In bedingten Ausdruck konvertieren", Justification = "<Ausstehend>", Scope = "member", Target = "~M:ClientMessenger.Relationship.op_Equality(ClientMessenger.Relationship,System.Nullable{ClientMessenger.TagUserData})~System.Boolean")]
+[assembly: SuppressMessage("Style", "IDE0046:In bedingten Ausdruck konvertieren", Justification = "<Ausstehend>", Scope = "member", Target = "~M:ClientMessenger.Relationship.op_Equality(ClientMessenger.Relationship,ClientMessenger.TagUserData)~System.Boolean")]
+[assembly: SuppressMessage("Style", "IDE0046:In bedingten Ausdruck konvertieren", Justification = "<Ausstehend>", Scope = "member", Target = "~M:ClientMessenger.Relationship.op_Equality(ClientMessenger.TagUserData,ClientMessenger.Relationship)~System.Boolean")]

@@ -267,9 +267,9 @@ namespace ClientMessenger
                 ? ""
                 : BiographyTextBox.Text;
 
-            var dayItem = (ComboBoxItem)DayBox.SelectedItem;
-            var monthItem = (ComboBoxItem)MonthBox.SelectedItem;
-            var yearItem = (ComboBoxItem)YearBox.SelectedItem;
+            ComboBoxItem dayItem = (ComboBoxItem)DayBox.SelectedItem;
+            ComboBoxItem monthItem = (ComboBoxItem)MonthBox.SelectedItem;
+            ComboBoxItem yearItem = (ComboBoxItem)YearBox.SelectedItem;
 
             var day = int.Parse((string)dayItem.Content).ToString("D2");
             var month = int.Parse((string)monthItem.Content).ToString("D2");
@@ -280,7 +280,7 @@ namespace ClientMessenger
                 _profilPicFile = ClientUI.DefaultProfilPic;
             }
 
-            var user = new User()
+            User user = new()
             {
                 Email = EmailTextBox.Text,
                 Password = PasswordTextBox.Text,
@@ -326,9 +326,9 @@ namespace ClientMessenger
                 return false;
             }
 
-            var day = (ComboBoxItem)MonthBox.SelectedItem;
-            var month = (ComboBoxItem)MonthBox.SelectedItem;
-            var year = (ComboBoxItem)YearBox.SelectedItem;
+            ComboBoxItem day = (ComboBoxItem)MonthBox.SelectedItem;
+            ComboBoxItem month = (ComboBoxItem)MonthBox.SelectedItem;
+            ComboBoxItem year = (ComboBoxItem)YearBox.SelectedItem;
 
             if (!DateOnly.TryParse($"{day.Content}, {month.Content}, {year.Content}", out _))
             {
@@ -369,7 +369,7 @@ namespace ClientMessenger
             const string validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
             const int passwordLength = 30;
 
-            var generator = RandomNumberGenerator.Create();
+            RandomNumberGenerator generator = RandomNumberGenerator.Create();
             var passwordChars = new char[passwordLength];
             var buffer = new byte[1];
 

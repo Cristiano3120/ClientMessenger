@@ -30,7 +30,7 @@ namespace ClientMessenger
 
         public static byte[] EncryptRSA(RSAParameters publicKey, byte[] data)
         {
-            using var rsa = RSA.Create();
+            using RSA rsa = RSA.Create();
             {
                 rsa.ImportParameters(publicKey);
                 return rsa.Encrypt(data, RSAEncryptionPadding.Pkcs1);
@@ -57,13 +57,15 @@ namespace ClientMessenger
         {
             ICryptoTransform decryptor = Aes.CreateDecryptor();
 
-            using var ms = new MemoryStream();
-            using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Write))
+            using (MemoryStream ms = new())
             {
-                cs.Write(encryptedData, 0, encryptedData.Length);
-            }
+                using (CryptoStream cs = new(ms, decryptor, CryptoStreamMode.Write))
+                {
+                    cs.Write(encryptedData, 0, encryptedData.Length);
+                }
 
-            return ms.ToArray();
+                return ms.ToArray();
+            }   
         }
 
         #endregion
@@ -75,7 +77,7 @@ namespace ClientMessenger
         /// </summary>
         internal static byte[] CompressData(byte[] data)
         {
-            using var compressor = new Compressor(new CompressionOptions(1));
+            using Compressor compressor = new(new CompressionOptions(1));
             var compressedData = compressor.Wrap(data);
             return compressedData.Length >= data.Length
                 ? data
@@ -86,7 +88,7 @@ namespace ClientMessenger
         {
             try
             {
-                using var decompressor = new Decompressor();
+                using Decompressor decompressor = new();
                 return decompressor.Unwrap(data);
             }
             catch (Exception)

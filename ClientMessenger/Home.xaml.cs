@@ -75,12 +75,12 @@ namespace ClientMessenger
             {
                 if (args.Action == NotifyCollectionChangedAction.Add)
                 {
-                    var relationshipToAdd = (Relationship)args.NewItems![0]!;
+                    Relationship relationshipToAdd = (Relationship)args.NewItems![0]!;
                     AddOneToFriendsList(relationshipToAdd);
                 }
                 else if (args.Action == NotifyCollectionChangedAction.Remove)
                 {
-                    var relationshipToRemove = (Relationship)args.OldItems![0]!;
+                    Relationship relationshipToRemove = (Relationship)args.OldItems![0]!;
                     RemoveOneFromFriendsList(relationshipToRemove);
                 }
             };
@@ -243,13 +243,13 @@ namespace ClientMessenger
 
         private void CreateChat(Relationship relationship)
         {
-            var scrollViewer = new ScrollViewer
+            ScrollViewer scrollViewer = new()
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             };
 
-            var chatPanel = new StackPanel
+            StackPanel chatPanel = new()
             {
                 Orientation = Orientation.Vertical,
                 VerticalAlignment = VerticalAlignment.Top,
@@ -338,8 +338,8 @@ namespace ClientMessenger
             ChatDatabase chatDatabase = new();
             chatDatabase.AddMessage(relationship.Id, message);
 
-            var chatPanel = (StackPanel)scrollViewer.Content;
-            var outerStackPanel = new StackPanel
+            StackPanel chatPanel = (StackPanel)scrollViewer.Content;
+            StackPanel outerStackPanel = new()
             {
                 Orientation = Orientation.Horizontal,
                 VerticalAlignment = VerticalAlignment.Top,
@@ -350,7 +350,7 @@ namespace ClientMessenger
                 ? (Relationship)Client.User
                 : relationship;
 
-            var ellipse = new Ellipse
+            Ellipse ellipse = new()
             {
                 Width = 45,
                 Height = 45,
@@ -362,15 +362,15 @@ namespace ClientMessenger
                 }
             };
 
-            var innerStackPanel = new StackPanel
+            StackPanel innerStackPanel = new()
             {
                 Orientation = Orientation.Vertical,
                 MaxWidth = 400
             };
 
-            var nameAndTimePanel = new DockPanel();
+            DockPanel nameAndTimePanel = new();
 
-            var nameTextBlock = new TextBlock
+            TextBlock nameTextBlock = new()
             {
                 Text = sender.Username,
                 FontWeight = FontWeights.Bold,
@@ -380,7 +380,7 @@ namespace ClientMessenger
             };
             DockPanel.SetDock(nameTextBlock, Dock.Left);
 
-            var dateTimeTextBlock = new TextBlock
+            TextBlock dateTimeTextBlock = new()
             {
                 Text = message.DateTime.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
                 FontSize = 12,
@@ -392,7 +392,7 @@ namespace ClientMessenger
             nameAndTimePanel.Children.Add(nameTextBlock);
             nameAndTimePanel.Children.Add(dateTimeTextBlock);
 
-            var messageTextBlock = new TextBlock
+            TextBlock messageTextBlock = new()
             {
                 Text = message.Content,
                 TextWrapping = TextWrapping.Wrap,
@@ -515,7 +515,7 @@ namespace ClientMessenger
 
         private void CreateUIForDmListUI(StackPanel stackPanel)
         {
-            var deleteButton = new Button
+            Button deleteButton = new()
             {
                 Content = "X",
                 Background = Brushes.Transparent,
@@ -526,8 +526,18 @@ namespace ClientMessenger
                 Margin = new Thickness(0, 0, 0, 0),
             };
 
+            deleteButton.MouseEnter += (sender, args) =>
+            {
+                deleteButton.Opacity = 0.5;
+            };
+
+            deleteButton.MouseLeave += (sender, args) =>
+            {
+                deleteButton.Opacity = 1;
+            };
+
             Colors colors = new();
-            var textBlock = new TextBlock()
+            TextBlock textBlock = new()
             {
                 Foreground = colors.ColorToSolidColorBrush(colors.Red),
                 Tag = "Notification"
@@ -572,7 +582,7 @@ namespace ClientMessenger
         private void CreateBtnsForBlockedListUI(StackPanel stackPanel, Relationship blocked, in Colors colors)
         {
             RelationshipButtonsData readdButtonData = new(blocked.Id, Blocked, RelationshipState.Pending);
-            var readdButton = new Button
+            Button readdButton = new()
             {
                 Content = "Re-add",
                 Background = new SolidColorBrush(colors.Green),
@@ -584,7 +594,7 @@ namespace ClientMessenger
             };
 
             RelationshipButtonsData unblockButtonData = new(blocked.Id, Blocked, RelationshipState.None);
-            var unblockButton = new Button
+            Button unblockButton = new()
             {
                 Content = "Unblock",
                 Background = new SolidColorBrush(colors.Gray),
@@ -636,7 +646,7 @@ namespace ClientMessenger
         private void CreateBtnsForFriendsListUI(StackPanel stackPanel, Relationship friend, in Colors colors)
         {
             RelationshipButtonsData deleteButtonData = new(friend.Id, Friends, RelationshipState.None);
-            var declineButton = new Button
+            Button declineButton = new()
             {
                 Content = "Delete",
                 Background = new SolidColorBrush(colors.Red),
@@ -648,7 +658,7 @@ namespace ClientMessenger
             };
 
             RelationshipButtonsData blockButtonData = new(friend.Id, Friends, RelationshipState.Blocked);
-            var blockButton = new Button
+            Button blockButton = new()
             {
                 Content = "Block",
                 Background = new SolidColorBrush(colors.Gray),
@@ -659,7 +669,7 @@ namespace ClientMessenger
                 Tag = blockButtonData
             };
 
-            var msgButton = new Button
+            Button msgButton = new()
             {
                 Width = 40,
                 Height = 30,
@@ -669,7 +679,7 @@ namespace ClientMessenger
                 Tag = friend.Id
             };
 
-            var svgViewbox = new SvgViewbox
+            SvgViewbox svgViewbox = new()
             {
                 Source = new Uri(Client.GetDynamicPath(@"Images/msg.svg")),
                 Stretch = Stretch.Uniform
@@ -720,7 +730,7 @@ namespace ClientMessenger
         private void CreateBtnsForPendingListUI(StackPanel stackPanel, Relationship pendingRequest, in Colors colors)
         {
             RelationshipButtonsData acceptButtonData = new(pendingRequest.Id, Pending, RelationshipState.Friend);
-            var acceptButton = new Button
+            Button acceptButton = new()
             {
                 Content = "Accept",
                 Background = new SolidColorBrush(colors.Green),
@@ -732,7 +742,7 @@ namespace ClientMessenger
             };
 
             RelationshipButtonsData declineButtonData = new(pendingRequest.Id, Pending, RelationshipState.None);
-            var declineButton = new Button
+            Button declineButton = new()
             {
                 Content = "Decline",
                 Background = new SolidColorBrush(colors.Red),
@@ -744,7 +754,7 @@ namespace ClientMessenger
             };
 
             RelationshipButtonsData blockButtonData = new(pendingRequest.Id, Pending, RelationshipState.Blocked);
-            var blockButton = new Button
+            Button blockButton = new()
             {
                 Content = "Block",
                 Background = new SolidColorBrush(colors.Gray),
@@ -779,7 +789,7 @@ namespace ClientMessenger
 
         private void ChangePanelState(object sender, RoutedEventArgs args)
         {
-            var btn = (Button)sender;
+            Button btn = (Button)sender;
             switch ((Panels)btn.Tag)
             {
                 case Panels.AddFriend:
@@ -818,7 +828,7 @@ namespace ClientMessenger
             grid.Visibility = Visibility.Visible;
             grid.UpdateLayout();
 
-            var slideInAnimation = new DoubleAnimation
+            DoubleAnimation slideInAnimation = new()
             {
                 From = grid.ActualWidth,
                 To = 0,
@@ -830,7 +840,7 @@ namespace ClientMessenger
 
         private static void SlideOutAnimation(TranslateTransform translateTransform, Grid grid)
         {
-            var slideOutAnimation = new DoubleAnimation
+            DoubleAnimation slideOutAnimation = new()
             {
                 From = 0,
                 To = grid.ActualWidth,
@@ -855,8 +865,8 @@ namespace ClientMessenger
         {
             if (sender is Button button && button.Tag is RelationshipButtonsData buttonData)
             {
-                var stackPanelParent = (StackPanel)button.Parent;
-                var listboxParent = (ListBox)stackPanelParent.Parent;
+                StackPanel stackPanelParent = (StackPanel)button.Parent;
+                ListBox listboxParent = (ListBox)stackPanelParent.Parent;
 
                 (long relationshipId, IList<Relationship> targetSet, RelationshipState wantedState) = buttonData;
                 RelationshipUpdate relationshipUpdate = new()
@@ -907,7 +917,7 @@ namespace ClientMessenger
 
         private void CreateChat_Click(object sender, RoutedEventArgs args)
         {
-            var button = (Button)sender;
+            Button button = (Button)sender;
             Relationship relationship = _friends.FirstOrDefault(x => x.Id == (long)button.Tag)!;
             AddOneToDmList(relationship);
             CreateOrOpenChat(relationship);
@@ -915,8 +925,8 @@ namespace ClientMessenger
 
         private void CloseChat_Click(object sender, RoutedEventArgs args)
         {
-            var button = (Button)sender;
-            var stackPanel = (StackPanel)button.Parent;
+            Button button = (Button)sender;
+            StackPanel stackPanel = (StackPanel)button.Parent;
             RemoveOneFromDmList(stackPanel);
             ChatPanel.Visibility = Visibility.Collapsed;
         }
@@ -981,7 +991,7 @@ namespace ClientMessenger
             {
                 foreach (object item in BlockedList.Items)
                 {
-                    var stackPanel = (StackPanel)item;
+                    StackPanel stackPanel = (StackPanel)item;
                     (string usernameInList, string hashTagInList) = (ValueTuple<string, string>)stackPanel.Tag;
                     if (usernameInList == username && hashTagInList == hashTag)
                     {
@@ -1034,14 +1044,14 @@ namespace ClientMessenger
 
         private static StackPanel BasicUserUI(Relationship user)
         {
-            var stackPanel = new StackPanel
+            StackPanel stackPanel = new()
             {
                 Tag = new TagUserData(user.Username, user.HashTag),
                 Orientation = Orientation.Horizontal,
                 Margin = new Thickness(5),
             };
 
-            var ellipse = new Ellipse
+            Ellipse ellipse = new()
             {
                 Width = 45,
                 Height = 45,
@@ -1049,7 +1059,7 @@ namespace ClientMessenger
                 Margin = new Thickness(0, 0, 10, 0)
             };
 
-            var imageBrush = new ImageBrush()
+            ImageBrush imageBrush = new()
             {
                 ImageSource = user.ProfilePicture,
                 Stretch = Stretch.UniformToFill,
@@ -1057,7 +1067,7 @@ namespace ClientMessenger
 
             ellipse.Fill = imageBrush;
 
-            var textBlockUsername = new TextBlock
+            TextBlock textBlockUsername = new()
             {
                 Text = user.Username,
                 Foreground = Brushes.White,

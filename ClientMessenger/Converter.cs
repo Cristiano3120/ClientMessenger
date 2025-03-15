@@ -8,17 +8,19 @@ namespace ClientMessenger
     {
         public static BitmapImage ToBitmapImage(Bitmap bitmap)
         {
-            using var memoryStream = new MemoryStream();
-            bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
-            memoryStream.Seek(0, SeekOrigin.Begin);
+            using (MemoryStream memoryStream = new())
+            {
+                bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+                memoryStream.Seek(0, SeekOrigin.Begin);
 
-            var bitmapImage = new BitmapImage();
-            bitmapImage.BeginInit();
-            bitmapImage.StreamSource = memoryStream;
-            bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-            bitmapImage.EndInit();
+                BitmapImage bitmapImage = new();
+                bitmapImage.BeginInit();
+                bitmapImage.StreamSource = memoryStream;
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
 
-            return bitmapImage;
+                return bitmapImage;
+            }
         }
 
         public static BitmapImage ToBitmapImage(byte[] bytes)
@@ -26,7 +28,7 @@ namespace ClientMessenger
             if (bytes.Length == 0)
                 bytes = File.ReadAllBytes(ClientUI.DefaultProfilPic);
 
-            var bitmapImage = new BitmapImage();
+            BitmapImage bitmapImage = new();
             bitmapImage.BeginInit();
             bitmapImage.StreamSource = new MemoryStream(bytes);
             bitmapImage.EndInit();
@@ -39,12 +41,14 @@ namespace ClientMessenger
             if (bitmapImage == null)
                 return [];
 
-            using var memoryStream = new MemoryStream();
-            var encoder = new BmpBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bitmapImage));
-            encoder.Save(memoryStream);
+            using (MemoryStream memoryStream = new())
+            {
+                BmpBitmapEncoder encoder = new();
+                encoder.Frames.Add(BitmapFrame.Create(bitmapImage));
+                encoder.Save(memoryStream);
 
-            return memoryStream.ToArray();
+                return memoryStream.ToArray();
+            }
         }
     }
 }

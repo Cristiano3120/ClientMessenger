@@ -170,8 +170,7 @@ namespace ClientMessenger
                     home.Blocked = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Blocked)];
                     home.Pending = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Pending)];
                     home.Friends = [.. relationships!.Where(x => x.RelationshipState == RelationshipState.Friend)];
-                }
-                
+                }      
             }, DispatcherPriority.Render);
         }
 

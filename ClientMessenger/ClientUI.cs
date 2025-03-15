@@ -106,7 +106,7 @@ namespace ClientMessenger
 
         private static void ChangeCursorOnHover(object sender, RoutedEventArgs e)
         {
-            var button = (Button)sender;
+            Button button = (Button)sender;
             button.Cursor = Cursors.Hand;
         }
 
@@ -114,7 +114,7 @@ namespace ClientMessenger
 
         private static void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
-            var window = Window.GetWindow((Button)sender);
+            Window window = Window.GetWindow((Button)sender);
             var windowHandle = new WindowInteropHelper(window).Handle;
 
             var wParam = window.WindowState == WindowState.Maximized
@@ -126,14 +126,14 @@ namespace ClientMessenger
 
         private static void MinimizeButton_Click(object sender, RoutedEventArgs e)
         {
-            var window = Window.GetWindow((Button)sender);
+            Window window = Window.GetWindow((Button)sender);
             var windowHandle = new WindowInteropHelper(window).Handle;
             SendMessage(windowHandle, WM_SYSCOMMAND, SC_MINIMIZE, IntPtr.Zero);
         }
 
         private static void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            var window = Window.GetWindow((Button)sender);
+            Window window = Window.GetWindow((Button)sender);
             var windowHandle = new WindowInteropHelper(window).Handle;
             SendMessage(windowHandle, WM_SYSCOMMAND, SC_CLOSE, IntPtr.Zero);
         }
