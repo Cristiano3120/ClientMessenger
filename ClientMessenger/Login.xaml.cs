@@ -120,7 +120,7 @@ namespace ClientMessenger
 
         public async Task LoginWentWrong()
         {
-            var oldMsg = EmailError.Text;
+            string oldMsg = EmailError.Text;
             EmailError.Text = "Email or password is wrong!";
             await ShowError(EmailError);
             EmailError.Text = oldMsg;

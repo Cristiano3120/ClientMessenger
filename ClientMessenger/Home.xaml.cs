@@ -1101,8 +1101,8 @@ namespace ClientMessenger
 
         private async Task SendFriendRequestAsync()
         {
-            var username = AddFriendUsernameTextBox.Text;
-            var hashTag = AddFriendHashTagTextBox.Text;
+            string username = AddFriendUsernameTextBox.Text;
+            string hashTag = AddFriendHashTagTextBox.Text;
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(hashTag))
             {

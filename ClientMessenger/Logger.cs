@@ -51,8 +51,8 @@ namespace ClientMessenger
                 }
             }
 
-            var timestamp = DateTime.Now.ToString("dd-MM-yyyy/HH-mm-ss");
-            var pathToNewFile = Client.GetDynamicPath($"Logging/{timestamp}.md");
+            string timestamp = DateTime.Now.ToString("dd-MM-yyyy/HH-mm-ss");
+            string pathToNewFile = Client.GetDynamicPath($"Logging/{timestamp}.md");
             File.Create(pathToNewFile).Close();
 
             return pathToNewFile;
@@ -126,15 +126,15 @@ namespace ClientMessenger
 
             if (stackFrame != null)
             {
-                var methodName = stackFrame?.GetMethod()?.Name + "()";
-                var filename = stackFrame?.GetFileName() ?? "missing filename";
-                var lineNum = stackFrame?.GetFileLineNumber();
-                var columnNum = stackFrame?.GetFileColumnNumber();
+                string methodName = stackFrame?.GetMethod()?.Name + "()";
+                string filename = stackFrame?.GetFileName() ?? "missing filename";
+                int? lineNum = stackFrame?.GetFileLineNumber();
+                int? columnNum = stackFrame?.GetFileColumnNumber();
 
-                var index = filename.LastIndexOf('\\') + 1;
+                int index = filename.LastIndexOf('\\') + 1;
                 filename = filename[index..];
 
-                var errorInfos = $"ERROR in file {filename}, in {methodName}, at line: {lineNum}, at column: {columnNum}";
+                string errorInfos = $"ERROR in file {filename}, in {methodName}, at line: {lineNum}, at column: {columnNum}";
                 Log(ConsoleColor.Red, false, errorInfos);
             }
 

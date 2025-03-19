@@ -90,7 +90,7 @@ namespace ClientMessenger
                     }
 
                     byte[] completeBytes = ms.ToArray();
-                    byte[] decryptedBytes = Security.DecryptMessage(completeBytes);
+                    byte[] decryptedBytes = await Security.DecryptMessageAsync(completeBytes);
                     byte[] decompressedBytes = Security.DecompressData(decryptedBytes);
                     var completeMessage = Encoding.UTF8.GetString(decompressedBytes);
 
@@ -186,10 +186,10 @@ namespace ClientMessenger
                 return;
             }
 
-            var jsonPayload = JsonSerializer.Serialize(payload, JsonSerializerOptions);
-            var buffer = Encoding.UTF8.GetBytes(jsonPayload);
-            var compressedData = Security.CompressData(buffer);
-            var encryptedData = Security.EncryptAes(compressedData);
+            string? jsonPayload = JsonSerializer.Serialize(payload, JsonSerializerOptions);
+            byte[] buffer = Encoding.UTF8.GetBytes(jsonPayload);
+            byte[] compressedData = Security.CompressData(buffer);
+            byte[] encryptedData = await Security.EncryptAesAsync(compressedData);
 
             await _server.SendAsync(encryptedData, WebSocketMessageType.Binary, true, CancellationToken.None);
 

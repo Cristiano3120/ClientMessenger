@@ -61,7 +61,7 @@ namespace ClientMessenger
 
         private void InitializeComboBoxes()
         {
-            for (var i = 1; i <= 31; i++)
+            for (int i = 1; i <= 31; i++)
             {
                 ComboBoxItem item = new()
                 {
@@ -74,7 +74,7 @@ namespace ClientMessenger
                 DayBox.Items.Add(item);
             }
 
-            for (var i = 1; i <= 12; i++)
+            for (int i = 1; i <= 12; i++)
             {
                 ComboBoxItem item = new()
                 {
@@ -87,7 +87,7 @@ namespace ClientMessenger
                 MonthBox.Items.Add(item);
             }
 
-            for (var i = 2020; i >= 1950; i--)
+            for (int i = 2020; i >= 1950; i--)
             {
                 ComboBoxItem item = new()
                 {
@@ -263,7 +263,7 @@ namespace ClientMessenger
                 return;
             }
 
-            var biography = BiographyTextBox.Text == "Biography"
+            string biography = BiographyTextBox.Text == "Biography"
                 ? ""
                 : BiographyTextBox.Text;
 
@@ -271,9 +271,9 @@ namespace ClientMessenger
             ComboBoxItem monthItem = (ComboBoxItem)MonthBox.SelectedItem;
             ComboBoxItem yearItem = (ComboBoxItem)YearBox.SelectedItem;
 
-            var day = int.Parse((string)dayItem.Content).ToString("D2");
-            var month = int.Parse((string)monthItem.Content).ToString("D2");
-            var year = (string)yearItem.Content;
+            string day = int.Parse((string)dayItem.Content).ToString("D2");
+            string month = int.Parse((string)monthItem.Content).ToString("D2");
+            string year = (string)yearItem.Content;
 
             if (_profilPicFile is "" or null)
             {
@@ -352,7 +352,7 @@ namespace ClientMessenger
 
         private static async Task Error(TextBlock textBlock, string msg)
         {
-            var oldMsg = textBlock.Text;
+            string oldMsg = textBlock.Text;
             textBlock.Text = msg;
             textBlock.Visibility = Visibility.Visible;
             await Task.Delay(1500);
@@ -370,8 +370,8 @@ namespace ClientMessenger
             const int passwordLength = 30;
 
             RandomNumberGenerator generator = RandomNumberGenerator.Create();
-            var passwordChars = new char[passwordLength];
-            var buffer = new byte[1];
+            char[] passwordChars = new char[passwordLength];
+            byte[] buffer = new byte[1];
 
             for (int i = 0; i < passwordLength; i++)
             {

@@ -17,14 +17,23 @@ namespace ClientMessenger
 
         #region Encryption
 
-        public static byte[] EncryptAes(byte[] dataToEncrypt)
+        public static async Task<byte[]> EncryptAesAsync(byte[] dataToEncrypt)
         {
             if (dataToEncrypt == null || dataToEncrypt.Length == 0)
                 throw new ArgumentException("Data to encrypt cannot be null or empty", nameof(dataToEncrypt));
 
-            using (ICryptoTransform encryptor = Aes.CreateEncryptor())
+            using (MemoryStream ms = new())
             {
-                return encryptor.TransformFinalBlock(dataToEncrypt, 0, dataToEncrypt.Length);
+                using (ICryptoTransform encryptor = Aes.CreateEncryptor())
+                {
+                    using (CryptoStream cryptoStream = new(ms, encryptor, CryptoStreamMode.Write, true))
+                    {
+                        await cryptoStream.WriteAsync(dataToEncrypt);
+                        await cryptoStream.FlushFinalBlockAsync();
+                    }
+                }
+
+                return ms.ToArray();
             }
         }
 
@@ -41,11 +50,11 @@ namespace ClientMessenger
 
         #region Decryption
 
-        public static byte[] DecryptMessage(byte[] receivedData)
+        public static async Task<byte[]> DecryptMessageAsync(byte[] receivedData)
         {
             try
             {
-                return DecryptAes(receivedData);
+                return await DecryptAesAsync(receivedData);
             }
             catch (Exception)
             {
@@ -53,15 +62,15 @@ namespace ClientMessenger
             }
         }
 
-        private static byte[] DecryptAes(byte[] encryptedData)
+        private static async Task<byte[]> DecryptAesAsync(byte[] encryptedData)
         {
             ICryptoTransform decryptor = Aes.CreateDecryptor();
 
             using (MemoryStream ms = new())
             {
-                using (CryptoStream cs = new(ms, decryptor, CryptoStreamMode.Write))
+                using (CryptoStream cs = new(ms, decryptor, CryptoStreamMode.Write, true))
                 {
-                    cs.Write(encryptedData, 0, encryptedData.Length);
+                    await cs.WriteAsync(encryptedData);
                 }
 
                 return ms.ToArray();
@@ -78,7 +87,7 @@ namespace ClientMessenger
         internal static byte[] CompressData(byte[] data)
         {
             using Compressor compressor = new(new CompressionOptions(1));
-            var compressedData = compressor.Wrap(data);
+            byte[] compressedData = compressor.Wrap(data);
             return compressedData.Length >= data.Length
                 ? data
                 : compressedData;

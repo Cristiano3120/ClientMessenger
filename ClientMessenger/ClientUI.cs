@@ -115,9 +115,9 @@ namespace ClientMessenger
         private static void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
             Window window = Window.GetWindow((Button)sender);
-            var windowHandle = new WindowInteropHelper(window).Handle;
-
-            var wParam = window.WindowState == WindowState.Maximized
+            nint windowHandle = new WindowInteropHelper(window).Handle;
+            
+            int wParam = window.WindowState == WindowState.Maximized
                 ? SC_RESTORE
                 : SC_MAXIMIZE;
 
@@ -127,14 +127,14 @@ namespace ClientMessenger
         private static void MinimizeButton_Click(object sender, RoutedEventArgs e)
         {
             Window window = Window.GetWindow((Button)sender);
-            var windowHandle = new WindowInteropHelper(window).Handle;
+            nint windowHandle = new WindowInteropHelper(window).Handle;
             SendMessage(windowHandle, WM_SYSCOMMAND, SC_MINIMIZE, IntPtr.Zero);
         }
 
         private static void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Window window = Window.GetWindow((Button)sender);
-            var windowHandle = new WindowInteropHelper(window).Handle;
+            nint windowHandle = new WindowInteropHelper(window).Handle;
             SendMessage(windowHandle, WM_SYSCOMMAND, SC_CLOSE, IntPtr.Zero);
         }
 
