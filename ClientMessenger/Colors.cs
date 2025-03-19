@@ -5,6 +5,7 @@ namespace ClientMessenger
     public ref struct Colors()
     {
         public Color Green { get; private set; } = (Color)ColorConverter.ConvertFromString("#288444");
+        public Color LightGray { get; private set; } = (Color)ColorConverter.ConvertFromString("#7c7e84");
         public Color Gray { get; private set; } = (Color)ColorConverter.ConvertFromString("#302c34");
         public Color Red { get; private set; } = (Color)ColorConverter.ConvertFromString("#f44038");
 

@@ -97,7 +97,7 @@ namespace ClientMessenger
                     Logger.LogPayload(ConsoleColor.Green, completeMessage, "[RECEIVED]:");
                     ClearMs(ms);
 
-                    await HandleReceivedMessageAsync(JsonDocument.Parse(completeMessage).RootElement);
+                    await HandleReceivedMessageAsync(JsonDocument.Parse(completeMessage));
                 }
                 catch (Exception ex)
                 {
@@ -108,8 +108,9 @@ namespace ClientMessenger
             await Restart();
         }
 
-        private static async Task HandleReceivedMessageAsync(JsonElement message)
+        private static async Task HandleReceivedMessageAsync(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
             OpCode code = message.GetOpCode();
             switch (code)
             {
@@ -144,10 +145,10 @@ namespace ClientMessenger
                     await HandleServerResponses.ARelationshipWasUpdatedAsync(message);
                     break;
                 case OpCode.ReceiveChatMessage:
-                    HandleServerResponses.ReceiveChatMessage(message);
+                    HandleServerResponses.ReceiveChatMessage(ref message);
                     break;
                 case OpCode.ReceiveChats:
-                    HandleServerResponses.ReceiveChats(message);
+                    HandleServerResponses.ReceiveChats(ref message);
                     break;
             }
         }

@@ -1,14 +1,40 @@
 ﻿using System.Collections;
+using System.ComponentModel;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace ClientMessenger
 {
-    public sealed class User : IEnumerable<(string name, string value)>
+    public sealed class User : IEnumerable<(string name, string value)>, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
         public long Id { get; init; }
-        public BitmapImage? ProfilePicture { get; set; }
-        public string Username { get; set; }
+
+        private BitmapImage? _profilPicture;
+        public BitmapImage? ProfilePicture
+        {
+            get => _profilPicture;
+            set
+            {
+                _profilPicture = value;
+                OnPropertyChanged(nameof(ProfilePicture));
+            }
+        }
+
+        private string _username;
+        public string Username
+        {
+            get => _username;
+            set
+            {
+                if (_username != value)
+                {
+                    _username = value;
+                    OnPropertyChanged(nameof(Username));
+                }
+            }
+        }
         public string HashTag { get; set; }
         public string Email { get; init; }
         public string Password { get; init; }
@@ -28,6 +54,7 @@ namespace ClientMessenger
             Biography = "";
             Birthday = null;
             Token = "";
+            _username = "";
         }
 
         public static explicit operator Relationship(User? user)
@@ -42,6 +69,8 @@ namespace ClientMessenger
                 ProfilePicture = user.ProfilePicture,
             };
         }
+
+        #region IEnumerable
 
         public IEnumerator<(string name, string value)> GetEnumerator()
         {
@@ -60,6 +89,12 @@ namespace ClientMessenger
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        #endregion
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

@@ -1,14 +1,19 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using ClientMessenger.LocalChatDatabase;
+using Microsoft.Win32;
 using SharpVectors.Converters;
+using Windows.System;
 
 namespace ClientMessenger
 {
@@ -30,7 +35,8 @@ namespace ClientMessenger
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
             InitAddFriendUsernameTextBox();
             InitAddFriendHashTagTextBox();
-            InitNameAndProfilPic();
+            InitPersonalInfoStackPanel();
+            InitSettingsPanel();
             _ = CleanUpChats();
             InitAddFriendBtn();
             InitCollections();
@@ -55,12 +61,6 @@ namespace ClientMessenger
 
             PendingBtn.Click += ChangePanelState;
             PendingBtn.Tag = Panels.Pending;
-        }
-
-        private void InitNameAndProfilPic()
-        {
-            ProfilPic.ImageSource = Client.User.ProfilePicture;
-            Username.Text = $"{Client.User.Username} {Client.User.HashTag}";
         }
 
         private void InitPanels()
@@ -151,6 +151,61 @@ namespace ClientMessenger
             Grid.SetRow(inputTextBox, 1);
             ChatPanel.Children.Add(inputTextBox);
             ChatPanel.UpdateLayout();
+        }
+
+        private void InitPersonalInfoStackPanel()
+        {
+            PersonalInfoStackPanel.MouseEnter += (sender, args) =>
+            {
+                PersonalInfoStackPanel.Cursor = Cursors.Hand;
+            };
+
+            PersonalInfoStackPanel.MouseLeave += (sender, args) =>
+            {
+                PersonalInfoStackPanel.Cursor = Cursors.Arrow;
+            };
+
+            PersonalInfoStackPanel.MouseDown += (sender, args) =>
+            {
+                HidePanels();
+                CreateSettingsPanel();
+            };
+
+            User user = Client.User;
+            Binding usernameBinding = new(nameof(user.Username))
+            {
+                Source = user,
+                Mode = BindingMode.OneWay
+            };
+            Username.SetBinding(TextBlock.TextProperty, usernameBinding);
+
+            Binding profilePictureBinding = new(nameof(user.ProfilePicture))
+            {
+                Source = user,
+                Mode = BindingMode.OneWay
+            };
+            BindingOperations.SetBinding(ProfilPic, ImageBrush.ImageSourceProperty, profilePictureBinding);
+
+
+            KeyDown += (sender, args) =>
+            {
+                if (args.Key == Key.Escape && SettingsPanel.Visibility == Visibility.Visible)
+                {
+                    HidePanels();
+                    FriendsPanel.Visibility = Visibility.Visible;
+                }
+            };
+        }
+
+        private void InitSettingsPanel()
+        {
+            SettingsPanel.KeyDown += (sender, args) =>
+            {
+                if (args.Key == Key.Escape)
+                {
+                    HidePanels();
+                }
+            };
         }
 
         #region Init AddFriendPanel
@@ -303,36 +358,6 @@ namespace ClientMessenger
             }
         }
 
-        private void ChangeNotificationAmount(Relationship relationship, bool removeNotifications)
-        {
-            IEnumerable<StackPanel> openDms = Dms.Items.Cast<StackPanel>();
-
-            foreach (StackPanel stackPanel in openDms)
-            {
-                if (stackPanel.Tag is TagUserData tagUserData && relationship == tagUserData)
-                {
-                    TextBlock notificationTextBlock = stackPanel.Children.OfType<TextBlock>()
-                        .First(tb => tb.Tag is string tag && tag == "Notification");
-
-                    if (removeNotifications)
-                    {
-                        notificationTextBlock.Text = string.Empty;
-                        return;
-                    }
-
-                    if (notificationTextBlock.Text == "99+")
-                        return;
-
-                    _ = byte.TryParse(notificationTextBlock.Text, out byte notificationAmount);
-                    notificationAmount++;
-
-                    notificationTextBlock.Text = notificationAmount <= 99
-                        ? notificationAmount.ToString()
-                        : "99+";
-                }
-            }
-        }
-
         private static void AddMessage(ScrollViewer scrollViewer, Relationship relationship, Message message)
         {
             ChatDatabase chatDatabase = new();
@@ -409,6 +434,36 @@ namespace ClientMessenger
             chatPanel.Children.Add(outerStackPanel);
             scrollViewer.ScrollToEnd();
             chatPanel.UpdateLayout();
+        }
+
+        private void ChangeNotificationAmount(Relationship relationship, bool removeNotifications)
+        {
+            IEnumerable<StackPanel> openDms = Dms.Items.Cast<StackPanel>();
+
+            foreach (StackPanel stackPanel in openDms)
+            {
+                if (stackPanel.Tag is TagUserData tagUserData && relationship == tagUserData)
+                {
+                    TextBlock notificationTextBlock = stackPanel.Children.OfType<TextBlock>()
+                        .First(tb => tb.Tag is string tag && tag == "Notification");
+
+                    if (removeNotifications)
+                    {
+                        notificationTextBlock.Text = string.Empty;
+                        return;
+                    }
+
+                    if (notificationTextBlock.Text == "99+")
+                        return;
+
+                    _ = byte.TryParse(notificationTextBlock.Text, out byte notificationAmount);
+                    notificationAmount++;
+
+                    notificationTextBlock.Text = notificationAmount <= 99
+                        ? notificationAmount.ToString()
+                        : "99+";
+                }
+            }
         }
 
         private static void PlaySound(string pathToSound)
@@ -546,6 +601,93 @@ namespace ClientMessenger
             deleteButton.Click += CloseChat_Click;
             stackPanel.Children.Add(textBlock);
             stackPanel.Children.Add(deleteButton);
+        }
+
+        #endregion
+
+        #region Settings
+
+        private void CreateSettingsPanel()
+        {
+            StackPanel personalInfoStackPanel = new()
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Top
+            };
+
+            Ellipse profileEllipse = new()
+            {
+                Width = 45,
+                Height = 45,
+                Margin = new Thickness(10, 2.5, 0, 0),
+                Cursor = Cursors.Hand,
+            };
+            profileEllipse.MouseDown += async(sender, args) =>
+            {
+                await ChangeProfilePicture();
+            };
+
+            ImageBrush profileImageBrush = new()
+            {
+                ImageSource = Client.User.ProfilePicture,
+                Stretch = Stretch.UniformToFill
+            };
+            profileEllipse.Fill = profileImageBrush;
+
+            Binding profilePictureBinding = new(nameof(Client.User.ProfilePicture))
+            {
+                Source = Client.User,
+                Mode = BindingMode.OneWay
+            };
+            BindingOperations.SetBinding(profileImageBrush, ImageBrush.ImageSourceProperty, profilePictureBinding);
+
+            Colors colors = new();
+            TextBlock settingsUsername = new()
+            {
+                Text = Client.User.Username,
+                Width = 120,
+                Height = 20,
+                Foreground = colors.ColorToSolidColorBrush(colors.LightGray),
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(10, 2, 0, 0)
+            };
+
+            personalInfoStackPanel.Children.Add(profileEllipse);
+            personalInfoStackPanel.Children.Add(settingsUsername);
+            SettingsPanel.Children.Add(personalInfoStackPanel);
+            
+            SettingsPanel.UpdateLayout();
+            SettingsPanel.Visibility = Visibility.Visible;
+        }
+
+        private void ClearSettingsPanel()
+        {
+            SettingsPanel.Visibility = Visibility.Collapsed;
+            SettingsPanel.Children.Clear();
+            SettingsPanel.UpdateLayout();
+        }   
+
+        private async Task ChangeProfilePicture()
+        {
+            OpenFileDialog openFileDialog = new();
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                byte[] profilePictureBytes = File.ReadAllBytes(filePath);
+
+                ProfilePictureUpdate profilePictureUpdate = new(Client.User.Id, profilePictureBytes);
+                var payload = new
+                {
+                    opCode = OpCode.SettingsUpdate,
+                    settingsUpdate = SettingsUpdate.ChangeProfilPicture,
+                    profilePictureUpdate,
+                };
+
+                await Client.SendPayloadAsync(payload);
+
+                Client.User.ProfilePicture = Converter.ToBitmapImage(profilePictureBytes);
+                SettingsPanel.UpdateLayout();
+            }
         }
 
         #endregion
@@ -785,6 +927,7 @@ namespace ClientMessenger
             FriendsPanel.Visibility = Visibility.Collapsed;
             BlockedPanel.Visibility = Visibility.Collapsed;
             ChatPanel.Visibility = Visibility.Collapsed;
+            ClearSettingsPanel();
         }
 
         private void ChangePanelState(object sender, RoutedEventArgs args)

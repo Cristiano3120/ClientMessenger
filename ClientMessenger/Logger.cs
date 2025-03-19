@@ -12,7 +12,7 @@ namespace ClientMessenger
         [return: MarshalAs(UnmanagedType.Bool)]
         private static partial bool AllocConsole();
 
-        [GeneratedRegex("(\"profilePicture\": \")[^\"]*(\")")]
+        [GeneratedRegex("(\"(?:profilePicture|newProfilePicture)\": \")[^\"]*(\")")]
         private static partial Regex FilterProfilPicRegex();
 
         [GeneratedRegex(@"\[[^\]]*\]")]

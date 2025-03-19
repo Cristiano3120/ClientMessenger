@@ -174,7 +174,7 @@ namespace ClientMessenger
             }, DispatcherPriority.Render);
         }
 
-        public static void ReceiveChatMessage(JsonElement message)
+        public static void ReceiveChatMessage(ref JsonElement message)
         {
             Message chatMessage = JsonSerializer.Deserialize<Message>(message.GetProperty("chatMessage"), Client.JsonSerializerOptions);
             Application.Current.Dispatcher.Invoke(() =>
@@ -184,7 +184,7 @@ namespace ClientMessenger
             }, DispatcherPriority.Render);
         }
 
-        public static void ReceiveChats(JsonElement message)
+        public static void ReceiveChats(ref JsonElement message)
         {
             List<ChatInfos>? chatInfos = JsonSerializer.Deserialize<List<ChatInfos>>(message.GetProperty("chats"), Client.JsonSerializerOptions);
             ChatDatabase chatDatabase = new();

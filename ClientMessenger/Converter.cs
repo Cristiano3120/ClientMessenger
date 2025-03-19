@@ -1,6 +1,7 @@
 ﻿using System.Windows.Media.Imaging;
 using System.Drawing;
 using System.IO;
+using System.Drawing.Imaging;
 
 namespace ClientMessenger
 {
@@ -10,7 +11,7 @@ namespace ClientMessenger
         {
             using (MemoryStream memoryStream = new())
             {
-                bitmap.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+                bitmap.Save(memoryStream, ImageFormat.Png);
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
                 BitmapImage bitmapImage = new();

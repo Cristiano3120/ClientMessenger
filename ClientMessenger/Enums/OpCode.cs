@@ -19,5 +19,6 @@
         SendChatMessage = 15,
         ReceiveChatMessage = 16,
         ReceiveChats = 17,
+        SettingsUpdate = 18,
     }
 }
