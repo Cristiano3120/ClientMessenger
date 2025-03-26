@@ -88,7 +88,7 @@
 
             <TextBlock x:Name="AddFriendInfoTextBlock" Text="Enter valid data" Width="300" Height="20"  Margin="0, 0, 0, 50" TextAlignment="Center"/>
             <TextBox x:Name="AddFriendUsernameTextBox" Width="150" Height="30" Margin="0, 0, 50, 0" Text="Username"/>
-            <TextBox x:Name="AddFriendHashTagTextBox" Width="50" Height="30" Margin="155, 0, 0, 0" Text="#"/>
+            <TextBox x:Name="AddFriendHashtagTextBox" Width="50" Height="30" Margin="155, 0, 0, 0" Text="#"/>
 
             <Button x:Name="AddFriendAddFriendBtn" Width="80" Height="30" Margin="0, 150, 0, 0" Content="Add"/>
         </Grid>

@@ -20,7 +20,7 @@ namespace ClientMessenger
         public static async Task<byte[]> EncryptAesAsync(byte[] dataToEncrypt)
         {
             if (dataToEncrypt == null || dataToEncrypt.Length == 0)
-                throw new ArgumentException("Data to encrypt cannot be null or empty", nameof(dataToEncrypt));
+                return [];
 
             using (MemoryStream ms = new())
             {
@@ -32,7 +32,7 @@ namespace ClientMessenger
                         await cryptoStream.FlushFinalBlockAsync();
                     }
                 }
-
+                
                 return ms.ToArray();
             }
         }

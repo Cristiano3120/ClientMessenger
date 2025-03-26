@@ -154,7 +154,21 @@ namespace ClientMessenger
 
                 string message = FilterProfilPicRegex().Replace(payload, "$1[Image]$2");
                 JsonNode jsonNode = JsonNode.Parse(message)!;
-                jsonNode["opCode"] = Enum.Parse<OpCode>(jsonNode["opCode"]!.ToString()).ToString();
+
+                string opCode = nameof(OpCode).ToCamelCase();
+                jsonNode[opCode] = Enum.Parse<OpCode>(jsonNode[opCode]!.ToString()).ToString();
+
+                string settingsUpdate = nameof(SettingsUpdate).ToCamelCase();
+                if (message.Contains(settingsUpdate))
+                {
+                    jsonNode[settingsUpdate] = Enum.Parse<SettingsUpdate>(jsonNode[settingsUpdate]!.ToString()).ToString();
+                }
+
+                string usernameUpdateResult = nameof(UsernameUpdateResult).ToCamelCase();
+                if (message.Contains(usernameUpdateResult))
+                {
+                    jsonNode[usernameUpdateResult] = Enum.Parse<UsernameUpdateResult>(jsonNode[usernameUpdateResult]!.ToString()).ToString();
+                }
 
                 Console.WriteLine($"[{DateTime.Now:HH: mm: ss}]: {prefix} {jsonNode}");
                 streamWriter.WriteLine($"{prefix} {FilterKeywords().Replace(jsonNode.ToString(), match => $"**{match.Value}**")}");

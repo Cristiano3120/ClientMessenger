@@ -139,7 +139,7 @@ namespace ClientMessenger
         {
             InitProfilPic();
             InitUsernameTextBox();
-            InitHashTagTextBox();
+            InithashtagTextBox();
             InitBiographyTextBox();
             InitSignUpBtn();
         }
@@ -168,28 +168,28 @@ namespace ClientMessenger
             ClientUI.RestrictClipboardPasting(UsernameTextBox, maxChars);
         }
 
-        private void InitHashTagTextBox()
+        private void InithashtagTextBox()
         {
             const byte maxChars = 5;
-            HashTagTextBox.PreviewTextInput += (sender, args) =>
+            hashtagTextBox.PreviewTextInput += (sender, args) =>
             {
-                if (HashTagTextBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
+                if (hashtagTextBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
                 {
                     args.Handled = true;
                     return;
                 }
             };
 
-            HashTagTextBox.TextChanged += (sender, args) =>
+            hashtagTextBox.TextChanged += (sender, args) =>
             {
-                if (!HashTagTextBox.Text.StartsWith('#'))
+                if (!hashtagTextBox.Text.StartsWith('#'))
                 {
-                    HashTagTextBox.Text = "#" + HashTagTextBox.Text.TrimStart('#');
-                    HashTagTextBox.CaretIndex = HashTagTextBox.Text.Length;
+                    hashtagTextBox.Text = "#" + hashtagTextBox.Text.TrimStart('#');
+                    hashtagTextBox.CaretIndex = hashtagTextBox.Text.Length;
                 }
             };
 
-            ClientUI.RestrictClipboardPasting(HashTagTextBox, maxChars);
+            ClientUI.RestrictClipboardPasting(hashtagTextBox, maxChars);
         }
 
         private void InitBiographyTextBox()
@@ -286,7 +286,7 @@ namespace ClientMessenger
                 Password = PasswordTextBox.Text,
                 Birthday = DateOnly.ParseExact($"{day}-{month}-{year}", "dd-MM-yyyy", CultureInfo.InvariantCulture),
                 Username = UsernameTextBox.Text,
-                HashTag = HashTagTextBox.Text,
+                Hashtag = hashtagTextBox.Text,
                 Biography = biography,
                 ProfilePicture = ImageEditor.ScaleImage(_profilPicFile),
                 FaEnabled = FaCheckBox.IsChecked!.Value,
@@ -341,7 +341,7 @@ namespace ClientMessenger
         }
 
         private bool CheckIfAllFieldsAreFilledStage2() 
-            => UsernameTextBox.Text != "Username" && HashTagTextBox.Text != "#";
+            => UsernameTextBox.Text != "Username" && hashtagTextBox.Text != "#";
 
         private static async Task Error(TextBlock textBlock)
         {

@@ -9,6 +9,12 @@ namespace ClientMessenger.Json
     internal static class JsonExtensions
     {
         #region GetExtensions
+        public static UsernameUpdateResult GetUsernameUpdateResult(this JsonElement property)
+            => (UsernameUpdateResult)property.GetProperty("settingsUpdate").GetByte();
+
+        public static SettingsUpdate GetSettingsUpdate(this JsonElement property)
+            => (SettingsUpdate)property.GetProperty("settingsUpdate").GetByte();
+
         /// <summary>
         /// Needs to be called on the <c>root</c> of the <see cref="JsonElement"/>.
         /// Converts the data that is sent as an byte to the <see cref="OpCode"/> equivalent.

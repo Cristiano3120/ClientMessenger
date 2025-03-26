@@ -8,7 +8,7 @@ namespace ClientMessenger
         public long Id { get; init; } = -1;
         public BitmapImage? ProfilePicture { get; set; }
         public string Username { get; set; } = "";
-        public string HashTag { get; set; } = "";
+        public string Hashtag { get; set; } = "";
         public string Biography { get; set; } = "";
         public RelationshipState RelationshipState { get; set; }
 
@@ -16,7 +16,7 @@ namespace ClientMessenger
         public IEnumerator<(string name, string value)> GetEnumerator()
         {
             yield return (nameof(Username).ToCamelCase(), Username);
-            yield return (nameof(HashTag).ToCamelCase(), HashTag);
+            yield return (nameof(Hashtag).ToCamelCase(), Hashtag);
             yield return (nameof(Biography).ToCamelCase(), Biography);
             yield return (nameof(Id).ToCamelCase(), Id.ToString());
             yield return (nameof(ProfilePicture).ToCamelCase(), Convert.ToBase64String(Converter.ToByteArray(ProfilePicture)));
@@ -37,7 +37,7 @@ namespace ClientMessenger
                 return false;
 
             return left.Username == right.Username &&
-                left.HashTag == right.HashTag;
+                left.Hashtag == right.Hashtag;
         }
 
         public static bool operator !=(Relationship? left, TagUserData right)
@@ -51,7 +51,7 @@ namespace ClientMessenger
                 return false;
 
             return left.Username == right.Username &&
-                left.HashTag == right.HashTag;
+                left.Hashtag == right.Hashtag;
         }
 
         public static bool operator !=(TagUserData left, Relationship? right)

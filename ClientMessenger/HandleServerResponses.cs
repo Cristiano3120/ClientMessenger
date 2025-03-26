@@ -11,8 +11,10 @@ namespace ClientMessenger
     public static class HandleServerResponses
     {
         #region Pre logged in
-        public static async Task ReceiveRSAAsync(JsonElement message)
+        public static async Task ReceiveRSAAsync(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             RSAParameters publicKey = message.GetPublicKey();
             AesKeyData aesKeyData = new()
             {
@@ -36,8 +38,10 @@ namespace ClientMessenger
             }
         }
 
-        public static async Task AnswerCreateAccountAsync(JsonElement message)
+        public static async Task AnswerCreateAccountAsync(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             NpgsqlExceptionInfos error = message.GetNpgsqlExceptionInfos();
             if (error.Exception == NpgsqlExceptions.None)
             {
@@ -50,8 +54,10 @@ namespace ClientMessenger
             await HandleNpgsqlErrorAsync(error);
         }
 
-        public static async Task AnswerToLoginAsync(JsonElement message)
+        public static async Task AnswerToLoginAsync(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             NpgsqlExceptionInfos error = message.GetNpgsqlExceptionInfos();
             if (error.Exception != NpgsqlExceptions.None)
             {
@@ -71,8 +77,10 @@ namespace ClientMessenger
             ClientUI.SwitchWindows<Login, Home>();
         }
 
-        public static async Task AnswerToVerificationRequestAsync(JsonElement message)
+        public static async Task AnswerToVerificationRequestAsync(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             bool success = message.GetProperty("success").GetBoolean();
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(success);
         }
@@ -85,8 +93,10 @@ namespace ClientMessenger
             Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 
-        public static async Task AnswerToAutoLoginRequestAsync(JsonElement message)
+        public static async Task AnswerToAutoLoginRequestAsync(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             NpgsqlExceptionInfos exceptionInfos = message.GetNpgsqlExceptionInfos();
             NpgsqlExceptions exception = exceptionInfos.Exception;
 
@@ -110,8 +120,10 @@ namespace ClientMessenger
 
         #region Past Log in
 
-        public static async Task AnswerToRelationshipUpdateRequestAsync(JsonElement message)
+        public static async Task AnswerToRelationshipUpdateRequestAsync(JsonDocument jsonDocument)
         { 
+            JsonElement message = jsonDocument.RootElement;
+
             NpgsqlExceptionInfos exceptionInfos = message.GetNpgsqlExceptionInfos()!;
             if (exceptionInfos.Exception == NpgsqlExceptions.None)
             {
@@ -126,8 +138,10 @@ namespace ClientMessenger
             await HandleNpgsqlErrorAsync(exceptionInfos);
         }
 
-        public static async Task ARelationshipWasUpdatedAsync(JsonElement message)
+        public static async Task ARelationshipWasUpdatedAsync(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             RelationshipUpdate relationshipUpdate = JsonSerializer.Deserialize<RelationshipUpdate>(message.GetProperty("relationshipUpdate"), Client.JsonSerializerOptions);
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
@@ -151,8 +165,10 @@ namespace ClientMessenger
             });
         }
 
-        public static async Task ReceiveRelationshipsAsync(JsonElement message)
+        public static async Task ReceiveRelationshipsAsync(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             HashSet<Relationship>? relationships = JsonSerializer.Deserialize<HashSet<Relationship>>(message.GetProperty("relationships"), Client.JsonSerializerOptions);
             NpgsqlExceptionInfos npgsqlExceptionInfos = message.GetNpgsqlExceptionInfos();
 
@@ -174,8 +190,10 @@ namespace ClientMessenger
             }, DispatcherPriority.Render);
         }
 
-        public static void ReceiveChatMessage(ref JsonElement message)
+        public static void ReceiveChatMessage(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             Message chatMessage = JsonSerializer.Deserialize<Message>(message.GetProperty("chatMessage"), Client.JsonSerializerOptions);
             Application.Current.Dispatcher.Invoke(() =>
             {
@@ -184,8 +202,10 @@ namespace ClientMessenger
             }, DispatcherPriority.Render);
         }
 
-        public static void ReceiveChats(ref JsonElement message)
+        public static void ReceiveChats(JsonDocument jsonDocument)
         {
+            JsonElement message = jsonDocument.RootElement;
+
             List<ChatInfos>? chatInfos = JsonSerializer.Deserialize<List<ChatInfos>>(message.GetProperty("chats"), Client.JsonSerializerOptions);
             ChatDatabase chatDatabase = new();
             chatDatabase.AddChats(chatInfos!);

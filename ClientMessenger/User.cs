@@ -35,7 +35,7 @@ namespace ClientMessenger
                 }
             }
         }
-        public string HashTag { get; set; }
+        public string Hashtag { get; set; }
         public string Email { get; init; }
         public string Password { get; init; }
         public string Biography { get; set; }
@@ -48,7 +48,7 @@ namespace ClientMessenger
             Id = -1;
             ProfilePicture = null;
             Username = "";
-            HashTag = "";
+            Hashtag = "";
             Email = "";
             Password = "";
             Biography = "";
@@ -63,7 +63,7 @@ namespace ClientMessenger
             return new()
             {
                 Username = user.Username,
-                HashTag = user.HashTag,
+                Hashtag = user.Hashtag,
                 Id = user.Id,
                 Biography = user.Biography,
                 ProfilePicture = user.ProfilePicture,
@@ -75,7 +75,7 @@ namespace ClientMessenger
         public IEnumerator<(string name, string value)> GetEnumerator()
         {
             yield return (nameof(Username).ToCamelCase(), Username);
-            yield return (nameof(HashTag).ToCamelCase(), HashTag);
+            yield return (nameof(Hashtag).ToCamelCase(), Hashtag);
             yield return (nameof(Email).ToCamelCase(), Email);
             yield return (nameof(Password).ToCamelCase(), Password);
             yield return (nameof(Biography).ToCamelCase(), Biography);

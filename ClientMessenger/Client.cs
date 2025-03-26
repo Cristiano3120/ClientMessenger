@@ -66,7 +66,7 @@ namespace ClientMessenger
         private static async Task ReceiveMessagesAsync()
         {
             Logger.LogInformation("Listening for messages!");
-            var buffer = new byte[65536];
+            byte[] buffer = new byte[65536];
             MemoryStream ms = new();
 
             while (_server.State == WebSocketState.Open)
@@ -92,7 +92,7 @@ namespace ClientMessenger
                     byte[] completeBytes = ms.ToArray();
                     byte[] decryptedBytes = await Security.DecryptMessageAsync(completeBytes);
                     byte[] decompressedBytes = Security.DecompressData(decryptedBytes);
-                    var completeMessage = Encoding.UTF8.GetString(decompressedBytes);
+                    string completeMessage = Encoding.UTF8.GetString(decompressedBytes);
 
                     Logger.LogPayload(ConsoleColor.Green, completeMessage, "[RECEIVED]:");
                     ClearMs(ms);
@@ -110,49 +110,51 @@ namespace ClientMessenger
 
         private static async Task HandleReceivedMessageAsync(JsonDocument jsonDocument)
         {
-            JsonElement message = jsonDocument.RootElement;
-            OpCode code = message.GetOpCode();
-            switch (code)
+            OpCode opCode = jsonDocument.RootElement.GetOpCode();
+            switch (opCode)
             {
                 case OpCode.ReceiveRSA:
-                    await HandleServerResponses.ReceiveRSAAsync(message);
+                    await HandleServerResponses.ReceiveRSAAsync(jsonDocument);
                     break;
                 case OpCode.ServerReadyToReceive:
                     await HandleServerResponses.ServerReadyToReceiveAsync();
                     break;
                 case OpCode.AnswerToCreateAccount:
-                    await HandleServerResponses.AnswerCreateAccountAsync(message);
+                    await HandleServerResponses.AnswerCreateAccountAsync(jsonDocument);
                     break;
                 case OpCode.AnswerToLogin:
-                    await HandleServerResponses.AnswerToLoginAsync(message);
+                    await HandleServerResponses.AnswerToLoginAsync(jsonDocument);
                     break;
                 case OpCode.VerificationProcess:
-                    await HandleServerResponses.AnswerToVerificationRequestAsync(message);
+                    await HandleServerResponses.AnswerToVerificationRequestAsync(jsonDocument);
                     break;
                 case OpCode.VerificationWentWrong:
                     await HandleServerResponses.VerificationWentWrongAsync();
                     break;
                 case OpCode.AnswerToAutoLogin:
-                    await HandleServerResponses.AnswerToAutoLoginRequestAsync(message);
+                    await HandleServerResponses.AnswerToAutoLoginRequestAsync(jsonDocument);
                     break;
                 case OpCode.AnswerToRequestedRelationshipUpdate:
-                    await HandleServerResponses.AnswerToRelationshipUpdateRequestAsync(message);
+                    await HandleServerResponses.AnswerToRelationshipUpdateRequestAsync(jsonDocument);
                     break;
                 case OpCode.ReceiveRelationships:
-                    await HandleServerResponses.ReceiveRelationshipsAsync(message);
+                    await HandleServerResponses.ReceiveRelationshipsAsync(jsonDocument);
                     break;
                 case OpCode.ARelationshipWasUpdated:
-                    await HandleServerResponses.ARelationshipWasUpdatedAsync(message);
+                    await HandleServerResponses.ARelationshipWasUpdatedAsync(jsonDocument);
                     break;
                 case OpCode.ReceiveChatMessage:
-                    HandleServerResponses.ReceiveChatMessage(ref message);
+                    HandleServerResponses.ReceiveChatMessage(jsonDocument);
                     break;
                 case OpCode.ReceiveChats:
-                    HandleServerResponses.ReceiveChats(ref message);
+                    HandleServerResponses.ReceiveChats(jsonDocument);
+                    break;
+                case OpCode.SettingsUpdate:
+                    await HandleSettingsUpdate.HandleReceivedMessage(jsonDocument);
                     break;
             }
         }
-
+        
         #endregion
 
         #region Send data
@@ -166,10 +168,10 @@ namespace ClientMessenger
                 return;
             }
 
-            var jsonPayload = JsonSerializer.Serialize(payload, JsonSerializerOptions);
-            var buffer = Encoding.UTF8.GetBytes(jsonPayload);
-            var compressedData = Security.CompressData(buffer);
-            var encryptedData = Security.EncryptRSA(publicKey, compressedData);
+            string jsonPayload = JsonSerializer.Serialize(payload, JsonSerializerOptions);
+            byte[] buffer = Encoding.UTF8.GetBytes(jsonPayload);
+            byte[] compressedData = Security.CompressData(buffer);
+            byte[] encryptedData = Security.EncryptRSA(publicKey, compressedData);
 
             await _server.SendAsync(encryptedData, WebSocketMessageType.Binary, true, CancellationToken.None);
 
@@ -219,7 +221,7 @@ namespace ClientMessenger
 
         private static void ClearMs(MemoryStream ms)
         {
-            var buffer = ms.GetBuffer();
+            byte[] buffer = ms.GetBuffer();
             Array.Clear(buffer, 0, buffer.Length);
             ms.Position = 0;
             ms.SetLength(0);
@@ -230,7 +232,7 @@ namespace ClientMessenger
             if (testing)
                 return new Uri("ws://127.0.0.1:5000/");
 
-            var serverUri = Config.GetProperty("ServerUri").GetString();
+            string? serverUri = Config.GetProperty("ServerUri").GetString();
 
             if (serverUri == null)
             {
@@ -254,9 +256,9 @@ namespace ClientMessenger
         /// <returns>A fully resolved path based on the project's base directory and the given relative path.</returns>
         public static string GetDynamicPath(string relativePath)
         {
-            var projectBasePath = AppDomain.CurrentDomain.BaseDirectory;
+            string projectBasePath = AppDomain.CurrentDomain.BaseDirectory;
 
-            var binIndex = projectBasePath.IndexOf(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar, StringComparison.Ordinal);
+            int binIndex = projectBasePath.IndexOf(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar, StringComparison.Ordinal);
 
             if (binIndex != -1)
             {

@@ -6,6 +6,9 @@ using System.Windows;
 
 namespace ClientMessenger
 {
+    /// <summary>
+    /// Methods of this class must be called from the UI thread.
+    /// </summary>
     internal static partial class ClientUI
     {
 #pragma warning disable
@@ -52,9 +55,9 @@ namespace ClientMessenger
         /// If it doesn´t find anything it creates a new Instance of <typeparamref name="T"/>
         /// </summary>
         /// <returns>The window of type <typeparamref name="T"/></returns>
-        public static T GetWindow<T>() where T : Window, new() 
+        public static T GetWindow<T>() where T : Window, new()
             => Application.Current.Dispatcher.Invoke(() => Application.Current.Windows.OfType<T>().FirstOrDefault() ?? new T());
-        
+
         /// <summary>
         /// Checks if the text being pasted from the clipboard exceeds the specified character limit.
         /// If the pasted content exceeds the limit, the paste operation is canceled.
@@ -116,7 +119,7 @@ namespace ClientMessenger
         {
             Window window = Window.GetWindow((Button)sender);
             nint windowHandle = new WindowInteropHelper(window).Handle;
-            
+
             int wParam = window.WindowState == WindowState.Maximized
                 ? SC_RESTORE
                 : SC_MAXIMIZE;

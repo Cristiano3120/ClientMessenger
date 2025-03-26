@@ -13,7 +13,6 @@ using System.Windows.Shapes;
 using ClientMessenger.LocalChatDatabase;
 using Microsoft.Win32;
 using SharpVectors.Converters;
-using Windows.System;
 
 namespace ClientMessenger
 {
@@ -33,10 +32,9 @@ namespace ClientMessenger
         {
             InitializeComponent();
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
-            InitAddFriendUsernameTextBox();
-            InitAddFriendHashTagTextBox();
+            InitHashtagTextBox(AddFriendHashtagTextBox);
+            InitAddFriendUsernameTextBox();         
             InitPersonalInfoStackPanel();
-            InitSettingsPanel();
             _ = CleanUpChats();
             InitAddFriendBtn();
             InitCollections();
@@ -118,7 +116,7 @@ namespace ClientMessenger
                 {
                     TagUserData tagUserData = (TagUserData)stackPanel.Tag;
                     Relationship relationship = _friends.FirstOrDefault(x => x.Username == tagUserData.Username
-                        && x.HashTag == tagUserData.HashTag)!;
+                        && x.Hashtag == tagUserData.Hashtag)!;
 
                     CreateOrOpenChat(relationship);
                 }
@@ -140,7 +138,7 @@ namespace ClientMessenger
 
             inputTextBox.KeyDown += async (sender, args) =>
             {
-                if (args.Key == System.Windows.Input.Key.Enter && !string.IsNullOrEmpty(inputTextBox.Text))
+                if (args.Key == Key.Enter && !string.IsNullOrEmpty(inputTextBox.Text))
                 {
                     Message message = new(Client.User.Id, DateTime.Now, inputTextBox.Text);
                     await SendChatMessageAsync(message);
@@ -189,21 +187,18 @@ namespace ClientMessenger
 
             KeyDown += (sender, args) =>
             {
-                if (args.Key == Key.Escape && SettingsPanel.Visibility == Visibility.Visible)
-                {
-                    HidePanels();
-                    FriendsPanel.Visibility = Visibility.Visible;
-                }
-            };
-        }
-
-        private void InitSettingsPanel()
-        {
-            SettingsPanel.KeyDown += (sender, args) =>
-            {
                 if (args.Key == Key.Escape)
                 {
-                    HidePanels();
+                    StackPanel? changeUsernamePanel = SettingsPanel.Children.Cast<StackPanel>().FirstOrDefault(x => x.Name == "ChangeUsernamePanel");
+                    if (changeUsernamePanel is not null)
+                    {
+                        SettingsPanel.Children.Remove(changeUsernamePanel);
+                    }
+                    else
+                    {
+                        HidePanels();
+                        FriendsPanel.Visibility = Visibility.Visible;
+                    }
                 }
             };
         }
@@ -236,28 +231,30 @@ namespace ClientMessenger
             };
         }
 
-        private void InitAddFriendHashTagTextBox()
+        private static void InitHashtagTextBox(TextBox textBox)
         {
             const byte maxChars = 5;
-            AddFriendHashTagTextBox.PreviewTextInput += (sender, args) =>
+
+            textBox.Text = "#";
+            textBox.PreviewTextInput += (sender, args) =>
             {
-                if (AddFriendHashTagTextBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
+                if (textBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
                 {
                     args.Handled = true;
                     return;
                 }
             };
 
-            AddFriendHashTagTextBox.TextChanged += (sender, args) =>
+            textBox.TextChanged += (sender, args) =>
             {
-                if (!AddFriendHashTagTextBox.Text.StartsWith('#'))
+                if (!textBox.Text.StartsWith('#'))
                 {
-                    AddFriendHashTagTextBox.Text = "#" + AddFriendHashTagTextBox.Text.TrimStart('#');
-                    AddFriendHashTagTextBox.CaretIndex = AddFriendHashTagTextBox.Text.Length;
+                    textBox.Text = "#" + textBox.Text.TrimStart('#');
+                    textBox.CaretIndex = textBox.Text.Length;
                 }
             };
 
-            ClientUI.RestrictClipboardPasting(AddFriendHashTagTextBox, maxChars);
+            ClientUI.RestrictClipboardPasting(textBox, maxChars);
         }
 
         private void InitAddFriendBtn()
@@ -279,7 +276,7 @@ namespace ClientMessenger
             ChangeNotificationAmount(relationship, true);
             HidePanels();
 
-            _currentOpenChat = new TagUserData(relationship.Username, relationship.HashTag);
+            _currentOpenChat = new TagUserData(relationship.Username, relationship.Hashtag);
             if (_chats.TryGetValue(_currentOpenChat, out Chat? chat))
             {
                 chat.LastOpend = DateTime.Now;
@@ -331,7 +328,7 @@ namespace ClientMessenger
             ChatPanel.UpdateLayout();
 
             SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
-            _chats.TryAdd(new TagUserData(relationship.Username, relationship.HashTag), new Chat(scrollViewer, DateTime.Now));
+            _chats.TryAdd(new TagUserData(relationship.Username, relationship.Hashtag), new Chat(scrollViewer, DateTime.Now));
         }
 
         public void AddMessage(Message message)
@@ -344,7 +341,7 @@ namespace ClientMessenger
             lock (Lock)
             {
                 relationship = _friends.First(x => x.Id == message.SenderId);
-                TagUserData tagUserData = new(relationship.Username, relationship.HashTag);
+                TagUserData tagUserData = new(relationship.Username, relationship.Hashtag);
 
                 if (ChatPanel.Children.Count >= 2 && ChatPanel.Children[1] is ScrollViewer scrollViewer
                     && _currentOpenChat == relationship)
@@ -550,8 +547,8 @@ namespace ClientMessenger
         private void AddOneToDmList(Relationship relationship)
         {
             List<StackPanel> stackPanels = [.. Dms.Items.Cast<StackPanel>()];
-            StackPanel? match = stackPanels.FirstOrDefault(x => x.Tag is (string username, string hashTag)
-                && username == relationship.Username && hashTag == relationship.HashTag);
+            StackPanel? match = stackPanels.FirstOrDefault(x => x.Tag is (string username, string hashtag)
+                && username == relationship.Username && hashtag == relationship.Hashtag);
 
             if (match == null)
             {
@@ -615,6 +612,16 @@ namespace ClientMessenger
                 VerticalAlignment = VerticalAlignment.Top
             };
 
+            personalInfoStackPanel.Children.Add(CreateProfilePictureUI());
+            personalInfoStackPanel.Children.Add(CreateUsernameTextBlock());
+            SettingsPanel.Children.Add(personalInfoStackPanel);
+            
+            SettingsPanel.UpdateLayout();
+            SettingsPanel.Visibility = Visibility.Visible;
+        }
+
+        private Ellipse CreateProfilePictureUI()
+        {
             Ellipse profileEllipse = new()
             {
                 Width = 45,
@@ -622,9 +629,9 @@ namespace ClientMessenger
                 Margin = new Thickness(10, 2.5, 0, 0),
                 Cursor = Cursors.Hand,
             };
-            profileEllipse.MouseDown += async(sender, args) =>
+            profileEllipse.MouseDown += async (sender, args) =>
             {
-                await ChangeProfilePicture();
+                await ChangeProfilePictureAsync();
             };
 
             ImageBrush profileImageBrush = new()
@@ -641,10 +648,16 @@ namespace ClientMessenger
             };
             BindingOperations.SetBinding(profileImageBrush, ImageBrush.ImageSourceProperty, profilePictureBinding);
 
+            return profileEllipse;
+        }
+
+        private TextBlock CreateUsernameTextBlock()
+        {
             Colors colors = new();
-            TextBlock settingsUsername = new()
+            TextBlock usernameTextBox = new()
             {
                 Text = Client.User.Username,
+                Cursor = Cursors.Hand,
                 Width = 120,
                 Height = 20,
                 Foreground = colors.ColorToSolidColorBrush(colors.LightGray),
@@ -652,12 +665,19 @@ namespace ClientMessenger
                 Margin = new Thickness(10, 2, 0, 0)
             };
 
-            personalInfoStackPanel.Children.Add(profileEllipse);
-            personalInfoStackPanel.Children.Add(settingsUsername);
-            SettingsPanel.Children.Add(personalInfoStackPanel);
-            
-            SettingsPanel.UpdateLayout();
-            SettingsPanel.Visibility = Visibility.Visible;
+            usernameTextBox.MouseDown += (sender, args) =>
+            {
+                CreateChangeUsernameUI();
+            };
+
+            Binding usernameBinding = new(nameof(Client.User.Username))
+            {
+                Source = Client.User,
+                Mode = BindingMode.OneWay
+            };
+            usernameTextBox.SetBinding(TextBlock.TextProperty, usernameBinding);
+
+            return usernameTextBox;
         }
 
         private void ClearSettingsPanel()
@@ -667,7 +687,7 @@ namespace ClientMessenger
             SettingsPanel.UpdateLayout();
         }   
 
-        private async Task ChangeProfilePicture()
+        private async Task ChangeProfilePictureAsync()
         {
             OpenFileDialog openFileDialog = new();
             if (openFileDialog.ShowDialog() == true)
@@ -687,6 +707,161 @@ namespace ClientMessenger
 
                 Client.User.ProfilePicture = Converter.ToBitmapImage(profilePictureBytes);
                 SettingsPanel.UpdateLayout();
+            }
+        }
+
+        private void CreateChangeUsernameUI()
+        {
+            Colors colors = new();
+            StackPanel outerStackPanel = new()
+            {
+                Width = 350,
+                Height = 200,
+                Background = colors.ColorToSolidColorBrush(colors.DarkGray),
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Name = "ChangeUsernamePanel"
+            };
+
+            StackPanel innerStackPanel = new()
+            {
+                Name = "InnerStackPanel",
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 75, 0, 0)
+            };
+
+            StackPanel usernamePanel = new()
+            {
+                Name = "UsernamePanel",
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            TextBlock usernameText = new()
+            {
+                Name = "UsernameTextBlock",
+                Text = "Username",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+
+            TextBox changeUsernameTextBox = new()
+            {
+                Name = "ChangeUsername",
+                Width = 100,
+                Height = 30,
+                Margin = new Thickness(5)
+            };
+            usernamePanel.Children.Add(usernameText);
+            usernamePanel.Children.Add(changeUsernameTextBox);
+
+            StackPanel hashtagPanel = new()
+            {
+                Name = "HashtagPanel",
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            TextBlock hashtagText = new()
+            {
+                Name = "HashtagTextBlock",
+                Text = "Hashtag",
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+
+            TextBox changeHashtagTextBox = new()
+            {
+                Name = "ChangeHashtag",
+                Width = 100,
+                Height = 30,
+                Margin = new Thickness(5)
+            };
+            InitHashtagTextBox(changeHashtagTextBox);
+
+            hashtagPanel.Children.Add(hashtagText);
+            hashtagPanel.Children.Add(changeHashtagTextBox);
+
+            innerStackPanel.Children.Add(usernamePanel);
+            innerStackPanel.Children.Add(hashtagPanel);
+
+            outerStackPanel.Children.Add(innerStackPanel);
+
+            Button changeButton = new()
+            {
+                Content = "Change",
+                Width = 100,
+                Height = 30,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 20, 0, 0),
+            };
+
+            changeButton.Click += async (sender, args) =>
+            {
+                if (!string.IsNullOrEmpty(changeUsernameTextBox.Text) && !string.IsNullOrEmpty(changeHashtagTextBox.Text))
+                {
+                    await SendUsernameChangeRequestAsync(changeUsernameTextBox.Text, changeHashtagTextBox.Text);
+                }
+                else
+                {
+                    _ = DataInvalid(usernameText, hashtagText);
+                }
+            };
+
+            outerStackPanel.Children.Add(changeButton);
+            SettingsPanel.Children.Add(outerStackPanel);
+        }
+
+        public static async Task DataInvalid(TextBlock usernameText, TextBlock hashtagText)
+        {
+            hashtagText.Visibility = Visibility.Collapsed;
+            usernameText.Text = "Cant be empty!";
+
+            await Task.Delay(TimeSpan.FromSeconds(3));
+            usernameText.Text = "Username";
+
+        }
+
+        public async Task AnswerToUsernameChange(UsernameUpdate usernameUpdate, UsernameUpdateResult usernameUpdateResult)
+        {
+            StackPanel? changeUsernamePanel = SettingsPanel.Children
+                .OfType<StackPanel>().FirstOrDefault(x => x.Name == "ChangeUsernamePanel");
+
+            if (usernameUpdateResult == UsernameUpdateResult.Successful)
+            {
+                Client.User.Username = usernameUpdate.Username;
+                Client.User.Hashtag = usernameUpdate.Hashtag;
+
+                SettingsPanel.Children.Remove(changeUsernamePanel);
+                SettingsPanel.UpdateLayout();
+
+                return;
+            }
+
+            if (changeUsernamePanel != null)
+            {
+                StackPanel innerStackPanel = changeUsernamePanel.Children
+                    .OfType<StackPanel>().First();
+                StackPanel usernamePanel = innerStackPanel.Children
+                    .OfType<StackPanel>().First(x => x.Name == "UsernamePanel");
+                TextBlock usernameTextBlock = usernamePanel.Children
+                    .OfType<TextBlock>().First(x => x.Name == "UsernameTextBlock");
+
+                switch (usernameUpdateResult)
+                {
+                    case UsernameUpdateResult.OnCooldown:
+                        usernameTextBlock.Text = "On cooldown";
+                        break;
+                    case UsernameUpdateResult.NameTaken:
+                        usernameTextBlock.Text = "This username- hashtag combo is taken";
+                        break;
+                }    
+
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                usernameTextBlock.Text = "Username";
             }
         }
 
@@ -717,7 +892,7 @@ namespace ClientMessenger
         private void RemoveOneFromBlockedList(Relationship? friend)
         {
             ArgumentNullException.ThrowIfNull(friend);
-            BlockedList.Items.Remove(BlockedList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.HashTag)));
+            BlockedList.Items.Remove(BlockedList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.Hashtag)));
             BlockedList.UpdateLayout();
         }
 
@@ -781,7 +956,7 @@ namespace ClientMessenger
         private void RemoveOneFromFriendsList(Relationship? friend)
         {
             ArgumentNullException.ThrowIfNull(friend);
-            FriendsList.Items.Remove(FriendsList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.HashTag)));
+            FriendsList.Items.Remove(FriendsList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (friend.Username, friend.Hashtag)));
             FriendsList.UpdateLayout();
         }
 
@@ -865,7 +1040,7 @@ namespace ClientMessenger
         private void RemoveOneFromPendingList(Relationship? pending)
         {
             ArgumentNullException.ThrowIfNull(pending);
-            PendingList.Items.Remove(PendingList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (pending.Username, pending.HashTag)));
+            PendingList.Items.Remove(PendingList.Items.Cast<StackPanel>().FirstOrDefault(x => (x.Tag as (string, string)?) == (pending.Username, pending.Hashtag)));
             PendingList.UpdateLayout();
         }
 
@@ -1080,7 +1255,7 @@ namespace ClientMessenger
 
         private async Task SendChatMessageAsync(Message message)
         {
-            long otherUserId = _friends.FirstOrDefault(x => x.Username == _currentOpenChat.Username && x.HashTag == _currentOpenChat.HashTag)!.Id;
+            long otherUserId = _friends.FirstOrDefault(x => x.Username == _currentOpenChat.Username && x.Hashtag == _currentOpenChat.Hashtag)!.Id;
             var payload = new
             {
                 opCode = OpCode.SendChatMessage,
@@ -1102,21 +1277,21 @@ namespace ClientMessenger
         private async Task SendFriendRequestAsync()
         {
             string username = AddFriendUsernameTextBox.Text;
-            string hashTag = AddFriendHashTagTextBox.Text;
+            string hashtag = AddFriendHashtagTextBox.Text;
 
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(hashTag))
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(hashtag))
             {
                 await DisplayInfosAddFriendPanelAsync(Brushes.Red, "The username and/or password is invalid");
                 return;
             }
 
-            if (username == Client.User.Username && hashTag == Client.User.HashTag)
+            if (username == Client.User.Username && hashtag == Client.User.Hashtag)
             {
                 await DisplayInfosAddFriendPanelAsync(Brushes.Red, "You can´t add yourself :(");
                 return;
             }
 
-            Func<Relationship, bool> relationshipInListFunc = x => x.Username == username && x.HashTag == hashTag;
+            Func<Relationship, bool> relationshipInListFunc = x => x.Username == username && x.Hashtag == hashtag;
 
             if (Friends.Any(relationshipInListFunc))
             {
@@ -1135,8 +1310,8 @@ namespace ClientMessenger
                 foreach (object item in BlockedList.Items)
                 {
                     StackPanel stackPanel = (StackPanel)item;
-                    (string usernameInList, string hashTagInList) = (ValueTuple<string, string>)stackPanel.Tag;
-                    if (usernameInList == username && hashTagInList == hashTag)
+                    (string usernameInList, string hashtagInList) = (ValueTuple<string, string>)stackPanel.Tag;
+                    if (usernameInList == username && hashtagInList == hashtag)
                     {
                         BlockedList.Items.Remove(item);
                         break;
@@ -1147,7 +1322,7 @@ namespace ClientMessenger
             Relationship relationship = new()
             {
                 Username = username,
-                HashTag = hashTag
+                Hashtag = hashtag
             };
 
             RelationshipUpdate relationshipUpdate = new()
@@ -1172,6 +1347,19 @@ namespace ClientMessenger
             await Client.SendPayloadAsync(payload);
         }
 
+        private static async Task SendUsernameChangeRequestAsync(string username, string hashtag)
+        {
+            UsernameUpdate usernameUpdate = new(username, hashtag, Client.User.Id);
+            var payload = new
+            {
+                opCode = OpCode.SettingsUpdate,
+                settingsUpdate = SettingsUpdate.ChangeUsername,
+                usernameUpdate
+            };
+
+            await Client.SendPayloadAsync(payload);
+        }
+
         #endregion
 
         public async Task DisplayInfosAddFriendPanelAsync(SolidColorBrush color, string msg)
@@ -1189,7 +1377,7 @@ namespace ClientMessenger
         {
             StackPanel stackPanel = new()
             {
-                Tag = new TagUserData(user.Username, user.HashTag),
+                Tag = new TagUserData(user.Username, user.Hashtag),
                 Orientation = Orientation.Horizontal,
                 Margin = new Thickness(5),
             };
