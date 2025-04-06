@@ -45,7 +45,7 @@ namespace ClientMessenger
             NpgsqlExceptionInfos error = message.GetNpgsqlExceptionInfos();
             if (error.Exception == NpgsqlExceptions.None)
             {
-                Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
+                Client.User = JsonSerializer.Deserialize<User>(message)!;
                 AutoLogin.UpsertData(Client.User.Token);
                 ClientUI.SwitchWindows<CreateAcc, Verification>();
                 return;
@@ -65,7 +65,7 @@ namespace ClientMessenger
                 return;
             }
 
-            Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
+            Client.User = JsonSerializer.Deserialize<User>(message)!;
             AutoLogin.UpsertData(Client.User.Token);
 
             if (Client.User.FaEnabled)
@@ -82,12 +82,12 @@ namespace ClientMessenger
             JsonElement message = jsonDocument.RootElement;
 
             bool success = message.GetProperty("success").GetBoolean();
-            await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(success);
+            await ClientUI.GetWindow<Verification>().AnswerToVerificationRequestAsync(success);
         }
 
         public static async Task VerificationWentWrongAsync()
         {
-            await ClientUI.GetWindow<Verification>().AnswerToVerificationRequest(null);
+            await ClientUI.GetWindow<Verification>().AnswerToVerificationRequestAsync(null);
             await Client.CloseConnectionAsync(WebSocketCloseStatus.PolicyViolation, "");
             AutoLogin.DeleteData();
             Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
@@ -102,7 +102,7 @@ namespace ClientMessenger
 
             if (exception is NpgsqlExceptions.None)
             {
-                Client.User = JsonSerializer.Deserialize<User>(message, Client.JsonSerializerOptions)!;
+                Client.User = JsonSerializer.Deserialize<User>(message)!;
                 ClientUI.SwitchWindows<MainWindow, Home>();
                 return;
             }
@@ -142,7 +142,7 @@ namespace ClientMessenger
         {
             JsonElement message = jsonDocument.RootElement;
 
-            RelationshipUpdate relationshipUpdate = JsonSerializer.Deserialize<RelationshipUpdate>(message.GetProperty("relationshipUpdate"), Client.JsonSerializerOptions);
+            RelationshipUpdate relationshipUpdate = JsonSerializer.Deserialize<RelationshipUpdate>(message);
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 Home home = ClientUI.GetWindow<Home>();
@@ -169,7 +169,7 @@ namespace ClientMessenger
         {
             JsonElement message = jsonDocument.RootElement;
 
-            HashSet<Relationship>? relationships = JsonSerializer.Deserialize<HashSet<Relationship>>(message.GetProperty("relationships"), Client.JsonSerializerOptions);
+            HashSet<Relationship>? relationships = JsonSerializer.Deserialize<HashSet<Relationship>>(message.GetProperty("relationships"));
             NpgsqlExceptionInfos npgsqlExceptionInfos = message.GetNpgsqlExceptionInfos();
 
             if (npgsqlExceptionInfos.Exception != NpgsqlExceptions.None)
@@ -194,7 +194,7 @@ namespace ClientMessenger
         {
             JsonElement message = jsonDocument.RootElement;
 
-            Message chatMessage = JsonSerializer.Deserialize<Message>(message.GetProperty("chatMessage"), Client.JsonSerializerOptions);
+            Message chatMessage = JsonSerializer.Deserialize<Message>(message.GetProperty("chatMessage"));
             Application.Current.Dispatcher.Invoke(() =>
             {
                 Home home = ClientUI.GetWindow<Home>();
@@ -206,7 +206,7 @@ namespace ClientMessenger
         {
             JsonElement message = jsonDocument.RootElement;
 
-            List<ChatInfos>? chatInfos = JsonSerializer.Deserialize<List<ChatInfos>>(message.GetProperty("chats"), Client.JsonSerializerOptions);
+            List<ChatInfos>? chatInfos = JsonSerializer.Deserialize<List<ChatInfos>>(message.GetProperty("chats"));
             ChatDatabase chatDatabase = new();
             chatDatabase.AddChats(chatInfos!);
         }
@@ -238,7 +238,7 @@ namespace ClientMessenger
                     await Application.Current.Dispatcher.InvokeAsync(async () =>
                     {
                         Login login = ClientUI.GetWindow<Login>();
-                        await login.LoginWentWrong();
+                        await login.LoginWentWrongAsync();
                     });
                     break;
                 case NpgsqlExceptions.UserNotFound:

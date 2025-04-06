@@ -7,12 +7,12 @@ namespace ClientMessenger
         public MainWindow()
         {
             InitializeComponent();
-            Loaded += StartClient;
+            Loaded += StartClientAsync;
         }
 
-        private async void StartClient(object sender, RoutedEventArgs args)
+        private async void StartClientAsync(object sender, RoutedEventArgs args)
         {
-            await Client.Start();
+            await Client.StartAsync();
         }
     }
 }

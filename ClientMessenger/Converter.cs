@@ -27,7 +27,7 @@ namespace ClientMessenger
         public static BitmapImage ToBitmapImage(byte[] bytes)
         {
             if (bytes.Length == 0)
-                bytes = File.ReadAllBytes(ClientUI.DefaultProfilPic);
+                bytes = File.ReadAllBytes(ClientUI.GetDefaultProfilPic());
 
             BitmapImage bitmapImage = new();
             bitmapImage.BeginInit();
@@ -39,7 +39,7 @@ namespace ClientMessenger
 
         public static byte[] ToByteArray(BitmapImage? bitmapImage)
         {
-            if (bitmapImage == null)
+            if (bitmapImage is null)
                 return [];
 
             using (MemoryStream memoryStream = new())

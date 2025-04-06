@@ -10,14 +10,14 @@ namespace ClientMessenger
 {
     public static class Client
     {
-        public static JsonSerializerOptions JsonSerializerOptions { get; private set; } = new();
+        
         public static JsonElement Config { get; set; } = JsonExtensions.ReadJsonFile(JsonFile.Config);
         private static ClientWebSocket _server = new();
         public static User User { get; set; } = new();
 
         #region Start
 
-        public static async Task Start()
+        public static async Task StartAsync()
         {
             Logger.LogWarning("Connecting to Server...");
 
@@ -27,11 +27,6 @@ namespace ClientMessenger
                 Logger.LogError(args);
                 args.SetObserved();
             };
-
-            JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-            JsonSerializerOptions.Converters.Add(new JsonConverters.UserConverter());
-            JsonSerializerOptions.Converters.Add(new JsonConverters.RelationshipConverter());
-            JsonSerializerOptions.WriteIndented = true;
 
             await ConnectToServerAsync();
 
@@ -105,7 +100,7 @@ namespace ClientMessenger
                     break;
                 }
             }
-            await Restart();
+            await RestartAsync();
         }
 
         private static async Task HandleReceivedMessageAsync(JsonDocument jsonDocument)
@@ -150,7 +145,7 @@ namespace ClientMessenger
                     HandleServerResponses.ReceiveChats(jsonDocument);
                     break;
                 case OpCode.SettingsUpdate:
-                    await HandleSettingsUpdate.HandleReceivedMessage(jsonDocument);
+                    await HandleSettingsUpdate.HandleReceivedMessageAsync(jsonDocument);
                     break;
             }
         }
@@ -168,7 +163,7 @@ namespace ClientMessenger
                 return;
             }
 
-            string jsonPayload = JsonSerializer.Serialize(payload, JsonSerializerOptions);
+            string jsonPayload = JsonSerializer.Serialize(payload);
             byte[] buffer = Encoding.UTF8.GetBytes(jsonPayload);
             byte[] compressedData = Security.CompressData(buffer);
             byte[] encryptedData = Security.EncryptRSA(publicKey, compressedData);
@@ -188,7 +183,7 @@ namespace ClientMessenger
                 return;
             }
 
-            string? jsonPayload = JsonSerializer.Serialize(payload, JsonSerializerOptions);
+            string? jsonPayload = JsonSerializer.Serialize(payload);
             byte[] buffer = Encoding.UTF8.GetBytes(jsonPayload);
             byte[] compressedData = Security.CompressData(buffer);
             byte[] encryptedData = await Security.EncryptAesAsync(compressedData);
@@ -205,7 +200,7 @@ namespace ClientMessenger
                 await _server.CloseAsync(closeStatus, reason, CancellationToken.None);
         }
 
-        private static async Task Restart()
+        private static async Task RestartAsync()
         {
             Logger.LogError("Server closed the connection. Restarting the application...");
             await CloseConnectionAsync(WebSocketCloseStatus.NormalClosure, "");
@@ -234,7 +229,7 @@ namespace ClientMessenger
 
             string? serverUri = Config.GetProperty("ServerUri").GetString();
 
-            if (serverUri == null)
+            if (serverUri is null)
             {
                 Application.Current.Shutdown();
                 throw new NullReferenceException($"{nameof(serverUri)} is null");

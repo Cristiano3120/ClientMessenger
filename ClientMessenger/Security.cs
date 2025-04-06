@@ -19,7 +19,7 @@ namespace ClientMessenger
 
         public static async Task<byte[]> EncryptAesAsync(byte[] dataToEncrypt)
         {
-            if (dataToEncrypt == null || dataToEncrypt.Length == 0)
+            if (dataToEncrypt is null || dataToEncrypt.Length == 0)
                 return [];
 
             using (MemoryStream ms = new())

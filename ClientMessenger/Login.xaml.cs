@@ -24,28 +24,54 @@ namespace ClientMessenger
                 => ClientUI.SwitchWindows<Login, CreateAcc>());
         }
 
-        private async Task<bool> ValidateUserInput(string email, string password)
+        private async Task<bool> ValidateUserInputAsync(string email, string password)
         {
             if (!EmailRegex().IsMatch(email))
             {
-                await ShowError(EmailError);
+                await ShowErrorAsync(EmailError);
                 return false;
             }
 
             if (!PasswordRegex().IsMatch(password))
             {
-                await ShowError(PasswordError);
+                await ShowErrorAsync(PasswordError);
                 return false;
             }
 
             return true;
         }
 
-        private async Task ActivateCooldownError(TimeSpan cooldown)
+        private async Task ActivateCooldownErrorAsync(TimeSpan cooldown)
         {
             CooldownError.Visibility = Visibility.Visible;
             await Task.Delay(cooldown);
             CooldownError.Visibility = Visibility.Hidden;
+        }
+
+        private async Task SendLoginRequestAsync()
+        {
+            string email = EmailTextBox.Text;
+            string password = PasswordTextBox.Text;
+
+            if (!await ValidateUserInputAsync(email, password))
+                return;
+
+            if (!AntiSpam.CheckIfCanSendData(1.5f, out TimeSpan timeToWait))
+            {
+                await ActivateCooldownErrorAsync(timeToWait);
+                return;
+            }
+
+            bool stayLoggedIn = (bool)AutoLoginCheckBox.IsChecked!;
+            Client.Config = Client.Config.SetBoolean(JsonFile.Config, "AutoLogin", stayLoggedIn);
+
+            var payload = new
+            {
+                opCode = OpCode.RequestToLogin,
+                loginRequest = new LoginRequest(email, password, stayLoggedIn)
+            };
+
+            await Client.SendPayloadAsync(payload);
         }
 
         #region Init
@@ -84,49 +110,23 @@ namespace ClientMessenger
         {
             LoginBtn.Click += async (sender, args) =>
             {
-                await SendLoginRequest();
+                await SendLoginRequestAsync();
             };
         }
 
         #endregion
 
-        private async Task SendLoginRequest()
-        {
-            string email = EmailTextBox.Text;
-            string password = PasswordTextBox.Text;
-
-            if (!await ValidateUserInput(email, password))
-                return;
-
-            if (!AntiSpam.CheckIfCanSendData(1.5f, out TimeSpan timeToWait))
-            {
-                await ActivateCooldownError(timeToWait);
-                return;
-            }
-
-            bool stayLoggedIn = (bool)AutoLoginCheckBox.IsChecked!;
-            Client.Config = Client.Config.SetBoolean(JsonFile.Config, "AutoLogin", stayLoggedIn);
-
-            var payload = new
-            {
-                opCode = OpCode.RequestToLogin,
-                loginRequest = new LoginRequest(email, password, stayLoggedIn)
-            };
-
-            await Client.SendPayloadAsync(payload);
-        }
-
         #region HandleError
 
-        public async Task LoginWentWrong()
+        public async Task LoginWentWrongAsync()
         {
             string oldMsg = EmailError.Text;
             EmailError.Text = "Email or password is wrong!";
-            await ShowError(EmailError);
+            await ShowErrorAsync(EmailError);
             EmailError.Text = oldMsg;
         }
 
-        private static async Task ShowError(TextBlock errorUI)
+        private static async Task ShowErrorAsync(TextBlock errorUI)
         {
             errorUI.Visibility = Visibility.Visible;
             await Task.Delay(1500);

@@ -33,9 +33,9 @@ namespace ClientMessenger
             InitializeComponent();
             ClientUI.RegisterWindowButtons(MinimizeBtn, MaximizeBtn, CloseBtn);
             InitHashtagTextBox(AddFriendHashtagTextBox);
-            InitAddFriendUsernameTextBox();         
+            InitAddFriendUsernameTextBox();
             InitPersonalInfoStackPanel();
-            _ = CleanUpChats();
+            _ = CleanUpChatsAsync();
             InitAddFriendBtn();
             InitCollections();
             InitChatPanel();
@@ -281,9 +281,9 @@ namespace ClientMessenger
             {
                 chat.LastOpend = DateTime.Now;
 
-                DeleteMessagesFromChat();
-                ChatPanel.Children.Add(chat.ChatPanel);
-                chat.ChatPanel.ScrollToEnd();
+                DeleteAllMessagesFromChat();
+                ChatPanel.Children.Add(chat.ScrollViewer);
+                chat.ScrollViewer.ScrollToEnd();
                 ChatPanel.UpdateLayout();
 
                 SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
@@ -300,6 +300,31 @@ namespace ClientMessenger
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             };
+            scrollViewer.ScrollChanged += (sender, args) =>
+            {
+                if (_chats.TryGetValue(_currentOpenChat, out Chat? chat))
+                {
+                    double lastOffset = chat.LastScrollViewerVerticalOffset;
+                    double currentOffset = args.VerticalOffset;
+
+
+                    if (currentOffset < lastOffset || currentOffset == 0)
+                    {
+                        Console.WriteLine("⬆ User scrollt nach oben");
+                        AddAMessageToChat();
+                    }
+                    else if (currentOffset > lastOffset)
+                    {
+                        Console.WriteLine("⬇ User scrollt nach unten");
+                        DeleteAMessageFromChat(relationship.Id);
+                    }
+
+                    if (currentOffset != lastOffset)
+                    {
+                        chat.LastScrollViewerVerticalOffset = currentOffset;
+                    }
+                }
+            };
 
             StackPanel chatPanel = new()
             {
@@ -311,42 +336,50 @@ namespace ClientMessenger
             scrollViewer.Content = chatPanel;
             Grid.SetRow(scrollViewer, 0);
 
-            DeleteMessagesFromChat();
+            DeleteAllMessagesFromChat();
+
+            Chat chat = new Chat(scrollViewer, DateTime.Now);
+            _chats.TryAdd(new TagUserData(relationship.Username, relationship.Hashtag), chat);
 
             ChatDatabase chatDatabase = new();
             Message[]? messages = chatDatabase.GetMessages(relationship.Id);
-            if (messages != null)
+            if (messages is not null && messages.Length > 0)
             {
                 foreach (Message message in messages)
                 {
                     AddMessage(scrollViewer, relationship, message);
                 }
+                chat.LastMessage = messages.Last();
             }
-
+            
             ChatPanel.Children.Add(scrollViewer);
             scrollViewer.ScrollToEnd();
             ChatPanel.UpdateLayout();
 
             SlideInAnimation(ChatPanelTranslateTransform, ChatPanel);
-            _chats.TryAdd(new TagUserData(relationship.Username, relationship.Hashtag), new Chat(scrollViewer, DateTime.Now));
         }
 
-        public void AddMessage(Message message)
+        public void AddMessage(Message message, bool addAsNew = true)
         {
-            ChatDatabase chatDatabase = new();
-            chatDatabase.AddMessage(message.SenderId, message);
-            PlaySound("Sounds/messageSound.wav");
-
-            Relationship relationship;
+            if (addAsNew)
+            {
+                ChatDatabase chatDatabase = new();
+                chatDatabase.AddMessage(message.SenderId, message);
+                PlaySound("Sounds/messageSound.wav");
+            }
+            
             lock (Lock)
             {
-                relationship = _friends.First(x => x.Id == message.SenderId);
+                Relationship relationship = _friends.First(x => x.Username == _currentOpenChat.Username
+                    && x.Hashtag == _currentOpenChat.Hashtag);
                 TagUserData tagUserData = new(relationship.Username, relationship.Hashtag);
 
-                if (ChatPanel.Children.Count >= 2 && ChatPanel.Children[1] is ScrollViewer scrollViewer
-                    && _currentOpenChat == relationship)
+                if (ChatPanel.Children.Count >= 2 && ChatPanel.Children[1] is ScrollViewer scrollViewer && _currentOpenChat == relationship)
                 {
-                    AddMessage(scrollViewer, relationship, message);
+                    Relationship sender = message.SenderId == Client.User.Id
+                        ? (Relationship)Client.User
+                        : relationship;
+                    AddMessage(scrollViewer, relationship, message, addAsNew);
                     return;
                 }
 
@@ -355,10 +388,21 @@ namespace ClientMessenger
             }
         }
 
-        private static void AddMessage(ScrollViewer scrollViewer, Relationship relationship, Message message)
+        private void AddMessage(ScrollViewer scrollViewer, Relationship relationship, Message message, bool addAsNew = true)
         {
-            ChatDatabase chatDatabase = new();
-            chatDatabase.AddMessage(relationship.Id, message);
+            Chat chat = _chats[new TagUserData(relationship.Username, relationship.Hashtag)];
+            chat.MessageCount++;
+
+            
+            if (chat.LastMessage == message)
+            {
+                return;
+            }
+
+            if (!addAsNew)
+            {
+                chat.LastMessage = message;
+            }
 
             StackPanel chatPanel = (StackPanel)scrollViewer.Content;
             StackPanel outerStackPanel = new()
@@ -425,10 +469,19 @@ namespace ClientMessenger
 
             innerStackPanel.Children.Add(nameAndTimePanel);
             innerStackPanel.Children.Add(messageTextBlock);
+
             outerStackPanel.Children.Add(ellipse);
             outerStackPanel.Children.Add(innerStackPanel);
 
-            chatPanel.Children.Add(outerStackPanel);
+            if (addAsNew)
+            {
+                chatPanel.Children.Add(outerStackPanel);
+            }
+            else
+            {
+                chatPanel.Children.Insert(0, outerStackPanel);
+            }
+
             scrollViewer.ScrollToEnd();
             chatPanel.UpdateLayout();
         }
@@ -470,7 +523,7 @@ namespace ClientMessenger
             mediaPlayer.Play();
         }
 
-        private void DeleteMessagesFromChat()
+        private void DeleteAllMessagesFromChat()
         {
             foreach (UIElement child in ChatPanel.Children.Cast<UIElement>().Where(child => Grid.GetRow(child) == 0).ToArray())
             {
@@ -478,14 +531,70 @@ namespace ClientMessenger
             }
         }
 
-        private async Task CleanUpChats()
+        private void DeleteAMessageFromChat(long id)
+        {
+            List<StackPanel>? messages = GetMessagesFromChat(out StackPanel? chatPanel);
+
+            if (messages is null || messages?.Count < 8 || chatPanel is null)
+                return;
+
+            if (!_chats.TryGetValue(_currentOpenChat, out Chat? chat))
+                return;
+
+            Console.WriteLine("DELETE");
+            StackPanel? lastMessage = messages?.FirstOrDefault();
+
+            if (lastMessage is not null)
+            {
+                chatPanel.Children.Remove(lastMessage);
+                chatPanel.UpdateLayout();
+
+                chat.MessageCount--;
+
+                ChatDatabase chatDatabase = new();
+                chat.LastMessage = chatDatabase.GetLastLoadedMessage(chat.LastMessage, id);
+            }
+        }
+
+        private void AddAMessageToChat()
+        {
+            Relationship relationship = _friends.First(x => x.Username == _currentOpenChat.Username
+                && x.Hashtag == _currentOpenChat.Hashtag);
+
+            if (!_chats.TryGetValue(_currentOpenChat, out Chat? chat))
+                return;
+
+            ChatDatabase chatDatabase = new();
+            Message? messageToLoad = chatDatabase.GetNextMessage(chat.LastMessage, relationship.Id);
+
+            if (!messageToLoad.HasValue)
+                return;
+
+            Console.WriteLine("ADD MESSAGE");
+            AddMessage(messageToLoad.Value, false);
+        }
+
+        private List<StackPanel>? GetMessagesFromChat(out StackPanel? chatPanel)
+        {
+            chatPanel = null;
+            if (!_chats.TryGetValue(_currentOpenChat, out Chat? chat))
+            {
+                return null;
+            }
+            
+            ScrollViewer scrollViewer = chat.ScrollViewer;
+            chatPanel = (StackPanel)scrollViewer.Content;
+            return [.. chatPanel.Children.Cast<StackPanel>()];
+        }
+
+        private async Task CleanUpChatsAsync()
         {
             while (true)
             {
                 await Task.Delay(TimeSpan.FromMinutes(5));
                 foreach (KeyValuePair<TagUserData, Chat> chat in _chats)
                 {
-                    if (ChatPanel.Children[0] != chat.Value.ChatPanel && DateTime.Now - chat.Value.LastOpend > TimeSpan.FromMinutes(5))
+                    if (ChatPanel.Children[0] != chat.Value.ScrollViewer && DateTime.Now - chat.Value.LastOpend > TimeSpan.FromMinutes(5))
                     {
                         Logger.LogInformation($"Chat deleted from {nameof(_chats)}");
                         _chats.Remove(chat.Key, out _);
@@ -550,7 +659,7 @@ namespace ClientMessenger
             StackPanel? match = stackPanels.FirstOrDefault(x => x.Tag is (string username, string hashtag)
                 && username == relationship.Username && hashtag == relationship.Hashtag);
 
-            if (match == null)
+            if (match is null)
             {
                 StackPanel stackPanel = BasicUserUI(relationship);
                 CreateUIForDmListUI(stackPanel);
@@ -615,7 +724,7 @@ namespace ClientMessenger
             personalInfoStackPanel.Children.Add(CreateProfilePictureUI());
             personalInfoStackPanel.Children.Add(CreateUsernameTextBlock());
             SettingsPanel.Children.Add(personalInfoStackPanel);
-            
+
             SettingsPanel.UpdateLayout();
             SettingsPanel.Visibility = Visibility.Visible;
         }
@@ -685,7 +794,7 @@ namespace ClientMessenger
             SettingsPanel.Visibility = Visibility.Collapsed;
             SettingsPanel.Children.Clear();
             SettingsPanel.UpdateLayout();
-        }   
+        }
 
         private async Task ChangeProfilePictureAsync()
         {
@@ -807,7 +916,7 @@ namespace ClientMessenger
                 }
                 else
                 {
-                    _ = DataInvalid(usernameText, hashtagText);
+                    _ = DataInvalidAsync(usernameText, hashtagText);
                 }
             };
 
@@ -815,7 +924,7 @@ namespace ClientMessenger
             SettingsPanel.Children.Add(outerStackPanel);
         }
 
-        public static async Task DataInvalid(TextBlock usernameText, TextBlock hashtagText)
+        public static async Task DataInvalidAsync(TextBlock usernameText, TextBlock hashtagText)
         {
             hashtagText.Visibility = Visibility.Collapsed;
             usernameText.Text = "Cant be empty!";
@@ -825,7 +934,7 @@ namespace ClientMessenger
 
         }
 
-        public async Task AnswerToUsernameChange(UsernameUpdate usernameUpdate, UsernameUpdateResult usernameUpdateResult)
+        public async Task AnswerToUsernameChangeAsync(UsernameUpdate usernameUpdate, UsernameUpdateResult usernameUpdateResult)
         {
             StackPanel? changeUsernamePanel = SettingsPanel.Children
                 .OfType<StackPanel>().FirstOrDefault(x => x.Name == "ChangeUsernamePanel");
@@ -841,7 +950,7 @@ namespace ClientMessenger
                 return;
             }
 
-            if (changeUsernamePanel != null)
+            if (changeUsernamePanel is not null)
             {
                 StackPanel innerStackPanel = changeUsernamePanel.Children
                     .OfType<StackPanel>().First();
@@ -858,7 +967,7 @@ namespace ClientMessenger
                     case UsernameUpdateResult.NameTaken:
                         usernameTextBlock.Text = "This username- hashtag combo is taken";
                         break;
-                }    
+                }
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
                 usernameTextBlock.Text = "Username";
@@ -1255,11 +1364,11 @@ namespace ClientMessenger
 
         private async Task SendChatMessageAsync(Message message)
         {
-            long otherUserId = _friends.FirstOrDefault(x => x.Username == _currentOpenChat.Username && x.Hashtag == _currentOpenChat.Hashtag)!.Id;
+            Relationship relationship = _friends.First(x => x.Username == _currentOpenChat.Username && x.Hashtag == _currentOpenChat.Hashtag);
             var payload = new
             {
                 opCode = OpCode.SendChatMessage,
-                otherUserId,
+                otherUserId = relationship.Id,
                 message
             };
 
@@ -1267,11 +1376,11 @@ namespace ClientMessenger
 
             if (ChatPanel.Children.Count >= 2 && ChatPanel.Children[1] is ScrollViewer scrollViewer)
             {
-                AddMessage(scrollViewer, (Relationship)Client.User, message);
+                AddMessage(scrollViewer, relationship, message);
             }
 
             ChatDatabase chatDatabase = new();
-            chatDatabase.AddMessage(otherUserId, message);
+            chatDatabase.AddMessage(relationship.Id, message);
         }
 
         private async Task SendFriendRequestAsync()

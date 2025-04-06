@@ -24,7 +24,7 @@ namespace ClientMessenger
         static Logger()
         {
             AllocConsole();
-            _pathToLogFile = MaintainLoggingSystem(maxAmmountLoggingFiles: 5);
+            _pathToLogFile = MaintainLoggingSystem(maxAmmountLoggingFiles: 10);
         }
 
         private static string MaintainLoggingSystem(int maxAmmountLoggingFiles)
@@ -117,14 +117,14 @@ namespace ClientMessenger
             foreach (StackFrame item in stackTrace.GetFrames())
             {
                 //Looking for the frame contains the infos about the error
-                if (item.GetMethod()?.Name != null && item.GetFileName() != null)
+                if (item.GetMethod()?.Name is not null && item.GetFileName() is not null)
                 {
                     stackFrame = item;
                     break;
                 }
             }
 
-            if (stackFrame != null)
+            if (stackFrame is not null)
             {
                 string methodName = stackFrame?.GetMethod()?.Name + "()";
                 string filename = stackFrame?.GetFileName() ?? "missing filename";
@@ -138,9 +138,9 @@ namespace ClientMessenger
                 Log(ConsoleColor.Red, false, errorInfos);
             }
 
-            Log(ConsoleColor.Red, ex.InnerException == null, $"ERROR: {ex.Message}");
+            Log(ConsoleColor.Red, ex.InnerException is null, $"ERROR: {ex.Message}");
 
-            if (ex.InnerException != null)
+            if (ex.InnerException is not null)
                 LogError(ex.InnerException);
         }
 

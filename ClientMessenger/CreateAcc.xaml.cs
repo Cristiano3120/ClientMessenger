@@ -25,7 +25,7 @@ namespace ClientMessenger
         [GeneratedRegex(@"^(?!Password$).{8,}$")]
         private static partial Regex PasswordRegex();
 
-        private static string _profilPicFile = ClientUI.DefaultProfilPic;
+        private static string _profilPicFile = ClientUI.GetDefaultProfilPic();
         private static readonly Brush _grayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#343234"));
 
         public CreateAcc()
@@ -275,9 +275,9 @@ namespace ClientMessenger
             string month = int.Parse((string)monthItem.Content).ToString("D2");
             string year = (string)yearItem.Content;
 
-            if (_profilPicFile is "" or null)
+            if (string.IsNullOrEmpty(_profilPicFile))
             {
-                _profilPicFile = ClientUI.DefaultProfilPic;
+                _profilPicFile = ClientUI.GetDefaultProfilPic();
             }
 
             User user = new()

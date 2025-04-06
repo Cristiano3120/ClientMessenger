@@ -15,15 +15,15 @@ namespace ClientMessenger
 
             SignUpBtn.Click += async (sender, args) =>
             {
-                await SendVerificationCode();
+                await SendVerificationCodeAsync();
             };
         }
 
-        private async Task SendVerificationCode()
+        private async Task SendVerificationCodeAsync()
         {
             if (string.IsNullOrEmpty(VerificationTextBox.Text))
             {
-                await ChangeMsg("Enter the verification code");
+                await ChangeMsgAsync("Enter the verification code");
                 return;
             }
 
@@ -35,11 +35,11 @@ namespace ClientMessenger
             await Client.SendPayloadAsync(payload);
         }
 
-        public async Task AnswerToVerificationRequest(bool? success)
+        public async Task AnswerToVerificationRequestAsync(bool? success)
         {
             if (!success.HasValue)
             {
-                await ChangeMsg("You enterd the code wrong to often!");
+                await ChangeMsgAsync("You enterd the code wrong to often!");
                 await Client.CloseConnectionAsync(System.Net.WebSockets.WebSocketCloseStatus.PolicyViolation, "");
                 return;
             }
@@ -47,10 +47,10 @@ namespace ClientMessenger
             if (success.Value)
                 ClientUI.SwitchWindows<Verification, Home>();
             else
-                await ChangeMsg("The enterd code is incorrect");
+                await ChangeMsgAsync("The enterd code is incorrect");
         }
 
-        private async Task ChangeMsg(string msg)
+        private async Task ChangeMsgAsync(string msg)
         {
             await Application.Current.Dispatcher.InvokeAsync(async () =>
             {
