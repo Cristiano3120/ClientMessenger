@@ -73,7 +73,7 @@ namespace ClientMessenger
 
                     if (receivedDataInfo.MessageType == WebSocketMessageType.Close)
                     {
-                        Console.WriteLine("Server requested to close the connection.");
+                        Logger.LogWarning("Server requested to close the connection.");
                         await _server.CloseAsync(WebSocketCloseStatus.NormalClosure, "Client closing after server request", CancellationToken.None);
                         break;
                     }
