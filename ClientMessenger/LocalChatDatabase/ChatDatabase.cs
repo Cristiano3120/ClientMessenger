@@ -113,12 +113,16 @@ namespace ClientMessenger.LocalChatDatabase
                 if (chatInfos?.Messages is { Count: > 0 } messages)
                 {
                     IEnumerable<Message> filterdMessages = messages.SkipWhile(m => m != lastMessage);
+
+                    if (filterdMessages.Count() == 0)
+                        return lastMessage;
+
                     return filterdMessages.Count() > 1 
                         ? filterdMessages.ElementAt(1) 
                         : filterdMessages.First();
                 }
 
-                throw new Exception("No message to load");
+                return lastMessage;
             }
         }
     }

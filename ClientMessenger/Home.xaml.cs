@@ -300,6 +300,18 @@ namespace ClientMessenger
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             };
+            scrollViewer.PreviewMouseWheel += (sender, args) =>
+            {
+                const byte scrollAmount = 15;
+                if (args.Delta > 0)
+                {
+                    scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - scrollAmount);
+                }
+                else
+                {
+                    scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + scrollAmount);
+                }
+            };
             scrollViewer.ScrollChanged += (sender, args) =>
             {
                 if (_chats.TryGetValue(_currentOpenChat, out Chat? chat))
@@ -307,15 +319,12 @@ namespace ClientMessenger
                     double lastOffset = chat.LastScrollViewerVerticalOffset;
                     double currentOffset = args.VerticalOffset;
 
-
                     if (currentOffset < lastOffset || currentOffset == 0)
                     {
-                        Console.WriteLine("⬆ User scrollt nach oben");
                         AddAMessageToChat();
                     }
                     else if (currentOffset > lastOffset)
                     {
-                        Console.WriteLine("⬇ User scrollt nach unten");
                         DeleteAMessageFromChat(relationship.Id);
                     }
 
@@ -338,7 +347,7 @@ namespace ClientMessenger
 
             DeleteAllMessagesFromChat();
 
-            Chat chat = new Chat(scrollViewer, DateTime.Now);
+            Chat chat = new(scrollViewer, DateTime.Now);
             _chats.TryAdd(new TagUserData(relationship.Username, relationship.Hashtag), chat);
 
             ChatDatabase chatDatabase = new();
@@ -349,7 +358,7 @@ namespace ClientMessenger
                 {
                     AddMessage(scrollViewer, relationship, message);
                 }
-                chat.LastMessage = messages.Last();
+                chat.LastMessage = messages.First();
             }
             
             ChatPanel.Children.Add(scrollViewer);
@@ -399,12 +408,16 @@ namespace ClientMessenger
                 return;
             }
 
-            if (!addAsNew)
+            if (addAsNew && chat.LastMessage == default)
+            {
+                chat.LastMessage = message;
+            }
+            else if (!addAsNew)
             {
                 chat.LastMessage = message;
             }
 
-            StackPanel chatPanel = (StackPanel)scrollViewer.Content;
+                StackPanel chatPanel = (StackPanel)scrollViewer.Content;
             StackPanel outerStackPanel = new()
             {
                 Orientation = Orientation.Horizontal,
@@ -541,7 +554,6 @@ namespace ClientMessenger
             if (!_chats.TryGetValue(_currentOpenChat, out Chat? chat))
                 return;
 
-            Console.WriteLine("DELETE");
             StackPanel? lastMessage = messages?.FirstOrDefault();
 
             if (lastMessage is not null)
@@ -570,7 +582,6 @@ namespace ClientMessenger
             if (!messageToLoad.HasValue)
                 return;
 
-            Console.WriteLine("ADD MESSAGE");
             AddMessage(messageToLoad.Value, false);
         }
 
@@ -656,9 +667,9 @@ namespace ClientMessenger
         private void AddOneToDmList(Relationship relationship)
         {
             List<StackPanel> stackPanels = [.. Dms.Items.Cast<StackPanel>()];
-            StackPanel? match = stackPanels.FirstOrDefault(x => x.Tag is (string username, string hashtag)
-                && username == relationship.Username && hashtag == relationship.Hashtag);
-
+            StackPanel? match = stackPanels.FirstOrDefault(x => x.Tag is TagUserData tagUserData
+                && tagUserData == relationship);
+            
             if (match is null)
             {
                 StackPanel stackPanel = BasicUserUI(relationship);
@@ -666,6 +677,8 @@ namespace ClientMessenger
                 Dms.Items.Add(stackPanel);
                 Dms.UpdateLayout();
             }
+
+            CreateOrOpenChat(relationship);
         }
 
         private void RemoveOneFromDmList(StackPanel stackPanel)
@@ -1345,7 +1358,7 @@ namespace ClientMessenger
         private void CreateChat_Click(object sender, RoutedEventArgs args)
         {
             Button button = (Button)sender;
-            Relationship relationship = _friends.FirstOrDefault(x => x.Id == (long)button.Tag)!;
+            Relationship relationship = _friends.First(x => x.Id == (long)button.Tag);
             AddOneToDmList(relationship);
             CreateOrOpenChat(relationship);
         }
