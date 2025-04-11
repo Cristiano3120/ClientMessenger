@@ -300,7 +300,7 @@ namespace ClientMessenger
                 VerticalScrollBarVisibility = ScrollBarVisibility.Hidden,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             };
-            scrollViewer.PreviewMouseWheel += (sender, args) =>
+            scrollViewer.PreviewMouseWheel += (_, args) =>
             {
                 const byte scrollAmount = 15;
                 if (args.Delta > 0)
@@ -417,7 +417,7 @@ namespace ClientMessenger
                 chat.LastMessage = message;
             }
 
-                StackPanel chatPanel = (StackPanel)scrollViewer.Content;
+            StackPanel chatPanel = (StackPanel)scrollViewer.Content;
             StackPanel outerStackPanel = new()
             {
                 Orientation = Orientation.Horizontal,

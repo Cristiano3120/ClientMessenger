@@ -23,52 +23,35 @@ namespace ClientMessenger
             yield return (nameof(RelationshipState).ToCamelCase(), RelationshipState.ToString());
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
         #endregion
 
-        #region == Operator override
+        #region Operator override
         public static bool operator ==(Relationship? left, TagUserData right)
-        {
-            if (left is null)
-                return false;
-
-            return left.Username == right.Username &&
-                left.Hashtag == right.Hashtag;
-        }
-
+            => left?.Equals(right) ?? false;
+        
         public static bool operator !=(Relationship? left, TagUserData right)
-        {
-            return !(left == right);
-        }
-
+            => !(left == right);
+        
         public static bool operator ==(TagUserData left, Relationship? right)
-        {
-            if (right is null)
-                return false;
-
-            return left.Username == right.Username &&
-                left.Hashtag == right.Hashtag;
-        }
-
+            => right?.Equals(left) ?? false;
+        
         public static bool operator !=(TagUserData left, Relationship? right)
-        {
-            return !(left == right);
-        }
-
+            => !(left == right);
+        
+        public bool Equals(TagUserData tagUserData)
+            => Username == tagUserData.Username 
+                && Hashtag == tagUserData.Hashtag;
+        
         public override bool Equals(object? obj)
-        {
-            return base.Equals(obj);
-        }
-
+            => obj is TagUserData tagUserData 
+            ? Equals(tagUserData) 
+            : base.Equals(obj);
+        
         public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
+            => base.GetHashCode();
+        
         #endregion
     }
 }

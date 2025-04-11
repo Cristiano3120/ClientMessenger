@@ -36,7 +36,7 @@ namespace ClientMessenger
             Application.Current.Dispatcher.InvokeAsync(async () =>
             {
                 //Delay so the switch looks smoother
-                const int windowSwitchDelay = 300;
+                const ushort windowSwitchDelay = 300;
 
                 new TWindowToOpen().Show();
                 await Task.Delay(windowSwitchDelay);
@@ -68,7 +68,7 @@ namespace ClientMessenger
         /// <param name="maxChars">The maximum allowed character count for the <see cref="TextBox"/> content after pasting.</param>
         public static void RestrictClipboardPasting(TextBox textBox, byte maxChars)
         {
-            DataObject.AddPastingHandler(textBox, (sender, args) =>
+            DataObject.AddPastingHandler(textBox, (_, args) =>
             {
                 string clipboardText = Clipboard.GetText();
                 int availableChars = maxChars - textBox.Text.Length + textBox.SelectedText.Length;

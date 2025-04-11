@@ -54,7 +54,6 @@ namespace ClientMessenger.LocalChatDatabase
                 else
                 {
                     ChatInfos chatInfosValue = chatInfos.Value;
-                    chatInfosValue.Messages ??= new List<Message>();
                     chatInfosValue.Messages.Add(message);
 
                     chats.DeleteMany(x => x.Members.Contains(id));
@@ -112,14 +111,14 @@ namespace ClientMessenger.LocalChatDatabase
 
                 if (chatInfos?.Messages is { Count: > 0 } messages)
                 {
-                    IEnumerable<Message> filterdMessages = messages.SkipWhile(m => m != lastMessage);
+                    IEnumerable<Message> filteredMessages = messages.SkipWhile(m => m != lastMessage);
 
-                    if (filterdMessages.Count() == 0)
+                    if (!filteredMessages.Any())
                         return lastMessage;
 
-                    return filterdMessages.Count() > 1 
-                        ? filterdMessages.ElementAt(1) 
-                        : filterdMessages.First();
+                    return filteredMessages.Count() > 1 
+                        ? filteredMessages.ElementAt(1) 
+                        : filteredMessages.First();
                 }
 
                 return lastMessage;

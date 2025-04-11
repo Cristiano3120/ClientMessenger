@@ -21,7 +21,7 @@ namespace ClientMessenger
         {
             Logger.LogWarning("Connecting to Server...");
 
-            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            TaskScheduler.UnobservedTaskException += (_, args) =>
             {
                 Logger.LogWarning("WARNING: CATCHED AN UNHANDELD EXCEPTION!");
                 Logger.LogError(args);
@@ -100,6 +100,7 @@ namespace ClientMessenger
                     break;
                 }
             }
+
             await RestartAsync();
         }
 

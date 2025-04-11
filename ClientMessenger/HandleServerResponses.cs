@@ -46,8 +46,10 @@ namespace ClientMessenger
             if (error.Exception == NpgsqlExceptions.None)
             {
                 Client.User = JsonSerializer.Deserialize<User>(message)!;
+
                 AutoLogin.UpsertData(Client.User.Token);
                 ClientUI.SwitchWindows<CreateAcc, Verification>();
+
                 return;
             }
 
@@ -89,7 +91,8 @@ namespace ClientMessenger
         {
             await ClientUI.GetWindow<Verification>().AnswerToVerificationRequestAsync(null);
             await Client.CloseConnectionAsync(WebSocketCloseStatus.PolicyViolation, "");
-            AutoLogin.DeleteData();
+
+            AutoLogin.DeleteToken();
             Application.Current.Dispatcher.Invoke(() => Application.Current.Shutdown());
         }
 
@@ -249,7 +252,7 @@ namespace ClientMessenger
                     });
                     break;
                 case NpgsqlExceptions.TokenInvalid:
-                    AutoLogin.DeleteData();
+                    AutoLogin.DeleteToken();
                     Application.Current.Dispatcher.Invoke(() => ClientUI.SwitchWindows<MainWindow, Login>());
                     break;
                 case NpgsqlExceptions.NoDataEntrys:
