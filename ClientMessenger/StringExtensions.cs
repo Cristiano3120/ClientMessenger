@@ -8,10 +8,9 @@
         /// <param name="str"></param>
         /// <returns></returns>
         public static string ToCamelCase(this string str)
-        {
-            return string.IsNullOrEmpty(str) 
+            => string.IsNullOrEmpty(str) 
                 ? str 
                 : char.ToLowerInvariant(str[0]) + str[1..];
-        }
+        
     }
 }

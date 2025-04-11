@@ -7,10 +7,10 @@ namespace ClientMessenger
     public partial class Login : Window
     {
         [GeneratedRegex(@"^(?("")("".+?""@)|(([0-9a-zA-Z](([\w-]*[0-9a-zA-Z])?)+)\@))([a-zA-Z0-9][\w-]*\.)+[a-zA-Z]{2,}$")]
-        private static partial Regex EmailRegex();
+        private partial Regex EmailRegex();
 
         [GeneratedRegex(@"^(?!Password$).{8,}$")]
-        private static partial Regex PasswordRegex();
+        private partial Regex PasswordRegex();
 
         public Login()
         {
@@ -20,8 +20,7 @@ namespace ClientMessenger
             InitEmailTextBox();
             InitLoginBtn();
 
-            CreateAccLink.Click += ((sender, args) 
-                => ClientUI.SwitchWindows<Login, CreateAcc>());
+            CreateAccLink.Click += ((_, _) => ClientUI.SwitchWindows<Login, CreateAcc>());
         }
 
         private async Task<bool> ValidateUserInputAsync(string email, string password)
@@ -48,7 +47,7 @@ namespace ClientMessenger
             CooldownError.Visibility = Visibility.Hidden;
         }
 
-        private async Task SendLoginRequestAsync()
+        private async void SendLoginRequestAsync(object sender, RoutedEventArgs args)
         {
             string email = EmailTextBox.Text;
             string password = PasswordTextBox.Text;
@@ -78,13 +77,13 @@ namespace ClientMessenger
 
         private void InitEmailTextBox()
         {
-            EmailTextBox.GotFocus += (sender, e) =>
+            EmailTextBox.GotFocus += (_, _) =>
             {
                 if (EmailTextBox.Text == "Email")
                     EmailTextBox.Text = "";
             };
 
-            EmailTextBox.LostFocus += (sender, e) =>
+            EmailTextBox.LostFocus += (_, _) =>
             {
                 if (EmailTextBox.Text == "")
                     EmailTextBox.Text = "Email";
@@ -93,13 +92,13 @@ namespace ClientMessenger
 
         private void InitPasswordTextBox()
         {
-            PasswordTextBox.GotFocus += (sender, e) =>
+            PasswordTextBox.GotFocus += (_, _) =>
             {
                 if (PasswordTextBox.Text == "Password")
                     PasswordTextBox.Text = "";
             };
 
-            PasswordTextBox.LostFocus += (sender, e) =>
+            PasswordTextBox.LostFocus += (_, _) =>
             {
                 if (PasswordTextBox.Text == "")
                     PasswordTextBox.Text = "Password";
@@ -107,12 +106,7 @@ namespace ClientMessenger
         }
 
         private void InitLoginBtn()
-        {
-            LoginBtn.Click += async (sender, args) =>
-            {
-                await SendLoginRequestAsync();
-            };
-        }
+           => LoginBtn.Click += SendLoginRequestAsync;
 
         #endregion
 

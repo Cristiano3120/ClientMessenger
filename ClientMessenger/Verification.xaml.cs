@@ -13,13 +13,10 @@ namespace ClientMessenger
             VerificationTextBox.PreviewTextInput += (sender, args) =>
                args.Handled = !int.TryParse(args.Text, out _);
 
-            SignUpBtn.Click += async (sender, args) =>
-            {
-                await SendVerificationCodeAsync();
-            };
+            SignUpBtn.Click += SendVerificationCodeAsync;
         }
 
-        private async Task SendVerificationCodeAsync()
+        private async void SendVerificationCodeAsync(object sender, RoutedEventArgs args)
         {
             if (string.IsNullOrEmpty(VerificationTextBox.Text))
             {
@@ -45,9 +42,13 @@ namespace ClientMessenger
             }
 
             if (success.Value)
+            {
                 ClientUI.SwitchWindows<Verification, Home>();
+            }             
             else
+            {
                 await ChangeMsgAsync("The enterd code is incorrect");
+            }
         }
 
         private async Task ChangeMsgAsync(string msg)
@@ -60,7 +61,7 @@ namespace ClientMessenger
                 InformationTextBlock.Foreground = Brushes.Red;
                 InformationTextBlock.Text = msg;
 
-                await Task.Delay(2000);
+                await Task.Delay(TimeSpan.FromSeconds(2));
 
                 InformationTextBlock.Text = oldMsg;
                 InformationTextBlock.Foreground = oldColor;

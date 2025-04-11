@@ -11,6 +11,8 @@ namespace ClientMessenger
         public event PropertyChangedEventHandler? PropertyChanged;
         public long Id { get; init; }
 
+        #region ProfilePicture
+
         private BitmapImage? _profilPicture;
         public BitmapImage? ProfilePicture
         {
@@ -22,6 +24,9 @@ namespace ClientMessenger
             }
         }
 
+        #endregion
+
+        #region Username
         private string _username;
         public string Username
         {
@@ -35,6 +40,9 @@ namespace ClientMessenger
                 }
             }
         }
+
+        #endregion
+
         public string Hashtag { get; set; }
         public string Email { get; init; }
         public string Password { get; init; }

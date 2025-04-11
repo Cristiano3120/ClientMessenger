@@ -10,9 +10,7 @@ namespace ClientMessenger
             Loaded += StartClientAsync;
         }
 
-        private async void StartClientAsync(object sender, RoutedEventArgs args)
-        {
-            await Client.StartAsync();
-        }
+        private async void StartClientAsync(object sender, RoutedEventArgs args) 
+            => await Client.StartAsync();
     }
 }

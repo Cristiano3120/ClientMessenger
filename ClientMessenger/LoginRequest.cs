@@ -3,11 +3,8 @@
     public readonly record struct LoginRequest
     {
         public string Email { get; init; }
-
         public string Password { get; init; }
-
         public string Token { get; init; }
-
         public bool StayLoggedIn { get; init; }
 
         public LoginRequest(string token)

@@ -13,20 +13,21 @@ namespace ClientMessenger
 {
     public partial class CreateAcc : Window
     {
+        #region Regex
         [GeneratedRegex(@"^(?("")("".+?""@)|(([0-9a-zA-Z](([\w-]*[0-9a-zA-Z])?)+)\@))([a-zA-Z0-9][\w-]*\.)+[a-zA-Z]{2,}$")]
-        private static partial Regex EmailRegex();
+        private partial Regex EmailRegex();
 
         [GeneratedRegex(@"^[A-Za-z0-9._;,<>´^+#?\s\[\](){}=$€\/%!-]+$")]
-        private static partial Regex BiographyRegex();
+        private partial Regex BiographyRegex();
 
         [GeneratedRegex(@"^[A-Za-z0-9._\s]+$")]
-        private static partial Regex UsernameRegex();
+        private partial Regex UsernameRegex();
 
         [GeneratedRegex(@"^(?!Password$).{8,}$")]
-        private static partial Regex PasswordRegex();
+        private partial Regex PasswordRegex();
+        #endregion
 
-        private static string _profilPicFile = ClientUI.GetDefaultProfilPic();
-        private static readonly Brush _grayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#343234"));
+        private string _profilPicFile = ClientUI.GetDefaultProfilPic();
 
         public CreateAcc()
         {
@@ -46,7 +47,7 @@ namespace ClientMessenger
 
             RandomPasswordBtn.Click += GeneratePassword_Click;
 
-            ContinueBtn.Click += async (sender, args) =>
+            ContinueBtn.Click += async (_, _) =>
             {
                 if (!CheckIfAllFieldsAreFilledStage1(out TextBlock? textBlock))
                 {
@@ -61,13 +62,16 @@ namespace ClientMessenger
 
         private void InitializeComboBoxes()
         {
+            Colors colors = new();
+            SolidColorBrush grayBrush = colors.ColorToSolidColorBrush(colors.Gray);
+
             for (int i = 1; i <= 31; i++)
             {
                 ComboBoxItem item = new()
                 {
                     IsSelected = i == 1,
-                    Background = _grayBrush,
-                    BorderBrush = _grayBrush,
+                    Background = grayBrush,
+                    BorderBrush = grayBrush,
                     FontWeight = FontWeights.Bold,
                     Content = $"{i}"
                 };
@@ -79,8 +83,8 @@ namespace ClientMessenger
                 ComboBoxItem item = new()
                 {
                     IsSelected = i == 1,
-                    Background = _grayBrush,
-                    BorderBrush = _grayBrush,
+                    Background = grayBrush,
+                    BorderBrush = grayBrush,
                     FontWeight = FontWeights.Bold,
                     Content = $"{i}"
                 };
@@ -92,8 +96,8 @@ namespace ClientMessenger
                 ComboBoxItem item = new()
                 {
                     IsSelected = i == 2020,
-                    Background = _grayBrush,
-                    BorderBrush = _grayBrush,
+                    Background = grayBrush,
+                    BorderBrush = grayBrush,
                     FontWeight = FontWeights.Bold,
                     Content = $"{i}"
                 };
@@ -103,13 +107,13 @@ namespace ClientMessenger
 
         private void InitEmailTextBox()
         {
-            EmailTextBox.GotFocus += (sender, args) =>
+            EmailTextBox.GotFocus += (_, _) =>
             {
                 if (EmailTextBox.Text == "Email")
                     EmailTextBox.Text = "";
             };
 
-            EmailTextBox.LostFocus += (sender, args) =>
+            EmailTextBox.LostFocus += (_, _) =>
             {
                 if (EmailTextBox.Text == "")
                     EmailTextBox.Text = "Email";
@@ -118,13 +122,13 @@ namespace ClientMessenger
 
         private void InitPasswordTextBox()
         {
-            PasswordTextBox.GotFocus += (sender, args) =>
+            PasswordTextBox.GotFocus += (_, _) =>
             {
                 if (PasswordTextBox.Text == "Password")
                     PasswordTextBox.Text = "";
             };
 
-            PasswordTextBox.LostFocus += (sender, args) =>
+            PasswordTextBox.LostFocus += (_, _) =>
             {
                 if (PasswordTextBox.Text == "")
                     PasswordTextBox.Text = "Password";
@@ -147,19 +151,19 @@ namespace ClientMessenger
         private void InitUsernameTextBox()
         {
             const byte maxChars = 14;
-            UsernameTextBox.GotFocus += (sender, args) =>
+            UsernameTextBox.GotFocus += (_, _) =>
             {
                 if (UsernameTextBox.Text == "Username")
                     UsernameTextBox.Text = "";
             };
 
-            UsernameTextBox.LostFocus += (sender, args) =>
+            UsernameTextBox.LostFocus += (_ ,_) =>
             {
                 if (UsernameTextBox.Text == "")
                     UsernameTextBox.Text = "Username";
             };
 
-            UsernameTextBox.PreviewTextInput += (sender, args) =>
+            UsernameTextBox.PreviewTextInput += (_, args) =>
             {
                 if (UsernameTextBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
                     args.Handled = true;
@@ -171,7 +175,7 @@ namespace ClientMessenger
         private void InithashtagTextBox()
         {
             const byte maxChars = 5;
-            hashtagTextBox.PreviewTextInput += (sender, args) =>
+            hashtagTextBox.PreviewTextInput += (_, args) =>
             {
                 if (hashtagTextBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
                 {
@@ -180,7 +184,7 @@ namespace ClientMessenger
                 }
             };
 
-            hashtagTextBox.TextChanged += (sender, args) =>
+            hashtagTextBox.TextChanged += (_, _) =>
             {
                 if (!hashtagTextBox.Text.StartsWith('#'))
                 {
@@ -199,19 +203,19 @@ namespace ClientMessenger
             BiographyTextBox.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
             BiographyTextBox.TextWrapping = TextWrapping.Wrap;
 
-            BiographyTextBox.GotFocus += (sender, args) =>
+            BiographyTextBox.GotFocus += (_, _) =>
             {
                 if (BiographyTextBox.Text == "Biography")
                     BiographyTextBox.Text = "";
             };
 
-            BiographyTextBox.LostFocus += (sender, args) =>
+            BiographyTextBox.LostFocus += (_, _) =>
             {
                 if (BiographyTextBox.Text == "")
                     BiographyTextBox.Text = "Biography";
             };
 
-            BiographyTextBox.PreviewTextInput += (sender, args) =>
+            BiographyTextBox.PreviewTextInput += (_, args) =>
             {
                 if (BiographyTextBox.Text.Length >= maxChars || !BiographyRegex().IsMatch(args.Text))
                     args.Handled = true;
@@ -223,12 +227,12 @@ namespace ClientMessenger
         private void InitProfilPic()
         {
             ProfilPic.Fill = ImageEditor.CreateImageBrush(_profilPicFile);
-            ProfilPic.MouseLeftButtonDown += (sender, args) =>
+            ProfilPic.MouseLeftButtonDown += (_, _) =>
             {
                 OpenFileDialog explorer = new()
                 {
                     Filter = "Image files (*.png;*.jpeg;*.jpg)|*.png;*.jpeg;*.jpg",
-                    Title = "Please select an image file.",
+                    Title = "Please select the image.",
                     Multiselect = false
                 };
 
@@ -243,13 +247,10 @@ namespace ClientMessenger
 
         private void InitSignUpBtn()
         {
-            SignUpBtn.Click += async (sender, args) =>
-            {
-                await SendCreateAccountRequest();
-            };
+            SignUpBtn.Click += SendCreateAccountRequest;
         }
 
-        private async Task SendCreateAccountRequest()
+        private async void SendCreateAccountRequest(object sender, RoutedEventArgs args)
         {
             if (!CheckIfAllFieldsAreFilledStage2())
             {
@@ -416,9 +417,9 @@ namespace ClientMessenger
                 }
             };
 
-            GoBackBtn.MouseEnter += (sender, args) => Cursor = Cursors.Hand;
+            GoBackBtn.MouseEnter += (_, _) => Cursor = Cursors.Hand;
 
-            GoBackBtn.MouseLeave += (sender, args) => Cursor = Cursors.Arrow;
+            GoBackBtn.MouseLeave += (_, _) => Cursor = Cursors.Arrow;
         }
 
         public async Task AccCreationWentWrong(string column)

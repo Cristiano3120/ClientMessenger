@@ -1,19 +1,13 @@
-﻿using System.Text.Json.Serialization;
-
-namespace ClientMessenger
+﻿namespace ClientMessenger
 {
     internal readonly record struct NpgsqlExceptionInfos
     {
-        [JsonPropertyName("npgsqlExceptions")]
         public NpgsqlExceptions Exception { get; init; }
         public string ColumnName { get; init; }
 
         #region Constructors
 
-        public NpgsqlExceptionInfos() : this(NpgsqlExceptions.None, "")
-        {
-
-        }
+        public NpgsqlExceptionInfos() : this(NpgsqlExceptions.None, "") { }
 
         public NpgsqlExceptionInfos(NpgsqlExceptions exception, string columnName)
         {

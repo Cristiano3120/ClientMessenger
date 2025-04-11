@@ -79,9 +79,6 @@ namespace ClientMessenger
 
         #endregion
 
-        /// <summary>
-        /// Outputs the wanted logs as yellow text in the console
-        /// </summary>
         public static void LogWarning(params string[] logs)
         {
             Log(ConsoleColor.Yellow, true, logs);
@@ -178,9 +175,6 @@ namespace ClientMessenger
             }
         }
 
-        /// <summary>
-        /// The method that filters the logs and writes them into the Console
-        /// </summary>
         private static void Log(ConsoleColor color, bool makeLineAfter, params string[] logs)
         {
             lock (_lock)

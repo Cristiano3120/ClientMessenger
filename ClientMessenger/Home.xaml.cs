@@ -19,7 +19,7 @@ namespace ClientMessenger
     public partial class Home : Window
     {
         [GeneratedRegex(@"^[A-Za-z0-9._\s]+$")]
-        private static partial Regex UsernameRegex();
+        private partial Regex UsernameRegex();
 
         public Lock Lock { get; private set; } = new();
         private readonly ConcurrentDictionary<TagUserData, Chat> _chats = new();
@@ -69,7 +69,7 @@ namespace ClientMessenger
 
         private void InitCollections()
         {
-            Friends.CollectionChanged += (sender, args) =>
+            Friends.CollectionChanged += (_, args) =>
             {
                 if (args.Action == NotifyCollectionChangedAction.Add)
                 {
@@ -83,7 +83,7 @@ namespace ClientMessenger
                 }
             };
 
-            Blocked.CollectionChanged += (sender, args) =>
+            Blocked.CollectionChanged += (_, args) =>
             {
                 if (args.Action == NotifyCollectionChangedAction.Add)
                 {
@@ -95,7 +95,7 @@ namespace ClientMessenger
                 }
             };
 
-            Pending.CollectionChanged += (sender, args) =>
+            Pending.CollectionChanged += (_, args) =>
             {
                 if (args.Action == NotifyCollectionChangedAction.Add)
                 {
@@ -110,11 +110,10 @@ namespace ClientMessenger
 
         private void InitDmList()
         {
-            Dms.SelectionChanged += (sender, args) =>
+            Dms.SelectionChanged += (_, args) =>
             {
-                if (Dms.SelectedItem is StackPanel stackPanel)
+                if (Dms.SelectedItem is StackPanel stackPanel && stackPanel.Tag is TagUserData tagUserData)
                 {
-                    TagUserData tagUserData = (TagUserData)stackPanel.Tag;
                     Relationship relationship = _friends.FirstOrDefault(x => x.Username == tagUserData.Username
                         && x.Hashtag == tagUserData.Hashtag)!;
 
@@ -136,7 +135,7 @@ namespace ClientMessenger
                 BorderBrush = Brushes.Transparent,
             };
 
-            inputTextBox.KeyDown += async (sender, args) =>
+            inputTextBox.KeyDown += async (_, args) =>
             {
                 if (args.Key == Key.Enter && !string.IsNullOrEmpty(inputTextBox.Text))
                 {
@@ -153,17 +152,12 @@ namespace ClientMessenger
 
         private void InitPersonalInfoStackPanel()
         {
-            PersonalInfoStackPanel.MouseEnter += (sender, args) =>
-            {
-                PersonalInfoStackPanel.Cursor = Cursors.Hand;
-            };
+            PersonalInfoStackPanel.MouseEnter += (_, _) => PersonalInfoStackPanel.Cursor = Cursors.Hand;
 
-            PersonalInfoStackPanel.MouseLeave += (sender, args) =>
-            {
-                PersonalInfoStackPanel.Cursor = Cursors.Arrow;
-            };
+            PersonalInfoStackPanel.MouseLeave += (_, _) => PersonalInfoStackPanel.Cursor = Cursors.Arrow;
+       
 
-            PersonalInfoStackPanel.MouseDown += (sender, args) =>
+            PersonalInfoStackPanel.MouseDown += (_, _) =>
             {
                 HidePanels();
                 CreateSettingsPanel();
@@ -185,11 +179,13 @@ namespace ClientMessenger
             BindingOperations.SetBinding(ProfilPic, ImageBrush.ImageSourceProperty, profilePictureBinding);
 
 
-            KeyDown += (sender, args) =>
+            KeyDown += (_, args) =>
             {
                 if (args.Key == Key.Escape)
                 {
-                    StackPanel? changeUsernamePanel = SettingsPanel.Children.Cast<StackPanel>().FirstOrDefault(x => x.Name == "ChangeUsernamePanel");
+                    StackPanel? changeUsernamePanel = SettingsPanel.Children.Cast<StackPanel>()
+                        .FirstOrDefault(x => x.Name == "ChangeUsernamePanel");
+
                     if (changeUsernamePanel is not null)
                     {
                         SettingsPanel.Children.Remove(changeUsernamePanel);
@@ -207,22 +203,22 @@ namespace ClientMessenger
 
         private void InitAddFriendUsernameTextBox()
         {
-            byte maxChars = 14;
+            const byte maxChars = 14;
             ClientUI.RestrictClipboardPasting(AddFriendUsernameTextBox, maxChars);
 
-            AddFriendUsernameTextBox.GotFocus += (sender, args) =>
+            AddFriendUsernameTextBox.GotFocus += (_, _) =>
             {
                 if (AddFriendUsernameTextBox.Text == "Username")
                     AddFriendUsernameTextBox.Text = "";
             };
 
-            AddFriendUsernameTextBox.LostFocus += (sender, args) =>
+            AddFriendUsernameTextBox.LostFocus += (_, _) =>
             {
                 if (AddFriendUsernameTextBox.Text == "")
                     AddFriendUsernameTextBox.Text = "Username";
             };
 
-            AddFriendUsernameTextBox.PreviewTextInput += (sender, args) =>
+            AddFriendUsernameTextBox.PreviewTextInput += (_, args) =>
             {
                 int charAmount = AddFriendUsernameTextBox.Text.Length;
 
@@ -231,12 +227,12 @@ namespace ClientMessenger
             };
         }
 
-        private static void InitHashtagTextBox(TextBox textBox)
+        private void InitHashtagTextBox(TextBox textBox)
         {
             const byte maxChars = 5;
 
             textBox.Text = "#";
-            textBox.PreviewTextInput += (sender, args) =>
+            textBox.PreviewTextInput += (_, args) =>
             {
                 if (textBox.Text.Length >= maxChars || !UsernameRegex().IsMatch(args.Text))
                 {
@@ -245,7 +241,7 @@ namespace ClientMessenger
                 }
             };
 
-            textBox.TextChanged += (sender, args) =>
+            textBox.TextChanged += (_, _) =>
             {
                 if (!textBox.Text.StartsWith('#'))
                 {
@@ -258,12 +254,8 @@ namespace ClientMessenger
         }
 
         private void InitAddFriendBtn()
-        {
-            AddFriendAddFriendBtn.Click += async (sender, args) =>
-            {
-                await SendFriendRequestAsync();
-            };
-        }
+            => AddFriendAddFriendBtn.Click += SendFriendRequestAsync;
+        
 
         #endregion
 
@@ -1396,7 +1388,7 @@ namespace ClientMessenger
             chatDatabase.AddMessage(relationship.Id, message);
         }
 
-        private async Task SendFriendRequestAsync()
+        private async void SendFriendRequestAsync(object sender, RoutedEventArgs args)
         {
             string username = AddFriendUsernameTextBox.Text;
             string hashtag = AddFriendHashtagTextBox.Text;
