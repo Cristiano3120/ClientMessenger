@@ -417,7 +417,7 @@ namespace ClientMessenger
                 chat.LastMessage = message;
             }
 
-            StackPanel chatPanel = (StackPanel)scrollViewer.Content;
+                StackPanel chatPanel = (StackPanel)scrollViewer.Content;
             StackPanel outerStackPanel = new()
             {
                 Orientation = Orientation.Horizontal,
