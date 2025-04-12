@@ -43,7 +43,7 @@
 	  <Compile Update="GlobalRules\GlobalUsings.cs">
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </Compile>
-	  <Compile Update="Json\JsonConverters.cs">
+	  <Compile Update="Json\JsonBitmapImageConverters.cs">
 	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </Compile>
 	  <Compile Update="Json\JsonExtensions.cs">

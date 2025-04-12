@@ -82,7 +82,7 @@ namespace ClientMessenger.LocalChatDatabase
             using (LiteDatabase database = new(_connString))
             {
                 long clientID = Client.User.Id;
-                ChatInfos? chatInfos = database.GetCollection<ChatInfos>("Chats").FindOne(x => x.Members.Contains(clientID) 
+                ChatInfos? chatInfos = database.GetCollection<ChatInfos>("Chats").FindOne(x => x.Members.Contains(clientID)
                     && x.Members.Contains(id));
 
                 if (chatInfos.HasValue && chatInfos.Value.Messages is not null)
@@ -97,6 +97,7 @@ namespace ClientMessenger.LocalChatDatabase
                             messageFound = true;
                     }
                 }
+
                 return null;
             }
         }

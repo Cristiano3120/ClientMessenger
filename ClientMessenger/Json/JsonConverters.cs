@@ -22,7 +22,7 @@ namespace ClientMessenger.Json
                         ? null
                         : new User()
                         {
-                            ProfilePicture = Converter.ToBitmapImage(root.GetProperty("profilePicture").GetBytesFromBase64()),
+                            ProfilePicture = BitmapImageConverter.ToBitmapImage(root.GetProperty("profilePicture").GetBytesFromBase64()),
                             Username = root.GetProperty("username").GetString()!,
                             Hashtag = root.GetProperty("hashtag").GetString()!,
                             Email = root.GetProperty("email").GetString()!,
@@ -83,7 +83,7 @@ namespace ClientMessenger.Json
                         ? null
                         : new Relationship()
                         {
-                            ProfilePicture = Converter.ToBitmapImage(root.GetProperty("profilePicture").GetBytesFromBase64()),
+                            ProfilePicture = BitmapImageConverter.ToBitmapImage(root.GetProperty("profilePicture").GetBytesFromBase64()),
                             Username = root.GetProperty("username").GetString()!,
                             Hashtag = root.GetProperty("hashtag").GetString()!,
                             Biography = root.GetProperty("biography").GetString()!,

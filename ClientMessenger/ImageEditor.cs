@@ -33,7 +33,7 @@ namespace ClientMessenger
                         graphics.DrawImage(originalImage, 0, 0, ellipseSize, ellipseSize);
                     }
 
-                    return Converter.ToBitmapImage(result);
+                    return BitmapImageConverter.ToBitmapImage(result);
                 }
             }
         }

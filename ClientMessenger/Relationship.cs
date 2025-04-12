@@ -19,7 +19,7 @@ namespace ClientMessenger
             yield return (nameof(Hashtag).ToCamelCase(), Hashtag);
             yield return (nameof(Biography).ToCamelCase(), Biography);
             yield return (nameof(Id).ToCamelCase(), Id.ToString());
-            yield return (nameof(ProfilePicture).ToCamelCase(), Convert.ToBase64String(Converter.ToByteArray(ProfilePicture)));
+            yield return (nameof(ProfilePicture).ToCamelCase(), Convert.ToBase64String(BitmapImageConverter.ToByteArray(ProfilePicture)));
             yield return (nameof(RelationshipState).ToCamelCase(), RelationshipState.ToString());
         }
 

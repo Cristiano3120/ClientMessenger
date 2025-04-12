@@ -5,7 +5,7 @@ using System.Drawing.Imaging;
 
 namespace ClientMessenger
 {
-    internal static class Converter
+    internal static class BitmapImageConverter
     {
         public static BitmapImage ToBitmapImage(Bitmap bitmap)
         {

@@ -511,12 +511,14 @@ namespace ClientMessenger
                     if (notificationTextBlock.Text == "99+")
                         return;
 
-                    _ = byte.TryParse(notificationTextBlock.Text, out byte notificationAmount);
-                    notificationAmount++;
+                    if (byte.TryParse(notificationTextBlock.Text, out byte notificationAmount))
+                    {
+                        notificationAmount++;
 
-                    notificationTextBlock.Text = notificationAmount <= 99
-                        ? notificationAmount.ToString()
-                        : "99+";
+                        notificationTextBlock.Text = notificationAmount <= 99
+                            ? notificationAmount.ToString()
+                            : "99+";
+                    }                
                 }
             }
         }
@@ -540,13 +542,13 @@ namespace ClientMessenger
         {
             List<StackPanel>? messages = GetMessagesFromChat(out StackPanel? chatPanel);
             
-            if (messages is null || messages?.Count < 8 || chatPanel is null)
+            if (messages is null || messages.Count < 8 || chatPanel is null)
                 return;
 
             if (!_chats.TryGetValue(_currentOpenChat, out Chat? chat))
                 return;
 
-            StackPanel? lastMessage = messages?.FirstOrDefault();
+            StackPanel? lastMessage = messages.FirstOrDefault();
 
             if (lastMessage is not null)
             {
@@ -692,20 +694,14 @@ namespace ClientMessenger
                 Margin = new Thickness(0, 0, 0, 0),
             };
 
-            deleteButton.MouseEnter += (sender, args) =>
-            {
-                deleteButton.Opacity = 0.5;
-            };
-
-            deleteButton.MouseLeave += (sender, args) =>
-            {
-                deleteButton.Opacity = 1;
-            };
+            deleteButton.MouseEnter += (_, _) => deleteButton.Opacity = 0.5;
+            deleteButton.MouseLeave += (_, _) =>  deleteButton.Opacity = 1;
+            
 
             Colors colors = new();
             TextBlock textBlock = new()
             {
-                Foreground = colors.ColorToSolidColorBrush(colors.Red),
+                Foreground = colors.Red,
                 Tag = "Notification"
             };
 
@@ -743,10 +739,7 @@ namespace ClientMessenger
                 Margin = new Thickness(10, 2.5, 0, 0),
                 Cursor = Cursors.Hand,
             };
-            profileEllipse.MouseDown += async (sender, args) =>
-            {
-                await ChangeProfilePictureAsync();
-            };
+            profileEllipse.MouseDown += ChangeProfilePictureAsync;
 
             ImageBrush profileImageBrush = new()
             {
@@ -774,15 +767,12 @@ namespace ClientMessenger
                 Cursor = Cursors.Hand,
                 Width = 120,
                 Height = 20,
-                Foreground = colors.ColorToSolidColorBrush(colors.LightGray),
+                Foreground = colors.LightGray,
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(10, 2, 0, 0)
             };
 
-            usernameTextBox.MouseDown += (sender, args) =>
-            {
-                CreateChangeUsernameUI();
-            };
+            usernameTextBox.MouseDown += CreateChangeUsernameUI;
 
             Binding usernameBinding = new(nameof(Client.User.Username))
             {
@@ -801,7 +791,7 @@ namespace ClientMessenger
             SettingsPanel.UpdateLayout();
         }
 
-        private async Task ChangeProfilePictureAsync()
+        private async void ChangeProfilePictureAsync(object sender, RoutedEventArgs args)
         {
             OpenFileDialog openFileDialog = new();
             if (openFileDialog.ShowDialog() == true)
@@ -819,19 +809,19 @@ namespace ClientMessenger
 
                 await Client.SendPayloadAsync(payload);
 
-                Client.User.ProfilePicture = Converter.ToBitmapImage(profilePictureBytes);
+                Client.User.ProfilePicture = BitmapImageConverter.ToBitmapImage(profilePictureBytes);
                 SettingsPanel.UpdateLayout();
             }
         }
 
-        private void CreateChangeUsernameUI()
+        private void CreateChangeUsernameUI(object sender, RoutedEventArgs args)
         {
             Colors colors = new();
             StackPanel outerStackPanel = new()
             {
                 Width = 350,
                 Height = 200,
-                Background = colors.ColorToSolidColorBrush(colors.DarkGray),
+                Background = colors.DarkGray,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Name = "ChangeUsernamePanel"
@@ -959,8 +949,10 @@ namespace ClientMessenger
             {
                 StackPanel innerStackPanel = changeUsernamePanel.Children
                     .OfType<StackPanel>().First();
+
                 StackPanel usernamePanel = innerStackPanel.Children
                     .OfType<StackPanel>().First(x => x.Name == "UsernamePanel");
+
                 TextBlock usernameTextBlock = usernamePanel.Children
                     .OfType<TextBlock>().First(x => x.Name == "UsernameTextBlock");
 
@@ -1016,7 +1008,7 @@ namespace ClientMessenger
             Button readdButton = new()
             {
                 Content = "Re-add",
-                Background = new SolidColorBrush(colors.Green),
+                Background = colors.Green,
                 Foreground = Brushes.White,
                 Width = 80,
                 Height = 30,
@@ -1028,7 +1020,7 @@ namespace ClientMessenger
             Button unblockButton = new()
             {
                 Content = "Unblock",
-                Background = new SolidColorBrush(colors.Gray),
+                Background = colors.Gray,
                 Foreground = Brushes.White,
                 Width = 80,
                 Height = 30,
@@ -1080,7 +1072,7 @@ namespace ClientMessenger
             Button declineButton = new()
             {
                 Content = "Delete",
-                Background = new SolidColorBrush(colors.Red),
+                Background = colors.Red,
                 Foreground = Brushes.White,
                 Width = 80,
                 Height = 30,
@@ -1092,7 +1084,7 @@ namespace ClientMessenger
             Button blockButton = new()
             {
                 Content = "Block",
-                Background = new SolidColorBrush(colors.Gray),
+                Background = colors.Gray,
                 Foreground = Brushes.White,
                 Width = 80,
                 Height = 30,
@@ -1164,7 +1156,7 @@ namespace ClientMessenger
             Button acceptButton = new()
             {
                 Content = "Accept",
-                Background = new SolidColorBrush(colors.Green),
+                Background = colors.Green,
                 Foreground = Brushes.White,
                 Width = 80,
                 Height = 30,
@@ -1176,7 +1168,7 @@ namespace ClientMessenger
             Button declineButton = new()
             {
                 Content = "Decline",
-                Background = new SolidColorBrush(colors.Red),
+                Background = colors.Red,
                 Foreground = Brushes.White,
                 Width = 80,
                 Height = 30,
@@ -1188,7 +1180,7 @@ namespace ClientMessenger
             Button blockButton = new()
             {
                 Content = "Block",
-                Background = new SolidColorBrush(colors.Gray),
+                Background = colors.Gray,
                 Foreground = Brushes.White,
                 Width = 80,
                 Height = 30,

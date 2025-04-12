@@ -63,7 +63,7 @@ namespace ClientMessenger
         private void InitializeComboBoxes()
         {
             Colors colors = new();
-            SolidColorBrush grayBrush = colors.ColorToSolidColorBrush(colors.Gray);
+            SolidColorBrush grayBrush = colors.DarkerGray;
 
             for (int i = 1; i <= 31; i++)
             {

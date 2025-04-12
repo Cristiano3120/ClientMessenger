@@ -89,7 +89,7 @@ namespace ClientMessenger
             yield return (nameof(Biography).ToCamelCase(), Biography);
             yield return (nameof(Id).ToCamelCase(), Id.ToString());
             yield return (nameof(Birthday).ToCamelCase(), Birthday?.ToString(new CultureInfo("de-DE")) ?? "");
-            yield return (nameof(ProfilePicture).ToCamelCase(), Convert.ToBase64String(Converter.ToByteArray(ProfilePicture)));
+            yield return (nameof(ProfilePicture).ToCamelCase(), Convert.ToBase64String(BitmapImageConverter.ToByteArray(ProfilePicture)));
             yield return (nameof(FaEnabled).ToCamelCase(), FaEnabled.ToString());
             yield return (nameof(Token).ToCamelCase(), Token);
         }
