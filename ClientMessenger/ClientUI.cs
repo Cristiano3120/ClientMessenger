@@ -103,19 +103,7 @@ namespace ClientMessenger
             minimizeButton.Click += MinimizeButton_Click;
             maximizeButton.Click += MaximizeButton_Click;
             closeButton.Click += CloseButton_Click;
-
-            minimizeButton.MouseEnter += ChangeCursorOnHover;
-            maximizeButton.MouseEnter += ChangeCursorOnHover;
-            closeButton.MouseEnter += ChangeCursorOnHover;
         }
-
-        private static void ChangeCursorOnHover(object sender, RoutedEventArgs e)
-        {
-            Button button = (Button)sender;
-            button.Cursor = Cursors.Hand;
-        }
-
-        #region Event_Click
 
         private static void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
@@ -142,8 +130,6 @@ namespace ClientMessenger
             nint windowHandle = new WindowInteropHelper(window).Handle;
             SendMessage(windowHandle, WM_SYSCOMMAND, SC_CLOSE, IntPtr.Zero);
         }
-
-        #endregion
 
         #endregion
     }
