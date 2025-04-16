@@ -20,5 +20,6 @@
         ReceiveChatMessage = 16,
         ReceiveChats = 17,
         SettingsUpdate = 18,
+        DeleteMessage = 19,
     }
 }

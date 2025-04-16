@@ -16,9 +16,9 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border x:Name="border" 
-                            BorderThickness="2" 
-                            BorderBrush="Gray" 
-                            Background="{TemplateBinding Background}">
+                    BorderThickness="2" 
+                    BorderBrush="Gray" 
+                    Background="{TemplateBinding Background}">
                             <ScrollViewer Margin="4" x:Name="PART_ContentHost"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -29,6 +29,16 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style TargetType="TextBox" x:Key="ReadonlyTextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="IsReadOnlyCaretVisible" Value="False"/>
         </Style>
 
         <!--Style for all TextBlocks by default-->

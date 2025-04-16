@@ -2,6 +2,7 @@
 {
     public readonly struct Message
     {
+        public Guid Guid { get; init; } = Guid.NewGuid();
         public long SenderId { get; init; }
         public DateTime DateTime { get; init; }
         public string Content { get; init; }
@@ -16,10 +17,7 @@
         #region Operator override
 
         public override bool Equals(object? obj)
-            => obj is Message other
-                && DateTime.ToString("yyyy-MM-dd HH:mm:ss") == other.DateTime.ToString("yyyy-MM-dd HH:mm:ss")
-                && SenderId == other.SenderId
-                && Content == other.Content;
+            => obj is Message other && Guid == other.Guid;
 
         public override int GetHashCode()
             => HashCode.Combine(SenderId, DateTime, Content);

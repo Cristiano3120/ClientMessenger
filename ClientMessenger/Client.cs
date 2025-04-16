@@ -148,6 +148,9 @@ namespace ClientMessenger
                 case OpCode.SettingsUpdate:
                     await HandleSettingsUpdate.HandleReceivedMessageAsync(jsonDocument);
                     break;
+                case OpCode.DeleteMessage:
+                    HandleServerResponses.DeleteMessage(jsonDocument);
+                    break;
             }
         }
         

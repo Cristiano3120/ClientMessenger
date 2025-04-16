@@ -1,7 +1,10 @@
-﻿namespace ClientMessenger
+﻿using System.Text.Json.Serialization;
+
+namespace ClientMessenger
 {
     internal readonly record struct NpgsqlExceptionInfos
     {
+        [JsonPropertyName("npgsqlExceptions")]
         public NpgsqlExceptions Exception { get; init; }
         public string ColumnName { get; init; }
 

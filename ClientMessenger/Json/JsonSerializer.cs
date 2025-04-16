@@ -7,8 +7,6 @@ namespace ClientMessenger.Json
         private static readonly JsonSerializerOptions _jsonSerializerOptions = new();
         static JsonSerializer()
         {
-            _jsonSerializerOptions.Converters.Add(new JsonConverters.RelationshipConverter());
-            _jsonSerializerOptions.Converters.Add(new JsonConverters.UserConverter());
             _jsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             _jsonSerializerOptions.WriteIndented = true;
         }
@@ -26,15 +24,27 @@ namespace ClientMessenger.Json
         /// <returns>The deserialized object of type <typeparamref name="T"/> or <c>null</c> if deserialization fails.</returns>
         public static T? Deserialize<T>(JsonElement payload)
         {
+            T? result;
+
             if (payload.ValueKind == JsonValueKind.Array)
             {
-                return payload.Deserialize<T>(_jsonSerializerOptions);
+                result = payload.Deserialize<T>(_jsonSerializerOptions);
             }
-           
-            string propertyName = typeof(T).Name.ToCamelCase();
-            return payload.TryGetProperty(propertyName, out JsonElement property)
-                ? property.Deserialize<T>(_jsonSerializerOptions)
-                : payload.Deserialize<T>(_jsonSerializerOptions);
+            else
+            {
+                string propertyName = typeof(T).Name.ToCamelCase();
+                result = payload.TryGetProperty(propertyName, out JsonElement property)
+                    ? property.Deserialize<T>(_jsonSerializerOptions)
+                    : payload.Deserialize<T>(_jsonSerializerOptions);
+            }
+
+            if (result is null)
+            {
+                Logger.LogError($"Failed to deserialize {typeof(T).Name} from JSON.");
+                return default;
+            }
+
+            return result;
         }
     }
 }

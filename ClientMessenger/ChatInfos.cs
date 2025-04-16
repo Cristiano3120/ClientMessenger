@@ -1,8 +1,26 @@
-﻿namespace ClientMessenger
+﻿using System.Text.Json.Serialization;
+using LiteDB;
+
+namespace ClientMessenger
 {
-    public readonly record struct ChatInfos(List<long> Members, List<Message> Messages)
+    public record struct ChatInfos
     {
-        public List<Message> Messages { get; init; } = Messages ?? new List<Message>();
-        public List<long> Members { get; init; } = Members ?? new List<long>();
+        [BsonId]
+        [JsonIgnore]
+        public ObjectId Id { get; set; }
+        public List<Message> Messages { get; set; }
+        public List<long> Members { get; init; }
+
+        public ChatInfos() : this(new List<long>(), new List<Message>())
+        {
+            Id = ObjectId.NewObjectId();
+        }
+
+        public ChatInfos(List<long> members, List<Message> messages)
+        {
+            Members = members;
+            Messages = messages;
+            Id = ObjectId.NewObjectId();
+        }
     }
 }

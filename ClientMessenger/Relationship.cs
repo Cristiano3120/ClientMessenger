@@ -1,31 +1,17 @@
-﻿using System.Collections;
+﻿using System.Text.Json.Serialization;
 using System.Windows.Media.Imaging;
 
 namespace ClientMessenger
 {
-    public sealed class Relationship: IEnumerable<(string name, string value)>
+    public sealed class Relationship
     {
-        public long Id { get; init; } = -1;
+        [JsonConverter(typeof(JsonConverters.Base64ByteArrayJsonConverter))]
         public BitmapImage? ProfilePicture { get; set; }
+        public RelationshipState RelationshipState { get; set; }
+        public string Biography { get; set; } = "";
         public string Username { get; set; } = "";
         public string Hashtag { get; set; } = "";
-        public string Biography { get; set; } = "";
-        public RelationshipState RelationshipState { get; set; }
-
-        #region IEnumerable
-        public IEnumerator<(string name, string value)> GetEnumerator()
-        {
-            yield return (nameof(Username).ToCamelCase(), Username);
-            yield return (nameof(Hashtag).ToCamelCase(), Hashtag);
-            yield return (nameof(Biography).ToCamelCase(), Biography);
-            yield return (nameof(Id).ToCamelCase(), Id.ToString());
-            yield return (nameof(ProfilePicture).ToCamelCase(), Convert.ToBase64String(BitmapImageConverter.ToByteArray(ProfilePicture)));
-            yield return (nameof(RelationshipState).ToCamelCase(), RelationshipState.ToString());
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        
-        #endregion
+        public long Id { get; init; } = -1;
 
         #region Operator override
         public static bool operator ==(Relationship? left, TagUserData right)

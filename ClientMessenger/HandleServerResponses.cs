@@ -103,14 +103,14 @@ namespace ClientMessenger
             NpgsqlExceptionInfos exceptionInfos = message.GetNpgsqlExceptionInfos();
             NpgsqlExceptions exception = exceptionInfos.Exception;
 
-            if (exception is NpgsqlExceptions.None)
+            if (exception == NpgsqlExceptions.None)
             {
                 Client.User = JsonSerializer.Deserialize<User>(message)!;
                 ClientUI.SwitchWindows<MainWindow, Home>();
                 return;
             }
 
-            if (exception is not NpgsqlExceptions.WrongLoginData)
+            if (exception != NpgsqlExceptions.WrongLoginData)
             {
                 await HandleNpgsqlErrorAsync(exceptionInfos);
                 return;
@@ -212,6 +212,18 @@ namespace ClientMessenger
             List<ChatInfos>? chatInfos = JsonSerializer.Deserialize<List<ChatInfos>>(message.GetProperty("chats"));
             ChatDatabase chatDatabase = new();
             chatDatabase.AddChats(chatInfos!);
+        }
+
+        public static void DeleteMessage(JsonDocument jsonDocument)
+        {
+            JsonElement message = jsonDocument.RootElement;
+     
+            DeleteMessage deleteMessage = JsonSerializer.Deserialize<DeleteMessage>(message);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Home home = ClientUI.GetWindow<Home>();
+                home.DeleteMessage(deleteMessage);
+            }, DispatcherPriority.Render);
         }
 
         #endregion

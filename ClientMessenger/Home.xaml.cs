@@ -26,6 +26,7 @@ namespace ClientMessenger
         private ObservableCollection<Relationship> _friends = [];
         private ObservableCollection<Relationship> _blocked = [];
         private ObservableCollection<Relationship> _pending = [];
+        private readonly CancellationTokenSource _cts = new();
         private TagUserData _currentOpenChat;
 
         public Home()
@@ -35,7 +36,8 @@ namespace ClientMessenger
             InitHashtagTextBox(AddFriendHashtagTextBox);
             InitAddFriendUsernameTextBox();
             InitPersonalInfoStackPanel();
-            _ = CleanUpChatsAsync();
+            InitMessageCommandBindings();
+            _ = CleanUpChatsAsync(_cts.Token);
             InitAddFriendBtn();
             InitCollections();
             InitChatPanel();
@@ -44,7 +46,79 @@ namespace ClientMessenger
             InitBtns();
         }
 
+        protected override void OnClosed(EventArgs args)
+        {
+            base.OnClosed(args);
+            _cts.Cancel();
+            _cts.Dispose();
+        }
+
         #region Init
+
+        private void InitMessageCommandBindings()
+        {
+            #region Copy
+
+            CommandBinding copyCommandBinding = new(
+                ApplicationCommands.Copy,
+                CopyCommand_Executed,
+                CopyCommand_CanExecute);
+
+            void CopyCommand_Executed(object sender, ExecutedRoutedEventArgs args)
+            {
+                if (args.Source is TextBlock textBlock)
+                {
+                    Clipboard.SetText(textBlock.Text);
+                }
+            }
+
+            void CopyCommand_CanExecute(object sender, CanExecuteRoutedEventArgs args)
+            {
+                args.CanExecute = true;
+            }
+
+            #endregion
+
+            #region Delete
+
+            CommandBinding deleteCommandBinding = new(
+                ApplicationCommands.Delete,
+                DeleteCommand_Executed,
+                DeleteCommand_CanExecute);
+
+            async void DeleteCommand_Executed(object sender, ExecutedRoutedEventArgs args)
+            {
+                if (args.Source is TextBlock textBlock && textBlock.Tag is Guid guid)
+                {
+                    long friendId = _friends.First(x => x == _currentOpenChat).Id;
+
+                    ChatDatabase chatDatabase = new();
+                    Message message = chatDatabase.GetMessage(friendId, guid);
+                    chatDatabase.DeleteMessage(friendId, guid);
+
+                    DeleteMessage(textBlock);
+
+                    DeleteMessage deleteMessage = new(Client.User.Id, friendId, guid);
+                    var payload = new
+                    {
+                        opCode = OpCode.DeleteMessage,
+                        deleteMessage,
+                    };
+
+                    await Client.SendPayloadAsync(payload);
+                }
+            }
+
+            void DeleteCommand_CanExecute(object sender, CanExecuteRoutedEventArgs args)
+            {
+                args.CanExecute = true;
+            }
+
+            #endregion
+
+            CommandBindings.Add(deleteCommandBinding);
+            CommandBindings.Add(copyCommandBinding);
+        }
 
         private void InitBtns()
         {
@@ -153,9 +227,7 @@ namespace ClientMessenger
         private void InitPersonalInfoStackPanel()
         {
             PersonalInfoStackPanel.MouseEnter += (_, _) => PersonalInfoStackPanel.Cursor = Cursors.Hand;
-
             PersonalInfoStackPanel.MouseLeave += (_, _) => PersonalInfoStackPanel.Cursor = Cursors.Arrow;
-       
 
             PersonalInfoStackPanel.MouseDown += (_, _) =>
             {
@@ -317,7 +389,7 @@ namespace ClientMessenger
                     }
                     else if (currentOffset > lastOffset)
                     {
-                        DeleteAMessageFromChat(relationship.Id);
+                        DeleteMessageFromChat(relationship.Id);
                     }
 
                     if (currentOffset != lastOffset)
@@ -371,19 +443,16 @@ namespace ClientMessenger
             
             lock (Lock)
             {
-                Relationship relationship = _friends.First(x => x.Username == _currentOpenChat.Username
-                    && x.Hashtag == _currentOpenChat.Hashtag);
-                TagUserData tagUserData = new(relationship.Username, relationship.Hashtag);
+                Relationship? relationship = _friends.FirstOrDefault(x => x == _currentOpenChat);
+                relationship ??= _friends.First(x => x.Id == message.SenderId);
 
-                if (ChatPanel.Children.Count >= 2 && ChatPanel.Children[1] is ScrollViewer scrollViewer && _currentOpenChat == relationship)
+                if (ChatPanel.Children.Count >= 2 && ChatPanel.Children[1] is ScrollViewer scrollViewer)
                 {
-                    Relationship sender = message.SenderId == Client.User.Id
-                        ? (Relationship)Client.User
-                        : relationship;
                     AddMessage(scrollViewer, relationship, message, addAsNew);
                     return;
                 }
 
+                TagUserData tagUserData = new(relationship.Username, relationship.Hashtag);
                 ChangeNotificationAmount(relationship, false);
                 _chats.Remove(tagUserData, out _);
             }
@@ -408,8 +477,8 @@ namespace ClientMessenger
             {
                 chat.LastMessage = message;
             }
-
-                StackPanel chatPanel = (StackPanel)scrollViewer.Content;
+            
+            StackPanel chatPanel = (StackPanel)scrollViewer.Content;
             StackPanel outerStackPanel = new()
             {
                 Orientation = Orientation.Horizontal,
@@ -440,7 +509,6 @@ namespace ClientMessenger
             };
 
             DockPanel nameAndTimePanel = new();
-
             TextBlock nameTextBlock = new()
             {
                 Text = sender.Username,
@@ -469,8 +537,10 @@ namespace ClientMessenger
                 TextWrapping = TextWrapping.Wrap,
                 Margin = new Thickness(0, 5, 0, 0),
                 FontSize = 14,
-                Foreground = Brushes.LightGray
+                Foreground = Brushes.LightGray,
+                Tag = message.Guid,
             };
+            messageTextBlock.ContextMenu = CreateMessageContextMenu(message, messageTextBlock);
 
             innerStackPanel.Children.Add(nameAndTimePanel);
             innerStackPanel.Children.Add(messageTextBlock);
@@ -489,6 +559,43 @@ namespace ClientMessenger
 
             scrollViewer.ScrollToEnd();
             chatPanel.UpdateLayout();
+        }
+
+        private static ContextMenu CreateMessageContextMenu(Message message, TextBlock textBlock)
+        {
+            Colors colors = new();
+            MenuItem copyItem = new()
+            {
+                Header = "Copy",
+                CommandTarget = textBlock,
+                Command = ApplicationCommands.Copy,
+                Background = colors.DarkerGray,
+            };
+
+            MenuItem deleteItem = new()
+            {
+                Header = "Delete",
+                Background = colors.Red,
+                CommandTarget = textBlock,
+                Command = ApplicationCommands.Delete,
+            };
+
+            ContextMenu contextMenu = new()
+            {
+                Items =      
+                {
+                    copyItem,
+                    deleteItem,
+                },
+                Background = colors.DarkerGray,
+            };
+            
+            if (message.SenderId != Client.User.Id)
+            {
+                contextMenu.Items.Remove(deleteItem);
+            }
+
+            return contextMenu;
         }
 
         private void ChangeNotificationAmount(Relationship relationship, bool removeNotifications)
@@ -510,6 +617,12 @@ namespace ClientMessenger
 
                     if (notificationTextBlock.Text == "99+")
                         return;
+
+                    if (notificationTextBlock.Text == "")
+                    {
+                        notificationTextBlock.Text = "1";
+                        return;
+                    }
 
                     if (byte.TryParse(notificationTextBlock.Text, out byte notificationAmount))
                     {
@@ -538,7 +651,7 @@ namespace ClientMessenger
             }
         }
 
-        private void DeleteAMessageFromChat(long id)
+        private void DeleteMessageFromChat(long id)
         {
             List<StackPanel>? messages = GetMessagesFromChat(out StackPanel? chatPanel);
             
@@ -562,10 +675,50 @@ namespace ClientMessenger
             }
         }
 
+        private void DeleteMessage(TextBlock textBlock)
+        {
+            if (_chats.TryGetValue(_currentOpenChat, out Chat? chat))
+            {
+                StackPanel chatPanel = (StackPanel)chat.ScrollViewer.Content;
+                StackPanel innerStackPanel = (StackPanel)textBlock.Parent;
+                StackPanel outerStackPanel = (StackPanel)innerStackPanel.Parent;
+                chatPanel.Children.Remove(outerStackPanel);
+            }
+        }
+
+        public void DeleteMessage(DeleteMessage deleteMessage)
+        {
+            ChatDatabase chatDatabase = new();
+            chatDatabase.DeleteMessage(deleteMessage.SenderId, deleteMessage.MessageGuid);
+
+            Relationship relationship = _friends.First(x => x.Id == deleteMessage.SenderId);
+            if (relationship != _currentOpenChat)
+            {
+                return;
+            }
+
+            List<StackPanel>? messages = GetMessagesFromChat(out StackPanel? chatPanel);
+            if (messages is null || messages.Count == 0)
+            {
+                return;
+            }
+
+            foreach (StackPanel message in messages)
+            {
+                StackPanel innerStackPanel = message.Children.OfType<StackPanel>().First();
+                TextBlock textBlock = innerStackPanel.Children.OfType<TextBlock>().First();
+
+                if (textBlock.Tag is Guid messageGuid && messageGuid == deleteMessage.MessageGuid)
+                {
+                    DeleteMessage(textBlock);
+                    break;
+                }
+            }
+        }
+
         private void AddAMessageToChat()
         {
-            Relationship relationship = _friends.First(x => x.Username == _currentOpenChat.Username
-                && x.Hashtag == _currentOpenChat.Hashtag);
+            Relationship relationship = _friends.First(x => x == _currentOpenChat);
 
             if (!_chats.TryGetValue(_currentOpenChat, out Chat? chat))
                 return;
@@ -592,18 +745,27 @@ namespace ClientMessenger
             return [.. chatPanel.Children.Cast<StackPanel>()];
         }
 
-        private async Task CleanUpChatsAsync()
+        private async Task CleanUpChatsAsync(CancellationToken token)
         {
-            while (true)
+            while (!token.IsCancellationRequested)
             {
-                await Task.Delay(TimeSpan.FromMinutes(5));
+                await Task.Delay(TimeSpan.FromMinutes(5), token);
+                List<TagUserData> toRemove = new();
+
                 foreach (KeyValuePair<TagUserData, Chat> chat in _chats)
                 {
-                    if (ChatPanel.Children[0] != chat.Value.ScrollViewer && DateTime.Now - chat.Value.LastOpend > TimeSpan.FromMinutes(5))
+                    ScrollViewer scrollViewer = ChatPanel.Children.OfType<ScrollViewer>().First();
+                    if (scrollViewer != chat.Value.ScrollViewer &&
+                        DateTime.Now - chat.Value.LastOpend > TimeSpan.FromMinutes(4, seconds: 30))
                     {
-                        Logger.LogInformation($"Chat deleted from {nameof(_chats)}");
-                        _chats.Remove(chat.Key, out _);
+                        toRemove.Add(chat.Key);
                     }
+                }
+
+                foreach (TagUserData key in toRemove)
+                {
+                    Logger.LogInformation($"Chat deleted from {nameof(_chats)}: {key.Username} {key.Hashtag}");
+                    _chats.Remove(key, out _);
                 }
             }
         }
@@ -1509,7 +1671,7 @@ namespace ClientMessenger
                 Text = user.Username,
                 Foreground = Brushes.White,
                 FontSize = 18,
-                Margin = new Thickness(10)
+                Margin = new Thickness(10),
             };
 
             stackPanel.Children.Add(ellipse);
